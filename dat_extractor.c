@@ -12,11 +12,20 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "file_structs.h"
 
 #define MAX_FILENAME_LEN 13 // space in the index entries for 13 chars + null term
-#define COMPRESSED_BUF_LEN 65536
-#define DECOMPRESSED_BUF_LEN 1048576
+#define LZ_RINGBUF_SIZE 0x1000
+
+#define INDEX_BITFIELD_OFFSET    0x00
+#define INDEX_UNCOMP_SIZE_OFFSET 0x02
+#define INDEX_COMP_SIZE_OFFSET   0x06
+#define INDEX_FILENAME_OFFSET    0x0A
+#define INDEX_OFFSET_OFFSET      0x18
+
+typedef struct
+{
+  uint8_t data[0x1C];
+} dat_index_entry;
 
 bool decode_dat(const char* filename);
 int  lz_inflate(uint8_t* inputbuf,  uint16_t inputbuf_len,
@@ -28,7 +37,7 @@ int main (int argc, char** argv)
 
   if (argc < 2)
   {
-    printf("Usage: %s <dat_file>\n", argv[0]);
+    printf("Nomad DAT File Extractor\nUsage: %s <dat_file>\n", argv[0]);
     return status;
   }
 
@@ -39,13 +48,13 @@ int main (int argc, char** argv)
 
 /**
  * Parses the index of a Nomad .DAT file and extracts the constituent data files.
- * As each file is extracted, it is also decompressed with the LZ algorithm.
+ * As each file is extracted, it is decompressed with the LZ algorithm if neccessary.
  */
 bool decode_dat(const char* datfilename)
 {
   bool status = false;
-  uint8_t buffer_compressed[COMPRESSED_BUF_LEN];
-  uint8_t buffer_decompressed[DECOMPRESSED_BUF_LEN];
+  uint8_t* buf_compressed = NULL;
+  uint8_t* buf_decompressed = NULL;
   uint16_t filecount = 0;
   uint32_t indexsize = 0;
   uint32_t decompressed_size = 0;
@@ -94,64 +103,137 @@ bool decode_dat(const char* datfilename)
     uint16_t indexpos = 0;
     while ((indexpos < filecount) && status)
     {
+      bool skipfile = false;
       char filename[MAX_FILENAME_LEN + 1];
-      strncpy(filename, index[indexpos].filename, MAX_FILENAME_LEN);
+      strncpy(filename, &(index[indexpos].data[INDEX_FILENAME_OFFSET]), MAX_FILENAME_LEN);
       filename[MAX_FILENAME_LEN] = '\0';
 
-      printf("Extracting index %u ('%s', compressed size %u, offset 0x%X)...\n",
-             indexpos, filename, index[indexpos].size, index[indexpos].offset);
+      uint32_t* compressed_size   = (uint32_t*)&(index[indexpos].data[INDEX_COMP_SIZE_OFFSET]);
+      uint32_t* uncompressed_size = (uint32_t*)&(index[indexpos].data[INDEX_UNCOMP_SIZE_OFFSET]);
+      uint32_t* offset            = (uint32_t*)&(index[indexpos].data[INDEX_OFFSET_OFFSET]);
+      uint16_t* flags             = (uint16_t*)&(index[indexpos].data[INDEX_BITFIELD_OFFSET]);
 
-      // seek to the position at which the contained file starts
-      if (fseek(fd, index[indexpos].offset, SEEK_SET) != 0)
+      // if bit 2 isn't set in the flags, the file is stored in a manner that
+      // this extractor doesn't yet support, so we need to skip it
+      if (~*flags & 0x0004)
       {
-        status = false;
-        fprintf(stderr, "Error: failed to seek to offset %u.\n", index[indexpos].offset);
+        skipfile = true;
+        printf("Skipping index %u ('%s'), unknown storage format...\n", indexpos, filename);
       }
 
-      if (status)
+      if (!skipfile)
       {
-        // read the contained file
-        if (fread(buffer_compressed, 1, index[indexpos].size, fd) != index[indexpos].size)
+        buf_compressed = malloc(*compressed_size);
+        buf_decompressed = malloc(*uncompressed_size);
+
+        if ((buf_compressed != NULL) && (buf_decompressed != NULL))
+        {
+          printf("Extracting index %u ('%s', %s, size %u, offset 0x%X)...\n",
+              indexpos, filename, (*flags & 0x0100) ? "compressed" : "uncompressed", *compressed_size, *offset);
+        }
+        else
         {
           status = false;
-          fprintf(stderr, "Error: failed to read %d bytes from offset %u.\n",
-                  index[indexpos].size, index[indexpos].offset);
+          if (buf_compressed == NULL)
+          {
+            fprintf(stderr, "Error: failed to allocate buffer of %d bytes for reading file at index %d ('%s').\n",
+                *compressed_size, indexpos, filename);
+          }
+          else if (buf_decompressed == NULL)
+          {
+            fprintf(stderr, "Error: failed to allocate buffer of %d bytes for decompressing file at index %d ('%s').\n",
+                *uncompressed_size, indexpos, filename);
+          }
         }
       }
 
-      if (status)
+      // seek to the position at which the contained file starts
+      if (status && !skipfile)
       {
-        decompressed_size = lz_inflate(buffer_compressed, index[indexpos].size,
-                                       buffer_decompressed, DECOMPRESSED_BUF_LEN);
-        status = (decompressed_size > 0);
+        if (fseek(fd, *offset, SEEK_SET) != 0)
+        {
+          status = false;
+          fprintf(stderr, "Error: failed to seek to offset %08X.\n", *offset);
+        }
       }
 
-      if (status)
+      if (status && !skipfile)
+      {
+        // read the contained file
+        if (fread(buf_compressed, 1, *compressed_size, fd) != *compressed_size)
+        {
+          status = false;
+          fprintf(stderr, "Error: failed to read %d bytes from offset %08X.\n", *compressed_size, *offset);
+        }
+      }
+
+      if (status && !skipfile)
+      {
+        // check the flags to see whether this file was actually stored compressed; only decompress if necessary
+        if (*flags & 0x0100)
+        {
+          decompressed_size = lz_inflate(buf_compressed, *compressed_size,
+                                         buf_decompressed, *uncompressed_size);
+          status = (decompressed_size > 0);
+
+          if (decompressed_size != *uncompressed_size)
+          {
+            fprintf(stderr, "Warning: File at index %d (%s) was listed as having an uncompressed size of %d, but unpacked to %d bytes!\n");
+          }
+        }
+        else
+        {
+          if (*compressed_size == *uncompressed_size)
+          {
+            memcpy(buf_decompressed, buf_compressed, *compressed_size);
+            decompressed_size = *compressed_size;
+          }
+          else
+          {
+            fprintf(stderr, "Warning: file at index %d (%s) is marked as uncompressed but compressed/decompressed"
+                            " sizes do not match! Skipping.", indexpos, filename);
+            skipfile = true;
+          }
+        }
+      }
+
+      if (status && !skipfile)
       {
         // open a separate file to which the contained file's data will be written
-        fd_target = fopen(index[indexpos].filename, "w");
+        fd_target = fopen(filename, "w");
         if (fd_target < 0)
         {
           status = false;
-          fprintf(stderr, "Error: failed to open '%s' for writing.\n", index[indexpos].filename);
+          fprintf(stderr, "Error: failed to open '%s' for writing.\n", filename);
         }
       }
 
-      if (status)
+      if (status && !skipfile)
       {
         // write the buffered data
-        if (fwrite(buffer_decompressed, 1, decompressed_size, fd_target) == decompressed_size)
+        if (fwrite(buf_decompressed, 1, decompressed_size, fd_target) == decompressed_size)
         {
           fclose(fd_target);
         }
         else
         {
           status = false;
-          fprintf(stderr, "Error: failed to write %d bytes to '%s'.\n",
-                  decompressed_size, index[indexpos].filename);
+          fprintf(stderr, "Error: failed to write %d bytes to '%s'.\n", decompressed_size, filename);
         }
       }
 
+      if (buf_compressed != NULL)
+      {
+        free(buf_compressed);
+      }
+
+      if (buf_decompressed != NULL)
+      {
+        free(buf_decompressed);
+      }
+
+      buf_compressed = NULL;
+      buf_decompressed = NULL;
       indexpos++;
     }
   }
@@ -175,7 +257,7 @@ bool decode_dat(const char* datfilename)
 int lz_inflate(uint8_t* input,  uint16_t inputbuf_len,
                uint8_t* output, uint32_t outputbuf_len)
 {
-  uint8_t buffer[0x1000];
+  uint8_t buffer[LZ_RINGBUF_SIZE];
   uint16_t bufpos = 0xFEE;
   uint16_t inputpos = 0;
   uint32_t outputpos = 0;
@@ -187,11 +269,14 @@ int lz_inflate(uint8_t* input,  uint16_t inputbuf_len,
   uint8_t chunkSize = 0;
   uint16_t chunkSource = 0;
 
-  while (inputpos < inputbuf_len)
+  memset(buffer, 0x20, LZ_RINGBUF_SIZE);
+
+  while ((inputpos < inputbuf_len) && (outputpos < outputbuf_len))
   {
     flagbyte = input[inputpos++];
 
-    for (chunkIndex = 0; (chunkIndex < 8) && (inputpos < inputbuf_len); chunkIndex++)
+    chunkIndex = 0;
+    while ((chunkIndex < 8) && (inputpos < inputbuf_len) && (outputpos < outputbuf_len))
     {
       if ((flagbyte & (1 << chunkIndex)) != 0)
       {
@@ -200,7 +285,7 @@ int lz_inflate(uint8_t* input,  uint16_t inputbuf_len,
         output[outputpos++] = decodebyte;
 
         buffer[bufpos] = decodebyte;
-        if (++bufpos >= 0x1000)
+        if (++bufpos >= LZ_RINGBUF_SIZE)
         {
           bufpos = 0;
         }
@@ -214,24 +299,40 @@ int lz_inflate(uint8_t* input,  uint16_t inputbuf_len,
         chunkSize   = ((codeword[1] & 0xF0) >> 4) + 3;
         chunkSource = ((codeword[1] & 0x0F) << 8) | codeword[0];
 
-        for (byteIndexInChunk = 0; byteIndexInChunk < chunkSize; byteIndexInChunk++)
+        byteIndexInChunk = 0;
+        while ((byteIndexInChunk < chunkSize) && (outputpos < outputbuf_len))
         {
           decodebyte = buffer[chunkSource];
           output[outputpos++] = decodebyte;
 
-          if (++chunkSource >= 0x1000)
+          if (++chunkSource >= LZ_RINGBUF_SIZE)
           {
             chunkSource = 0;
           }
 
           buffer[bufpos] = decodebyte;
-          if (++bufpos >= 0x1000)
+          if (++bufpos >= LZ_RINGBUF_SIZE)
           {
             bufpos = 0;
           }
+
+          byteIndexInChunk += 1;
+        }
+
+        if (byteIndexInChunk < chunkSize)
+        {
+          fprintf(stderr, "Error: reached end of output buffer with %d bytes left in chunk (from input offset %08X)\n",
+                  chunkSize - byteIndexInChunk, inputpos - 1);
         }
       }
+
+      chunkIndex += 1;
     } // end for chunk index 0-7
+  }
+
+  if (outputpos > outputbuf_len)
+  {
+    fprintf(stderr, "Error: output buffer overrun (%d vs %d)\n", outputpos, outputbuf_len);
   }
 
   return outputpos;
