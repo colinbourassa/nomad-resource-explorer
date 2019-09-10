@@ -64,9 +64,9 @@ int main(int argc, char** argv)
   {
     // get the image filesize and allocate a buffer
     fseek(fd_img, 0L, SEEK_END);
-    img_filesize = ftell(fd_image);
+    img_filesize = ftell(fd_img);
     rewind(fd_img);
-    if (filesize > 0)
+    if (img_filesize > 0)
     {
       imgdata = malloc(img_filesize);
     }
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     fseek(fd_pal, 0L, SEEK_END);
     pal_filesize = ftell(fd_pal);
     rewind(fd_pal);
-    if (filesize > 0)
+    if (pal_filesize > 0)
     {
       paldata = malloc(pal_filesize);
     }
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     {
       // the engine assumes that any pixels not explicitly defined in the image
       // are left pointing to palette index 0
-      memset(paldata, sizeof(palette_entry) * 128, 0);
+      memset(paldata, 0, sizeof(palette_entry) * 128);
     }
     else
     {
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 
     if (status)
     {
-      printf("Reading %d bytes of palette data.\n", pal_filesize);
+      printf("Reading %lu bytes of palette data.\n", pal_filesize);
       status = (fread(paldata, sizeof(uint8_t), pal_filesize, fd_pal) == pal_filesize);
       if (!status)
       {
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 
     if (status)
     {
-      printf("Reading %d bytes from source data.\n", img_filesize);
+      printf("Reading %lu bytes from source data.\n", img_filesize);
       status = (fread(imgdata, sizeof(uint8_t), img_filesize, fd_img) == img_filesize);
       if (!status)
       {
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
       if (outputbuf == NULL)
       {
         status = false;
-        fprintf(stderr, "Failed to allocate %d bytes for output buffer.\n", pixelcount * sizeof(palette_entry));
+        fprintf(stderr, "Failed to allocate %lu bytes for output buffer.\n", pixelcount * sizeof(palette_entry));
       }
     }
 
@@ -184,12 +184,12 @@ int main(int argc, char** argv)
     {
       status = false;
       fprintf(stderr, "Error: out of space in output buffer (%d pixels), but data remains in input"
-              "(%d of %d bytes processed.\n", pixelcount, inputpos, img_filesize);
+              "(%lu of %lu bytes processed.\n", pixelcount, inputpos, img_filesize);
     }
 
     if (status)
     {
-      // FIXME: This is currently hardcoded to point to the third byte in the
+      // FIXME: This is currently hardcoded to point to the fourth byte in the
       // palette data, since the first triplet is actually not a palette entry
       // but a color count. It appears there are other palette file formats
       // that may not match this.
