@@ -1,2 +1,6 @@
 # nomad-decode
-Extractor for data files from 1993 Gametek title "Nomad"
+
+This is collection of utilities to extract and convert data files provided with
+the 1993 space exploration game "Nomad", developed by Intense! Interactive and
+Papyrus Design and published by GameTek.
+
