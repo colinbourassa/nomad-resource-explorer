@@ -14,6 +14,7 @@
 #include <string.h>
 
 #define PPM_PIXELS_PER_LINE 4
+#define LARGE_PAL_FILESIZE  771
 
 typedef struct
 {
@@ -22,11 +23,30 @@ typedef struct
   uint8_t b;
 } palette_entry;
 
+/*
+ * Upconverts 6-bit VGA palette data to the full 8-bit range.
+ */
+void convert6BitPalette(uint8_t* paldata, long pal_filesize)
+{
+  long idx;
+
+  // palette data actually starts on the fourth byte
+  for (idx = 3; idx < pal_filesize; idx++)
+  {
+    // leftshift the six bits of data, and replicate the two high bits
+    // in the low positions
+    paldata[idx] = (paldata[idx] << 2) | (paldata[idx] >> 4);
+  }
+}
+
 int main(int argc, char** argv)
 {
+  // handles for the input (.stp) image, input palette, and output PPM
   FILE* fd_img = 0;
   FILE* fd_pal = 0;
   FILE* fd_out = 0;
+
+  // read buffers for the input
   uint8_t* imgdata = NULL;
   uint8_t* paldata = NULL;
   palette_entry* palette = NULL;
@@ -44,10 +64,15 @@ int main(int argc, char** argv)
   bool status = true;
 
   uint8_t* outputbuf = NULL;
+
+  // buffer position tracking
   uint_fast32_t inputpos = 0;
   uint_fast32_t outputpos = 0;
   uint_fast32_t endptr = 0;
   uint8_t rlebyte = 0;
+
+  // number of pixels that appear to be indexing beyond the palette
+  uint_fast32_t index_error_count = 0;
 
   if (argc < 4)
   {
@@ -82,24 +107,21 @@ int main(int argc, char** argv)
 
     if (imgdata && paldata)
     {
-      // the engine assumes that any pixels not explicitly defined in the image
-      // are left pointing to palette index 0
-      memset(paldata, 0, sizeof(palette_entry) * 128);
+      printf("Reading %lu bytes of palette data.\n", pal_filesize);
+      status = (fread(paldata, sizeof(uint8_t), pal_filesize, fd_pal) == pal_filesize);
+      if (status)
+      {
+        convert6BitPalette(paldata, pal_filesize);
+      }
+      else
+      {
+        fprintf(stderr, "Failed to read palette file.\n");
+      }
     }
     else
     {
       fprintf(stderr, "Failed to allocate read buffers.\n");
       status = false;
-    }
-
-    if (status)
-    {
-      printf("Reading %lu bytes of palette data.\n", pal_filesize);
-      status = (fread(paldata, sizeof(uint8_t), pal_filesize, fd_pal) == pal_filesize);
-      if (!status)
-      {
-        fprintf(stderr, "Failed to read palette file.\n");
-      }
     }
 
     if (status)
@@ -114,8 +136,11 @@ int main(int argc, char** argv)
 
     if (status)
     {
+      // FIXME: the source data will always be little-endian, so this code
+      // should be modified to detect when byteswapping is necessary
       width = (uint16_t*)&imgdata[0];
       height = (uint16_t*)&imgdata[2];
+
       pixelcount = (*width) * (*height);
       outputbuf = malloc(pixelcount);
 
@@ -138,6 +163,7 @@ int main(int argc, char** argv)
       while ((inputpos < img_filesize) && (outputpos < pixelcount))
       {
         rlebyte = imgdata[inputpos++];
+
         if (rlebyte & 0x80)
         {
           // bit 7 is set, so this is moving the output pointer ahead,
@@ -161,6 +187,9 @@ int main(int argc, char** argv)
               outputbuf[outputpos++] = imgdata[inputpos];
             }
           }
+
+          // advance the input once more so that we read the next RLE byte at the top of the loop
+          inputpos++;
         }
         else
         {
@@ -189,13 +218,27 @@ int main(int argc, char** argv)
 
     if (status)
     {
+      // TODO: The second byte of the palette file is the VGA palette index
+      // at which Nomad will start to populate the color data. This behavior
+      // should probably be accounted for here -- maybe include a routine
+      // that pre-populates a 256-color VGA palette with the entries normally
+      // created by the BIOS. This way, any of the palette data files that
+      // start filling data at some index other than zero will still result
+      // in a complete palette.
+
       // FIXME: This is currently hardcoded to point to the fourth byte in the
       // palette data, since the first triplet is actually not a palette entry
-      // but a color count. It appears there are other palette file formats
-      // that may not match this.
+      // but other information (sometimes including a color count.)
       palette = (palette_entry*)&paldata[3];
 
-      color_count = paldata[2] + (paldata[1] * 0x10) + (paldata[0] * 0x100);
+      // the smaller palettes seem to store the color count in the third byte
+      color_count = paldata[2];
+
+      // ...but the larger palettes leave that byte zeroed and always contain 256 colors
+      if ((color_count == 0) && (pal_filesize == LARGE_PAL_FILESIZE))
+      {
+        color_count = 256;
+      }
 
       fprintf(fd_out, "P3\n%d %d\n255", *width, *height);
 
@@ -211,8 +254,21 @@ int main(int argc, char** argv)
         {
           fprintf(fd_out, "%03d %03d %03d   ", palette[pal_index].r, palette[pal_index].g, palette[pal_index].b);
         }
+        else
+        {
+          index_error_count++;
+        }
       }
-      printf("Done.\n");
+
+      if (index_error_count)
+      {
+        fprintf(stderr, "Error: %lu pixels appeared to be indexing beyond the palette size of %d colors.\n",
+                index_error_count, color_count);
+      }
+      else
+      {
+        printf("Done.\n");
+      }
     }
 
   } // endif files were opened successfully
