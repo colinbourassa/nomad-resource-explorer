@@ -178,7 +178,8 @@ bool decode_dat(const char* datfilename)
 
           if (decompressed_size != *uncompressed_size)
           {
-            fprintf(stderr, "Warning: File at index %d (%s) was listed as having an uncompressed size of %d, but unpacked to %d bytes!\n");
+            fprintf(stderr, "Warning: File at index %d (%s) was listed as having an uncompressed size of %d, but unpacked to %d bytes!\n",
+                    indexpos, filename, *uncompressed_size, decompressed_size);
           }
         }
         else
