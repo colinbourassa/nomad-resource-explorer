@@ -27,6 +27,14 @@ QVector<InventoryObj> Inventory::getObjectList()
         InventoryObj obj;
         obj.id = id;
         obj.name = m_lib->getGameText(currentEntry->nameOffset);
+        obj.tradeable = currentEntry->isTradeable;
+        obj.unique = (currentEntry->type & 0x80);
+        obj.type = static_cast<InventoryObjType>(currentEntry->type & 0x7F);
+        obj.knownByPlayer = (currentEntry->flags & 0x04);
+        for (int raceid = 0; raceid < AlienRace_NumRaces; ++raceid)
+        {
+          obj.valueByRace[raceid] = currentEntry->valueByRace[raceid];
+        }
 
         if (!obj.name.isEmpty())
         {
@@ -39,4 +47,19 @@ QVector<InventoryObj> Inventory::getObjectList()
   }
 
   return list;
+}
+
+QPixmap Inventory::getInventoryImage(unsigned int id)
+{
+  bool status = false;
+  QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
+  QByteArray stpData;
+  QPixmap objImage;
+
+  if (m_lib->getFileByName(DatFileType_INVENT, invStpFilename, stpData))
+  {
+    objImage = m_lib->convertStpToPixmap(stpData, m_lib->getGamePalette(), status);
+  }
+
+  return objImage;
 }

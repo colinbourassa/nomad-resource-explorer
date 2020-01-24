@@ -8,6 +8,7 @@
 #include <QImage>
 #include <QVector>
 #include <QRgb>
+#include <QPixmap>
 
 #define LZ_RINGBUF_SIZE 0x1000
 
@@ -44,8 +45,9 @@ public:
   static const QMap<DatFileType,QString> s_datFileNames;
 
   bool getFileByName(DatFileType dat, QString filename, QByteArray& filedata);
-  bool getInventoryImage(unsigned int objectId, QImage* img);
   QString getGameText(int offset);
+  QPixmap convertStpToPixmap(QByteArray& stpData, QVector<QRgb> palette, bool& status);
+  QVector<QRgb> getGamePalette();
 
 private:
   QByteArray m_datContents[DatFileType_NUM_DAT_FILES];
@@ -57,7 +59,7 @@ private:
   bool loadGamePalette();
   bool lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile);
   bool getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile);
-  QPoint getPixelLocation(int imgWidth, int pixelnum);
+  QPoint getPixelLocation(int imgWidth, int pixelnum) const;
 };
 
 #endif // DATLIBRARY_H

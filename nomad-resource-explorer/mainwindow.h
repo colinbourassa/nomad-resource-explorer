@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QString>
+#include <QGraphicsScene>
 #include "datlibrary.h"
 #include "inventory.h"
 
@@ -26,12 +27,15 @@ private slots:
 
   void on_pushButton_clicked();
 
+  void on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+
 private:
     Ui::MainWindow *ui;
 
     QString m_gamedir;
     DatLibrary m_lib;
     Inventory m_inventory;
+    QGraphicsScene m_objScene;
 
 };
 

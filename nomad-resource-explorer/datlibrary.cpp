@@ -129,6 +129,12 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray &fi
   return status;
 }
 
+QVector<QRgb> DatLibrary::getGamePalette()
+{
+  loadGamePalette();
+  return m_gamePalette;
+}
+
 bool DatLibrary::loadGamePalette()
 {
   bool status = true;
@@ -139,7 +145,7 @@ bool DatLibrary::loadGamePalette()
 
     if (getFileByName(DatFileType_TEST, "GAME.PAL", paldata))
     {
-      for (int palByteIdx = 3; palByteIdx < paldata.size() - 3; ++palByteIdx)
+      for (int palByteIdx = 3; palByteIdx < paldata.size() - 3; palByteIdx += 3)
       {
         // upconvert the 6-bit palette data to 8-bit by leftshifting and
         // replicating the two high bits in the low positions
@@ -158,89 +164,83 @@ bool DatLibrary::loadGamePalette()
   return status;
 }
 
-QPoint DatLibrary::getPixelLocation(int imgWidth, int pixelNum)
+QPoint DatLibrary::getPixelLocation(int imgWidth, int pixelNum) const
 {
-  return QPoint(pixelNum % imgWidth, pixelNum / imgWidth);
+  QPoint pt (pixelNum % imgWidth, pixelNum / imgWidth);
+  return pt;
 }
 
-bool DatLibrary::getInventoryImage(unsigned int objectId, QImage* img)
+QPixmap DatLibrary::convertStpToPixmap(QByteArray &stpData, QVector<QRgb> palette, bool& status)
 {
-  bool status = true;
-  QByteArray imageFile;
+  status = true;
+  uint16_t width = qFromLittleEndian<quint16>(stpData.data() + 0);
+  uint16_t height = qFromLittleEndian<quint16>(stpData.data() + 2);
 
-  if (getFileAtIndex(DatFileType_INVENT, objectId, imageFile) && loadGamePalette())
+  QImage img(width, height, QImage::Format_Indexed8);
+  img.setColorTable(palette);
+
+  int pixelcount = width * height;
+  int inputpos = 8; // STP image data begins at byte index 8
+  int outputpos = 0;
+  int endptr = 0;
+
+  while ((inputpos < stpData.size()) && (outputpos < pixelcount))
   {
-    uint16_t width = qFromLittleEndian<quint16>(imageFile.data() + 0);
-    uint16_t height = qFromLittleEndian<quint16>(imageFile.data() + 2);
+    uint8_t rlebyte = static_cast<uint8_t>(stpData.at(inputpos));
+    inputpos++;
 
-    img = new QImage(width, height, QImage::Format_Indexed8);
-    img->setColorTable(m_gamePalette);
-
-    int pixelcount = width * height;
-    int inputpos = 8; // STP image data begins at byte index 8
-    int outputpos = 0;
-    int endptr = 0;
-
-    while ((inputpos < imageFile.size()) && (outputpos < pixelcount))
+    if (rlebyte & 0x80)
     {
-      uint8_t rlebyte = static_cast<uint8_t>(imageFile.at(inputpos));
-      inputpos++;
-
-      if (rlebyte & 0x80)
+      // bit 7 is set, so this is moving the output pointer ahread,
+      // leaving the default value in the skipped locations
+      endptr = outputpos + (rlebyte & 0x7F);
+      while ((outputpos < endptr) && (outputpos < pixelcount))
       {
-        // bit 7 is set, so this is moving the output pointer ahread,
-        // leaving the default value in the skipped locations
-        endptr = outputpos + (rlebyte & 0x7F);
+        img.setPixel(getPixelLocation(width, outputpos), 0x00);
+        outputpos++;
+      }
+    }
+    else if (rlebyte & 0x40)
+    {
+      // Bit 7 is clear and bit 6 is set, so this is a repeating sequence of a single byte.
+      // We only need to read one input byte for this RLE sequence, so verify that the input
+      // pointer is still within the buffer range.
+      if (inputpos < stpData.size())
+      {
+        endptr = outputpos + (rlebyte & 0x3F);
+
+        // TODO: runtime complaint ("QImage::setPixel: Index 64 out of range") needs fixing
+        unsigned int palindex = static_cast<unsigned int>(stpData.at(inputpos));
         while ((outputpos < endptr) && (outputpos < pixelcount))
         {
-          img->setPixel(getPixelLocation(width, outputpos), 0x00);
+          img.setPixel(getPixelLocation(width, outputpos), palindex);
           outputpos++;
         }
       }
-      else if (rlebyte & 0x40)
-      {
-        // Bit 7 is clear and bit 6 is set, so this is a repeating sequence of a single byte.
-        // We only need to read one input byte for this RLE sequence, so verify that the input
-        // pointer is still within the buffer range.
-        if (inputpos < imageFile.size())
-        {
-          endptr = outputpos + (rlebyte & 0x7F);
-          while ((outputpos < endptr) && (outputpos < pixelcount))
-          {
-            img->setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(imageFile.at(inputpos)));
-            outputpos++;
-          }
-        }
 
-        // advance the input once more so that we read the next RLE byte at the top of the loop
+      // advance the input once more so that we read the next RLE byte at the top of the loop
+      inputpos++;
+    }
+    else
+    {
+      // bits 6 and 7 are clear, so this is a byte sequence copy from the input
+      endptr = outputpos + rlebyte;
+      while ((outputpos < endptr) && (outputpos < pixelcount) && (inputpos < stpData.size()))
+      {
+        img.setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(stpData.at(inputpos)));
         inputpos++;
+        outputpos++;
       }
-      else
-      {
-        // bits 6 and 7 are clear, so this is a byte sequence copy from the input
-        endptr = outputpos + rlebyte;
-        while ((outputpos + endptr) && (outputpos < pixelcount) && (inputpos < imageFile.size()))
-        {
-          img->setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(imageFile.at(inputpos)));
-          inputpos++;
-          outputpos++;
-        }
-      }
-    }
-
-    // check if the input runs dry before all of the pixels are accounted for in the output
-    if ((inputpos >= imageFile.size()) && (outputpos < pixelcount))
-    {
-      status = false;
-    }
-
-    // check if the output buffer (containing width x height pixels) is full before all of the input is consumed
-    {
-      status = false;
     }
   }
 
-  return status;
+  // check if the input runs dry before all of the pixels are accounted for in the output
+  if ((inputpos >= stpData.size()) && (outputpos < pixelcount))
+  {
+    status = false;
+  }
+
+  return QPixmap::fromImage(img);
 }
 
 bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray &decompressedFile)
