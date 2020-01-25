@@ -1,7 +1,7 @@
 #ifndef INVENTORY_H
 #define INVENTORY_H
 
-#include <QVector>
+#include <QMap>
 #include <QPixmap>
 #include <stdint.h>
 #include "datlibrary.h"
@@ -21,7 +21,8 @@ enum InventoryObjType
   InventoryObjType_LaborBot = 0xB,
   InventoryObjType_LaborBotEnhancement = 0xC,
   InventoryObjType_Award = 0xD,
-  InventoryObjType_Translator = 0xE
+  InventoryObjType_Translator = 0xE,
+  InventoryObjType_Invalid = 0xFF
 };
 
 inline QString getInventoryObjTypeText(InventoryObjType type)
@@ -31,7 +32,7 @@ inline QString getInventoryObjTypeText(InventoryObjType type)
   case InventoryObjType_Normal:
     return QString("Normal");
   case InventoryObjType_NormalWithText:
-    return QString("Normal (with descriptive text");
+    return QString("Normal (with descriptive text)");
   case InventoryObjType_Engine:
     return QString("Engine");
   case InventoryObjType_Scanner:
@@ -54,20 +55,22 @@ inline QString getInventoryObjTypeText(InventoryObjType type)
     return QString("Award/medal/recognition");
   case InventoryObjType_Translator:
     return QString("Translator device");
+  default:
+    return QString("(invalid)");
   }
 }
 
 struct InventoryObj
 {
-  unsigned int id;
+  int id;
   QString name;
   bool tradeable;
   bool unique;
   InventoryObjType type;
-  unsigned int subtype;
+  int subtype;
   QString objText;
   bool knownByPlayer;
-  unsigned int valueByRace[AlienRace_NumRaces];
+  int valueByRace[AlienRace_NumRaces];
 };
 
 typedef struct __attribute__((packed)) ObjectTableEntry
@@ -88,12 +91,16 @@ class Inventory
 {
 public:
   Inventory(DatLibrary& lib);
-  QPixmap getInventoryImage(unsigned int id);
-
-  QVector<InventoryObj> getObjectList();
+  QPixmap getInventoryImage(int id);
+  QMap<int,InventoryObj> getObjectList();
+  InventoryObjType getObjectType(int id);
+  void clear();
 
 private:
   DatLibrary* m_lib;
+  QMap<int,InventoryObj> m_objList;
+
+  void populateObjectList();
 };
 
 #endif // INVENTORY_H

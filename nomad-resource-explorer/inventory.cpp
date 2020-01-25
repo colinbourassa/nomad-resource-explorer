@@ -6,16 +6,20 @@ Inventory::Inventory(DatLibrary& lib) :
 
 }
 
-QVector<InventoryObj> Inventory::getObjectList()
+void Inventory::clear()
 {
-  QVector<InventoryObj> list;
+  m_objList.clear();
+}
+
+void Inventory::populateObjectList()
+{
   QByteArray objdata;
 
   if (m_lib->getFileByName(DatFileType_CONVERSE, "OBJECT.TAB", objdata))
   {
     const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(objdata.data());
     unsigned int offset = 0;
-    unsigned int id = 0;
+    int id = 0;
 
     while (offset <= (objdata.size() - sizeof(ObjectTableEntry)))
     {
@@ -38,18 +42,25 @@ QVector<InventoryObj> Inventory::getObjectList()
 
         if (!obj.name.isEmpty())
         {
-          list.append(obj);
+          m_objList.insert(id,obj);
         }
       }
       offset += sizeof(ObjectTableEntry);
       id++;
     }
   }
-
-  return list;
 }
 
-QPixmap Inventory::getInventoryImage(unsigned int id)
+QMap<int,InventoryObj> Inventory::getObjectList()
+{
+  if (m_objList.isEmpty())
+  {
+    populateObjectList();
+  }
+  return m_objList;
+}
+
+QPixmap Inventory::getInventoryImage(int id)
 {
   bool status = false;
   QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
@@ -62,4 +73,21 @@ QPixmap Inventory::getInventoryImage(unsigned int id)
   }
 
   return objImage;
+}
+
+InventoryObjType Inventory::getObjectType(int id)
+{
+  InventoryObjType type = InventoryObjType_Invalid;
+
+  if (m_objList.isEmpty())
+  {
+    populateObjectList();
+  }
+
+  if (m_objList.contains(id))
+  {
+    type = m_objList[id].type;
+  }
+
+  return type;
 }

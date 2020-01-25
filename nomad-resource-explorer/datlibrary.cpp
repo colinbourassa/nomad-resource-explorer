@@ -137,6 +137,10 @@ QVector<QRgb> DatLibrary::getGamePalette()
 
 bool DatLibrary::loadGamePalette()
 {
+  // TODO: some palettes (such as GAME.PAL) have fewer than 256 colors,
+  // but we'll want to fill in the remaining colors because some images
+  // will index beyond this limited palette
+
   bool status = true;
 
   if (m_gamePalette.count() == 0)
@@ -145,7 +149,7 @@ bool DatLibrary::loadGamePalette()
 
     if (getFileByName(DatFileType_TEST, "GAME.PAL", paldata))
     {
-      for (int palByteIdx = 3; palByteIdx < paldata.size() - 3; palByteIdx += 3)
+      for (int palByteIdx = 3; palByteIdx <= paldata.size() - 3; palByteIdx += 3)
       {
         // upconvert the 6-bit palette data to 8-bit by leftshifting and
         // replicating the two high bits in the low positions
@@ -209,7 +213,6 @@ QPixmap DatLibrary::convertStpToPixmap(QByteArray &stpData, QVector<QRgb> palett
       {
         endptr = outputpos + (rlebyte & 0x3F);
 
-        // TODO: runtime complaint ("QImage::setPixel: Index 64 out of range") needs fixing
         unsigned int palindex = static_cast<unsigned int>(stpData.at(inputpos));
         while ((outputpos < endptr) && (outputpos < pixelcount))
         {
@@ -227,7 +230,8 @@ QPixmap DatLibrary::convertStpToPixmap(QByteArray &stpData, QVector<QRgb> palett
       endptr = outputpos + rlebyte;
       while ((outputpos < endptr) && (outputpos < pixelcount) && (inputpos < stpData.size()))
       {
-        img.setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(stpData.at(inputpos)));
+        unsigned int palindex = static_cast<unsigned int>(stpData.at(inputpos));
+        img.setPixel(getPixelLocation(width, outputpos), palindex);
         inputpos++;
         outputpos++;
       }

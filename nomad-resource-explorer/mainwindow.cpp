@@ -11,8 +11,7 @@
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  m_inventory(m_lib),
-  m_objScene(this)
+  m_inventory(m_lib)
 {
   ui->setupUi(this);
   m_lib.openData("/home/cmb/opt/games/nomad");
@@ -42,9 +41,9 @@ void MainWindow::on_actionClose_data_files_triggered()
 
 void MainWindow::on_pushButton_clicked()
 {
-  QVector<InventoryObj> objs = m_inventory.getObjectList();
+  QMap<int,InventoryObj> objs = m_inventory.getObjectList();
   ui->m_objTable->clear();
-  foreach (InventoryObj obj, objs)
+  foreach (InventoryObj obj, objs.values())
   {
     const int rowcount = ui->m_objTable->rowCount();
 
@@ -62,8 +61,9 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  unsigned int id = ui->m_objTable->item(currentRow, 0)->text().toUInt();
+  int id = ui->m_objTable->item(currentRow, 0)->text().toInt();
   QPixmap pm = m_inventory.getInventoryImage(id);
   m_objScene.addPixmap(pm);
   ui->m_objectImageView->setScene(&m_objScene);
+  ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_inventory.getObjectType(id)));
 }
