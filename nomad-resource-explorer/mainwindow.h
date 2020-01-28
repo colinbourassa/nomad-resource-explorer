@@ -30,13 +30,15 @@ private slots:
   void on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
 
 private:
-    Ui::MainWindow *ui;
+  Ui::MainWindow *ui;
 
-    QString m_gamedir;
-    DatLibrary m_lib;
-    Inventory m_inventory;
-    QGraphicsScene m_objScene;
+  QString m_gamedir;
+  DatLibrary m_lib;
+  Inventory m_inventory;
+  QGraphicsScene m_objScene;
 
+  void populatePlaceWidgets();
+  void populateObjectWidgets();
 };
 
 #endif // MAINWINDOW_H

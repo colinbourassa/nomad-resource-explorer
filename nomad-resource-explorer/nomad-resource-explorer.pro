@@ -28,13 +28,17 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     datlibrary.cpp \
-    inventory.cpp
+    inventory.cpp \
+    palette.cpp \
+    places.cpp
 
 HEADERS += \
         mainwindow.h \
     datlibrary.h \
     inventory.h \
-    enums.h
+    enums.h \
+    palette.h \
+    places.h
 
 FORMS += \
         mainwindow.ui

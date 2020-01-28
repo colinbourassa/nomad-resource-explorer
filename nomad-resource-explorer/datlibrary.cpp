@@ -139,7 +139,12 @@ bool DatLibrary::loadGamePalette()
 {
   // TODO: some palettes (such as GAME.PAL) have fewer than 256 colors,
   // but we'll want to fill in the remaining colors because some images
-  // will index beyond this limited palette
+  // will index beyond this limited palette.
+  //
+  // The palette colors used by hardware of the period may have been
+  // determined by the VGA BIOS, but since we don't have a VGA register
+  // map that we can probe for the actual colors, we need to make a best
+  // guess. The palette used by DOSBox should be fairly authentic.
 
   bool status = true;
 
@@ -153,9 +158,12 @@ bool DatLibrary::loadGamePalette()
       {
         // upconvert the 6-bit palette data to 8-bit by leftshifting and
         // replicating the two high bits in the low positions
-        int r = (paldata[palByteIdx] << 2)   | (paldata[palByteIdx] >> 4);
-        int g = (paldata[palByteIdx+1] << 2) | (paldata[palByteIdx+1] >> 4);
-        int b = (paldata[palByteIdx+2] << 2) | (paldata[palByteIdx+2] >> 4);
+        uint8_t rawbyteA = static_cast<uint8_t>(paldata[palByteIdx]);
+        uint8_t rawbyteB = static_cast<uint8_t>(paldata[palByteIdx+1]);
+        uint8_t rawbyteC = static_cast<uint8_t>(paldata[palByteIdx+2]);
+        int r = (rawbyteA << 2) | (rawbyteA >> 4);
+        int g = (rawbyteB << 2) | (rawbyteB >> 4);
+        int b = (rawbyteC << 2) | (rawbyteC >> 4);
         m_gamePalette.append(qRgb(r, g, b));
       }
     }

@@ -14,8 +14,11 @@ MainWindow::MainWindow(QWidget *parent) :
   m_inventory(m_lib)
 {
   ui->setupUi(this);
-  m_lib.openData("/home/cmb/opt/games/nomad");
   ui->m_objectImageView->scale(3, 3);
+
+  m_lib.openData("/home/cmb/opt/games/nomad");
+  populatePlaceWidgets();
+  populateObjectWidgets();
 }
 
 MainWindow::~MainWindow()
@@ -40,6 +43,15 @@ void MainWindow::on_actionClose_data_files_triggered()
 }
 
 void MainWindow::on_pushButton_clicked()
+{
+}
+
+void MainWindow::populatePlaceWidgets()
+{
+
+}
+
+void MainWindow::populateObjectWidgets()
 {
   QMap<int,InventoryObj> objs = m_inventory.getObjectList();
   ui->m_objTable->clear();
