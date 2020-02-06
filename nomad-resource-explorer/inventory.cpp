@@ -1,7 +1,9 @@
 #include "inventory.h"
+#include "imageconverter.h"
 
-Inventory::Inventory(DatLibrary& lib) :
-  m_lib(&lib)
+Inventory::Inventory(DatLibrary& lib, Palette& pal) :
+  m_lib(&lib),
+  m_pal(&pal)
 {
 
 }
@@ -69,7 +71,7 @@ QPixmap Inventory::getInventoryImage(int id)
 
   if (m_lib->getFileByName(DatFileType_INVENT, invStpFilename, stpData))
   {
-    objImage = m_lib->convertStpToPixmap(stpData, m_lib->getGamePalette(), status);
+    objImage = ImageConverter::stpToPixmap(stpData, m_pal->gamePalette(), status);
   }
 
   return objImage;

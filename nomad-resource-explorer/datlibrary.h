@@ -46,20 +46,15 @@ public:
 
   bool getFileByName(DatFileType dat, QString filename, QByteArray& filedata);
   QString getGameText(int offset);
-  QPixmap convertStpToPixmap(QByteArray& stpData, QVector<QRgb> palette, bool& status);
-  QVector<QRgb> getGamePalette();
 
 private:
   QByteArray m_datContents[DatFileType_NUM_DAT_FILES];
   uint8_t m_lzRingBuffer[LZ_RINGBUF_SIZE];
 
-  QVector<QRgb> m_gamePalette;
   QByteArray m_gameText; // keep a copy of GAMETEXT.TXT since it is referenced frequently
 
-  bool loadGamePalette();
-  bool lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile);
+  bool lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes);
   bool getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile);
-  QPoint getPixelLocation(int imgWidth, int pixelnum) const;
 };
 
 #endif // DATLIBRARY_H

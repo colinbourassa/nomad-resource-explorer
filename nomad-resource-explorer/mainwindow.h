@@ -6,6 +6,7 @@
 #include <QGraphicsScene>
 #include "datlibrary.h"
 #include "inventory.h"
+#include "palette.h"
 
 namespace Ui {
 class MainWindow;
@@ -33,8 +34,11 @@ private:
   Ui::MainWindow *ui;
 
   QString m_gamedir;
+
   DatLibrary m_lib;
   Inventory m_inventory;
+  Palette m_palette;
+
   QGraphicsScene m_objScene;
 
   void populatePlaceWidgets();

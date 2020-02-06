@@ -36,6 +36,8 @@ const QVector<QRgb> Palette::s_defaultVgaPalette =
   0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000
 };
 
+const QString Palette::s_gamePalFilename = "GAME.PAL";
+
 Palette::Palette(DatLibrary& lib) :
   m_lib(lib)
 {
@@ -50,13 +52,13 @@ void Palette::clear()
 void Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb> &palette)
 {
   // start with the default VGA palette, so that we can overlay the palette subset from the file
-  m_gamePal = s_defaultVgaPalette;
+  palette = s_defaultVgaPalette;
 
   QByteArray paldata;
 
   if (m_lib.getFileByName(datContainer, palFileName, paldata))
   {
-    // TODO: some palettes (such as GAME.PAL) have fewer than 256 colors,
+    // Some palettes (such as GAME.PAL) have fewer than 256 colors,
     // but we'll want to fill in the remaining colors because some images
     // will index beyond this limited palette.
     //
@@ -64,6 +66,7 @@ void Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector
     // determined by the VGA BIOS, but since we don't have a VGA register
     // map that we can probe for the actual colors, we need to make a best
     // guess. The palette used by DOSBox should be fairly authentic.
+
     if (paldata.size() >= 3)
     {
       int startIndex = paldata[1];
@@ -100,7 +103,15 @@ QVector<QRgb> Palette::gamePalette()
 {
   if (m_gamePal.size() == 0)
   {
-    loadPalData(DatFileType_TEST, "GAME.PAL", m_gamePal);
+    loadPalData(DatFileType_TEST, s_gamePalFilename, m_gamePal);
   }
   return m_gamePal;
+}
+
+QVector<QRgb> Palette::paletteByName(DatFileType datContainer, QString palFileName)
+{
+  QVector<QRgb> pal;
+  loadPalData(datContainer, palFileName, pal);
+
+  return pal;
 }

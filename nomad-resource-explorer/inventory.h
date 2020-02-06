@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "datlibrary.h"
 #include "enums.h"
+#include "palette.h"
 
 enum InventoryObjType
 {
@@ -90,7 +91,7 @@ typedef struct __attribute__((packed)) ObjectTableEntry
 class Inventory
 {
 public:
-  Inventory(DatLibrary& lib);
+  Inventory(DatLibrary& lib, Palette& pal);
   QPixmap getInventoryImage(int id);
   QMap<int,InventoryObj> getObjectList();
   InventoryObjType getObjectType(int id);
@@ -98,6 +99,7 @@ public:
 
 private:
   DatLibrary* m_lib;
+  Palette* m_pal;
   QMap<int,InventoryObj> m_objList;
 
   void populateObjectList();

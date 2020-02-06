@@ -52,7 +52,6 @@ void DatLibrary::closeData()
     m_datContents[datType].clear();
   }
 
-  m_gamePalette.clear();
   m_gameText.clear();
 }
 
@@ -64,25 +63,25 @@ bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray&
   if (m_datContents[dat].size() >= static_cast<int>((indexEntryOffset + sizeof(DatFileIndex))))
   {
     const char* rawDat = m_datContents[dat].constData();
+    int skipUncompressedBytes = 0;
 
     DatFileIndex indexEntry;
     memcpy(&indexEntry, rawDat + indexEntryOffset, sizeof(DatFileIndex));
 
+    if ((indexEntry.flags_b & 0x01) && (~indexEntry.flags_a & 0x04))
+    {
+      skipUncompressedBytes = 4;
+    }
+
+    // note that files with the uncompressed 4-byte header must have those
+    // four bytes added to the listed compressed size when copying
     QByteArray storedFile;
-    storedFile.append(rawDat + indexEntry.offset, indexEntry.compressed_size);
+    storedFile.append(rawDat + indexEntry.offset, indexEntry.compressed_size + skipUncompressedBytes);
 
     // if the file is stored with some form of compression
     if (indexEntry.flags_b & 0x1)
     {
-      if (indexEntry.flags_a & 0x4)
-      {
-        status = lzDecompress(storedFile, decompressedFile);
-      }
-      else
-      {
-        // the file is stored with compression, but it's a format not yet supported here
-        status = false;
-      }
+      status = lzDecompress(storedFile, decompressedFile, skipUncompressedBytes);
     }
     else
     {
@@ -129,133 +128,7 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray &fi
   return status;
 }
 
-QVector<QRgb> DatLibrary::getGamePalette()
-{
-  loadGamePalette();
-  return m_gamePalette;
-}
-
-bool DatLibrary::loadGamePalette()
-{
-  // TODO: some palettes (such as GAME.PAL) have fewer than 256 colors,
-  // but we'll want to fill in the remaining colors because some images
-  // will index beyond this limited palette.
-  //
-  // The palette colors used by hardware of the period may have been
-  // determined by the VGA BIOS, but since we don't have a VGA register
-  // map that we can probe for the actual colors, we need to make a best
-  // guess. The palette used by DOSBox should be fairly authentic.
-
-  bool status = true;
-
-  if (m_gamePalette.count() == 0)
-  {
-    QByteArray paldata;
-
-    if (getFileByName(DatFileType_TEST, "GAME.PAL", paldata))
-    {
-      for (int palByteIdx = 3; palByteIdx <= paldata.size() - 3; palByteIdx += 3)
-      {
-        // upconvert the 6-bit palette data to 8-bit by leftshifting and
-        // replicating the two high bits in the low positions
-        uint8_t rawbyteA = static_cast<uint8_t>(paldata[palByteIdx]);
-        uint8_t rawbyteB = static_cast<uint8_t>(paldata[palByteIdx+1]);
-        uint8_t rawbyteC = static_cast<uint8_t>(paldata[palByteIdx+2]);
-        int r = (rawbyteA << 2) | (rawbyteA >> 4);
-        int g = (rawbyteB << 2) | (rawbyteB >> 4);
-        int b = (rawbyteC << 2) | (rawbyteC >> 4);
-        m_gamePalette.append(qRgb(r, g, b));
-      }
-    }
-    else
-    {
-      status = false;
-    }
-  }
-
-  return status;
-}
-
-QPoint DatLibrary::getPixelLocation(int imgWidth, int pixelNum) const
-{
-  QPoint pt (pixelNum % imgWidth, pixelNum / imgWidth);
-  return pt;
-}
-
-QPixmap DatLibrary::convertStpToPixmap(QByteArray &stpData, QVector<QRgb> palette, bool& status)
-{
-  status = true;
-  uint16_t width = qFromLittleEndian<quint16>(stpData.data() + 0);
-  uint16_t height = qFromLittleEndian<quint16>(stpData.data() + 2);
-
-  QImage img(width, height, QImage::Format_Indexed8);
-  img.setColorTable(palette);
-
-  int pixelcount = width * height;
-  int inputpos = 8; // STP image data begins at byte index 8
-  int outputpos = 0;
-  int endptr = 0;
-
-  while ((inputpos < stpData.size()) && (outputpos < pixelcount))
-  {
-    uint8_t rlebyte = static_cast<uint8_t>(stpData.at(inputpos));
-    inputpos++;
-
-    if (rlebyte & 0x80)
-    {
-      // bit 7 is set, so this is moving the output pointer ahread,
-      // leaving the default value in the skipped locations
-      endptr = outputpos + (rlebyte & 0x7F);
-      while ((outputpos < endptr) && (outputpos < pixelcount))
-      {
-        img.setPixel(getPixelLocation(width, outputpos), 0x00);
-        outputpos++;
-      }
-    }
-    else if (rlebyte & 0x40)
-    {
-      // Bit 7 is clear and bit 6 is set, so this is a repeating sequence of a single byte.
-      // We only need to read one input byte for this RLE sequence, so verify that the input
-      // pointer is still within the buffer range.
-      if (inputpos < stpData.size())
-      {
-        endptr = outputpos + (rlebyte & 0x3F);
-
-        unsigned int palindex = static_cast<unsigned int>(stpData.at(inputpos));
-        while ((outputpos < endptr) && (outputpos < pixelcount))
-        {
-          img.setPixel(getPixelLocation(width, outputpos), palindex);
-          outputpos++;
-        }
-      }
-
-      // advance the input once more so that we read the next RLE byte at the top of the loop
-      inputpos++;
-    }
-    else
-    {
-      // bits 6 and 7 are clear, so this is a byte sequence copy from the input
-      endptr = outputpos + rlebyte;
-      while ((outputpos < endptr) && (outputpos < pixelcount) && (inputpos < stpData.size()))
-      {
-        unsigned int palindex = static_cast<unsigned int>(stpData.at(inputpos));
-        img.setPixel(getPixelLocation(width, outputpos), palindex);
-        inputpos++;
-        outputpos++;
-      }
-    }
-  }
-
-  // check if the input runs dry before all of the pixels are accounted for in the output
-  if ((inputpos >= stpData.size()) && (outputpos < pixelcount))
-  {
-    status = false;
-  }
-
-  return QPixmap::fromImage(img);
-}
-
-bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray &decompressedFile)
+bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray &decompressedFile, int skipUncompressedBytes)
 {
   bool status = true;
 
@@ -272,7 +145,20 @@ bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray &decompresse
   uint16_t chunkSource = 0;
   const int inputBufLen = compressedfile.size();
 
-  while (inputPos < inputBufLen)
+  if (skipUncompressedBytes > 0)
+  {
+    if (inputBufLen >= skipUncompressedBytes)
+    {
+      decompressedFile.append(compressedfile.data(), skipUncompressedBytes);
+      inputPos += skipUncompressedBytes;
+    }
+    else
+    {
+      status = false;
+    }
+  }
+
+  while (status && (inputPos < inputBufLen))
   {
     flagByte = static_cast<uint8_t>(compressedfile[inputPos++]);
 

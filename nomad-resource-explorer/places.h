@@ -3,7 +3,9 @@
 
 #include <QPixmap>
 #include <QMap>
+#include <stdint.h>
 #include "datlibrary.h"
+#include "palette.h"
 
 struct Place
 {
@@ -28,16 +30,18 @@ typedef struct __attribute__((packed)) PlaceTableEntry
 class Places
 {
 public:
-  Places(DatLibrary& lib);
+  Places(DatLibrary& lib, Palette& pal);
 
   void clear();
   QMap<int,Place> getPlaceList();
-  QPixmap getPlaceSurfaceImage(int id);
+  QPixmap getPlaceSurfaceImage(int id, bool& status);
 
 private:
   DatLibrary* m_lib;
+  Palette* m_pal;
   QMap<int,Place> m_placeList;
 
+  static const uint8_t s_planetTextureMapping[622];
 
   void populatePlaceList();
 };

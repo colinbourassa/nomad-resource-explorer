@@ -30,7 +30,9 @@ SOURCES += \
     datlibrary.cpp \
     inventory.cpp \
     palette.cpp \
-    places.cpp
+    places.cpp \
+    imageconverter.cpp \
+    aliens.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -38,7 +40,9 @@ HEADERS += \
     inventory.h \
     enums.h \
     palette.h \
-    places.h
+    places.h \
+    imageconverter.h \
+    aliens.h
 
 FORMS += \
         mainwindow.ui

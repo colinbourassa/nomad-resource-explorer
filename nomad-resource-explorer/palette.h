@@ -50,9 +50,11 @@ public:
 
   QVector<QRgb> defaultVgaPalette();
   QVector<QRgb> gamePalette();
+  QVector<QRgb> paletteByName(DatFileType datContainer, QString palFilename);
 
 private:
   static const QVector<QRgb> s_defaultVgaPalette;
+  static const QString s_gamePalFilename;
   DatLibrary m_lib;
   QVector<QRgb> m_gamePal;
 

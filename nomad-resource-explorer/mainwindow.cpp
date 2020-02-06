@@ -11,7 +11,8 @@
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  m_inventory(m_lib)
+  m_inventory(m_lib, m_palette),
+  m_palette(m_lib)
 {
   ui->setupUi(this);
   ui->m_objectImageView->scale(3, 3);
