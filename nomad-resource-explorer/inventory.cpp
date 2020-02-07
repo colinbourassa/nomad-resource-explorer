@@ -71,7 +71,11 @@ QPixmap Inventory::getInventoryImage(int id)
 
   if (m_lib->getFileByName(DatFileType_INVENT, invStpFilename, stpData))
   {
-    objImage = ImageConverter::stpToPixmap(stpData, m_pal->gamePalette(), status);
+    QVector<QRgb> pal;
+    if (m_pal->gamePalette(pal))
+    {
+      objImage = ImageConverter::stpToPixmap(stpData, pal, status);
+    }
   }
 
   return objImage;

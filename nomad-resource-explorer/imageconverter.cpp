@@ -69,7 +69,7 @@ QPixmap ImageConverter::plnToPixmap(QByteArray &plnData, QVector<QRgb> palette, 
 
     while (inputpos < plnData.size())
     {
-      const unsigned int palIndex = static_cast<unsigned int>(plnData.at(inputpos));
+      const uint8_t palIndex = static_cast<uint8_t>(plnData.at(inputpos));
       inputpos++;
       img.setPixel(getPixelLocation(width, outputpos), palIndex);
       outputpos++;

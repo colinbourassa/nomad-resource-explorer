@@ -48,17 +48,17 @@ public:
   Palette(DatLibrary& lib);
   void clear();
 
-  QVector<QRgb> defaultVgaPalette();
-  QVector<QRgb> gamePalette();
-  QVector<QRgb> paletteByName(DatFileType datContainer, QString palFilename);
+  void defaultVgaPalette(QVector<QRgb>& palette);
+  bool gamePalette(QVector<QRgb>& palette);
+  bool paletteByName(DatFileType datContainer, QString palFilename, QVector<QRgb>& palette);
 
 private:
   static const QVector<QRgb> s_defaultVgaPalette;
   static const QString s_gamePalFilename;
-  DatLibrary m_lib;
+  DatLibrary* m_lib;
   QVector<QRgb> m_gamePal;
 
-  void loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette);
+  bool loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette);
 
 };
 

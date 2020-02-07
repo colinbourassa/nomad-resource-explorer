@@ -4,6 +4,7 @@
 #include <QPixmap>
 #include <QMap>
 #include <stdint.h>
+#include "enums.h"
 #include "datlibrary.h"
 #include "palette.h"
 
@@ -12,6 +13,10 @@ struct Place
   int id;
   QString name;
   int representativeId;
+  int planetStarId;
+  int pclass;
+  QString pclassName;
+  AlienRace race;
 };
 
 typedef struct __attribute__((packed)) PlaceTableEntry

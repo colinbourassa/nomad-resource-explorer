@@ -7,6 +7,7 @@
 #include "datlibrary.h"
 #include "inventory.h"
 #include "palette.h"
+#include "places.h"
 
 namespace Ui {
 class MainWindow;
@@ -23,12 +24,9 @@ public:
 private slots:
   void on_actionOpen_game_data_dir_triggered();
   void on_actionExit_triggered();
-
   void on_actionClose_data_files_triggered();
-
-  void on_pushButton_clicked();
-
   void on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+  void on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
 
 private:
   Ui::MainWindow *ui;
@@ -37,9 +35,11 @@ private:
 
   DatLibrary m_lib;
   Inventory m_inventory;
+  Places m_places;
   Palette m_palette;
 
   QGraphicsScene m_objScene;
+  QGraphicsScene m_planetSurfaceScene;
 
   void populatePlaceWidgets();
   void populateObjectWidgets();

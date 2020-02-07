@@ -10,7 +10,7 @@ enum AlienRace
   AlienRace_Human,
   AlienRace_Kenelm,
   AlienRace_Korok,
-  AlienRace_Music,
+  AlienRace_Musin,
   AlienRace_Pahrump,
   AlienRace_Phelonese,
   AlienRace_Shaasa,

@@ -39,7 +39,7 @@ const QVector<QRgb> Palette::s_defaultVgaPalette =
 const QString Palette::s_gamePalFilename = "GAME.PAL";
 
 Palette::Palette(DatLibrary& lib) :
-  m_lib(lib)
+  m_lib(&lib)
 {
 
 }
@@ -49,15 +49,16 @@ void Palette::clear()
   m_gamePal.clear();
 }
 
-void Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb> &palette)
+bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb> &palette)
 {
-  // start with the default VGA palette, so that we can overlay the palette subset from the file
-  palette = s_defaultVgaPalette;
-
+  bool status = false;
   QByteArray paldata;
 
-  if (m_lib.getFileByName(datContainer, palFileName, paldata))
+  if (m_lib->getFileByName(datContainer, palFileName, paldata))
   {
+    // start with the default VGA palette, so that we can overlay the palette subset from the file
+    palette = s_defaultVgaPalette;
+
     // Some palettes (such as GAME.PAL) have fewer than 256 colors,
     // but we'll want to fill in the remaining colors because some images
     // will index beyond this limited palette.
@@ -69,7 +70,7 @@ void Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector
 
     if (paldata.size() >= 3)
     {
-      int startIndex = paldata[1];
+      uint8_t startIndex = static_cast<uint8_t>(paldata[1]);
       int colorCount = paldata[2];
 
       if (paldata.size() >= (3 + 3 * (colorCount)))
@@ -89,29 +90,32 @@ void Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector
 
           palette[startIndex + sourcePalIdx] = qRgb(r,g,b);
         }
+
+        status = true;
       }
     }
   }
+
+  return status;
 }
 
-QVector<QRgb> Palette::defaultVgaPalette()
+void Palette::defaultVgaPalette(QVector<QRgb>& palette)
 {
-  return s_defaultVgaPalette;
+  palette = s_defaultVgaPalette;
 }
 
-QVector<QRgb> Palette::gamePalette()
+bool Palette::gamePalette(QVector<QRgb>& palette)
 {
+  bool status = true;
   if (m_gamePal.size() == 0)
   {
-    loadPalData(DatFileType_TEST, s_gamePalFilename, m_gamePal);
+    status = loadPalData(DatFileType_TEST, s_gamePalFilename, m_gamePal);
   }
-  return m_gamePal;
+  palette = m_gamePal;
+  return status;
 }
 
-QVector<QRgb> Palette::paletteByName(DatFileType datContainer, QString palFileName)
+bool Palette::paletteByName(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette)
 {
-  QVector<QRgb> pal;
-  loadPalData(datContainer, palFileName, pal);
-
-  return pal;
+  return loadPalData(datContainer, palFileName, palette);
 }

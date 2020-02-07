@@ -91,7 +91,10 @@ void Places::populatePlaceList()
         p.id = id;
         p.name = m_lib->getGameText(currentEntry->nameOffset);
         p.representativeId = currentEntry->planetRepId;
-        //p.knownByPlayer = (currentEntry->flags & 0x04);
+        p.planetStarId = currentEntry->parentStarId;
+        p.pclass = currentEntry->pclass;
+        //p.pclassName = m_placeClasses->name(currentEntry->pclass);
+        p.race = static_cast<AlienRace>(currentEntry->race);
 
         if (!p.name.isEmpty())
         {
@@ -106,6 +109,10 @@ void Places::populatePlaceList()
 
 QMap<int,Place> Places::getPlaceList()
 {
+  if (m_placeList.isEmpty())
+  {
+    populatePlaceList();
+  }
   return m_placeList;
 }
 
@@ -115,11 +122,18 @@ QPixmap Places::getPlaceSurfaceImage(int id, bool& status)
   const unsigned char palLetter = s_planetTextureMapping[id * 2 + 1];
 
   const QString plnFilename = QString("WORLD%1a.pln").arg(baseNum, 2, 10, QChar('0'));
-  const QString palFilename = QString("WORLD%1%2.pal").arg(baseNum, 2, 10, QChar('0')).arg(palLetter);
+  const QString palFilename = QString("WORLD%1%2.pal").arg(baseNum, 2, 10, QChar('0')).arg(QString(palLetter));
 
   QByteArray plnFile;
-  const QVector<QRgb> palFile = m_pal->paletteByName(DatFileType_TEST, palFilename);
-  m_lib->getFileByName(DatFileType_TEST, plnFilename, plnFile);
+  QVector<QRgb> pal;
 
-  return ImageConverter::plnToPixmap(plnFile, palFile, status);
+  status = (m_pal->paletteByName(DatFileType_TEST, palFilename, pal) &&
+            m_lib->getFileByName(DatFileType_TEST, plnFilename, plnFile));
+
+  QPixmap pm;
+  if (status)
+  {
+    pm = ImageConverter::plnToPixmap(plnFile, pal, status);
+  }
+  return pm;
 }

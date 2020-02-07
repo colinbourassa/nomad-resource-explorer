@@ -7,15 +7,18 @@
 #include <QTableWidgetItem>
 #include <QImage>
 #include <QGraphicsScene>
+#include <QTreeWidgetItem>
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
   m_inventory(m_lib, m_palette),
+  m_places(m_lib, m_palette),
   m_palette(m_lib)
 {
   ui->setupUi(this);
   ui->m_objectImageView->scale(3, 3);
+  ui->m_planetView->scale(2, 2);
 
   m_lib.openData("/home/cmb/opt/games/nomad");
   populatePlaceWidgets();
@@ -43,13 +46,18 @@ void MainWindow::on_actionClose_data_files_triggered()
   m_lib.closeData();
 }
 
-void MainWindow::on_pushButton_clicked()
-{
-}
-
 void MainWindow::populatePlaceWidgets()
 {
+  QMap<int,Place> places = m_places.getPlaceList();
 
+  foreach (Place p, places.values())
+  {
+    const int rowcount = ui->m_placeTable->rowCount();
+    ui->m_placeTable->insertRow(rowcount);
+    ui->m_placeTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(p.id)));
+    ui->m_placeTable->setItem(rowcount, 1, new QTableWidgetItem(p.name));
+  }
+  ui->m_placeTable->resizeColumnsToContents();
 }
 
 void MainWindow::populateObjectWidgets()
@@ -79,4 +87,21 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   m_objScene.addPixmap(pm);
   ui->m_objectImageView->setScene(&m_objScene);
   ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_inventory.getObjectType(id)));
+}
+
+void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
+{
+  Q_UNUSED(currentColumn)
+  Q_UNUSED(previousRow)
+  Q_UNUSED(previousColumn)
+
+  bool status = true;
+  int id = ui->m_placeTable->item(currentRow, 0)->text().toInt();
+  QPixmap pm = m_places.getPlaceSurfaceImage(id, status);
+  if (status)
+  {
+    m_planetSurfaceScene.addPixmap(pm);
+    ui->m_planetView->setScene(&m_planetSurfaceScene);
+  }
+
 }
