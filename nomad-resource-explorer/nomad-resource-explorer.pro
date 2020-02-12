@@ -32,7 +32,8 @@ SOURCES += \
     palette.cpp \
     places.cpp \
     imageconverter.cpp \
-    aliens.cpp
+    aliens.cpp \
+    placeclasses.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -42,7 +43,8 @@ HEADERS += \
     palette.h \
     places.h \
     imageconverter.h \
-    aliens.h
+    aliens.h \
+    placeclasses.h
 
 FORMS += \
         mainwindow.ui

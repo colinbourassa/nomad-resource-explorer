@@ -154,12 +154,12 @@ QPixmap ImageConverter::stpToPixmap(QByteArray &stpData, QVector<QRgb> palette, 
   return QPixmap::fromImage(img);
 }
 
-QPixmap ImageConverter::delToPixmap(QByteArray &delData, QVector<QRgb> palette, bool &status)
+QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, bool& status)
 {
   status = true;
   const uint16_t width = qFromLittleEndian<quint16>(delData.data() + 0);
   const uint16_t height = qFromLittleEndian<quint16>(delData.data() + 2);
-  int inputpos = 0;
+  int inputpos = 4;
   int outputpos = 0;
 
   QImage img(width, height, QImage::Format_Indexed8);
@@ -168,20 +168,20 @@ QPixmap ImageConverter::delToPixmap(QByteArray &delData, QVector<QRgb> palette, 
   while (inputpos < delData.size())
   {
     uint8_t cmdbyte = static_cast<uint8_t>(delData.at(inputpos));
-    int8_t lastbyte;
+    uint8_t databyte = 0;
     inputpos++;
 
     if (cmdbyte & 0x01)
     {
       // we'll be writing the byte from the input stream to the output at least once,
       // so grab the input byte now
-      lastbyte = delData.at(inputpos);
+      databyte = static_cast<uint8_t>(delData.at(inputpos));
       inputpos++;
 
       if (cmdbyte & 0x02)
       {
         // single byte copy from input (low two bits of command are 11)
-        img.setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(lastbyte));
+        img.setPixel(getPixelLocation(width, outputpos), databyte);
         outputpos++;
       }
       else
@@ -189,7 +189,7 @@ QPixmap ImageConverter::delToPixmap(QByteArray &delData, QVector<QRgb> palette, 
         // repeat byte from input (low two bits of command are 01)
         for (int repeatidx = 0; repeatidx < (cmdbyte >> 2); repeatidx++)
         {
-          img.setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(lastbyte));
+          img.setPixel(getPixelLocation(width, outputpos), databyte);
           outputpos++;
         }
       }
@@ -210,7 +210,7 @@ QPixmap ImageConverter::delToPixmap(QByteArray &delData, QVector<QRgb> palette, 
           inputpos++;
         }
 
-        for (int repeatidx = 0; repeatidx < (cmdbyte >> 2); repeatidx++)
+        for (int repeatidx = 0; repeatidx < repeatcount; repeatidx++)
         {
           img.setPixel(getPixelLocation(width, outputpos), 0);
           outputpos++;
@@ -226,27 +226,40 @@ QPixmap ImageConverter::delToPixmap(QByteArray &delData, QVector<QRgb> palette, 
         if (length > 0)
         {
           // position in the input stream of the byte containing the last nibble for this sequence
-          const int sequenceEnd = inputpos + (length / 2) + 1;
+          //const int sequenceEnd = inputpos + (length / 2);
 
           // first byte written to the output will be the next byte in the input stream
-          int8_t lastbyte = delData.at(inputpos);
+          databyte = static_cast<uint8_t>(delData.at(inputpos));
           inputpos++;
 
-          img.setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(lastbyte));
+          img.setPixel(getPixelLocation(width, outputpos), databyte);
           outputpos++;
 
-          while (inputpos <= sequenceEnd)
+          int sequenceCount = 1;
+
+          while (sequenceCount < length)
           {
-            // TODO: ensure that we got the hi/lo order right when isolating the nibbles
             uint8_t nibble = static_cast<uint8_t>(delData.at(inputpos)) >> 4;
 
-            lastbyte += s_deltas[nibble];
-            img.setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(lastbyte));
+            databyte += s_deltas[nibble];
+            img.setPixel(getPixelLocation(width, outputpos), databyte);
+            outputpos++;
+            sequenceCount++;
 
-            nibble = static_cast<uint8_t>(delData.at(inputpos)) & 0x0F;
+            // only process the second nibble if we haven't yet completed the sequence;
+            // if the sequence does not require this nibble then it's simply wasted
+            if (sequenceCount < length)
+            {
+              nibble = static_cast<uint8_t>(delData.at(inputpos)) & 0x0F;
 
-            lastbyte += s_deltas[nibble];
-            img.setPixel(getPixelLocation(width, outputpos), static_cast<unsigned int>(lastbyte));
+              databyte += s_deltas[nibble];
+              img.setPixel(getPixelLocation(width, outputpos), databyte);
+              outputpos++;
+
+              sequenceCount++;
+            }
+
+            inputpos++;
           }
         }
       }

@@ -7,6 +7,7 @@
 #include "enums.h"
 #include "datlibrary.h"
 #include "palette.h"
+#include "placeclasses.h"
 
 struct Place
 {
@@ -35,15 +36,17 @@ typedef struct __attribute__((packed)) PlaceTableEntry
 class Places
 {
 public:
-  Places(DatLibrary& lib, Palette& pal);
+  Places(DatLibrary& lib, Palette& pal, PlaceClasses& pclasses);
 
   void clear();
   QMap<int,Place> getPlaceList();
+  bool getPlace(int id, Place& p);
   QPixmap getPlaceSurfaceImage(int id, bool& status);
 
 private:
   DatLibrary* m_lib;
   Palette* m_pal;
+  PlaceClasses* m_placeClasses;
   QMap<int,Place> m_placeList;
 
   static const uint8_t s_planetTextureMapping[622];

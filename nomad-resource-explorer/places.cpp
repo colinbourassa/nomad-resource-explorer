@@ -58,9 +58,10 @@ const uint8_t Places::s_planetTextureMapping[622] =
   0x2E, 0x69, 0x00, 0x00, 0x00, 0x61, 0x1D, 0x66, 0x2E, 0x65
 };
 
-Places::Places(DatLibrary& lib, Palette& pal) :
+Places::Places(DatLibrary& lib, Palette& pal, PlaceClasses& pclasses) :
   m_lib(&lib),
-  m_pal(&pal)
+  m_pal(&pal),
+  m_placeClasses(&pclasses)
 {
 
 }
@@ -88,12 +89,16 @@ void Places::populatePlaceList()
       if (currentEntry->nameOffset != 0xFFFF)
       {
         Place p;
+        PlaceClass pclassData;
+        if (m_placeClasses->pclassData(currentEntry->pclass, pclassData))
+        {
+          p.pclassName = pclassData.name;
+        }
         p.id = id;
         p.name = m_lib->getGameText(currentEntry->nameOffset);
         p.representativeId = currentEntry->planetRepId;
         p.planetStarId = currentEntry->parentStarId;
         p.pclass = currentEntry->pclass;
-        //p.pclassName = m_placeClasses->name(currentEntry->pclass);
         p.race = static_cast<AlienRace>(currentEntry->race);
 
         if (!p.name.isEmpty())
@@ -114,6 +119,24 @@ QMap<int,Place> Places::getPlaceList()
     populatePlaceList();
   }
   return m_placeList;
+}
+
+bool Places::getPlace(int id, Place& place)
+{
+  bool status = false;
+
+  if (m_placeList.isEmpty())
+  {
+    populatePlaceList();
+  }
+
+  if (m_placeList.contains(id))
+  {
+    status = true;
+    place = m_placeList[id];
+  }
+
+  return status;
 }
 
 QPixmap Places::getPlaceSurfaceImage(int id, bool& status)

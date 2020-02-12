@@ -1,4 +1,6 @@
+#include <QByteArray>
 #include "aliens.h"
+#include "imageconverter.h"
 
 const QVector<QString> Aliens::s_animationMap =
 {
@@ -36,7 +38,107 @@ const QVector<QString> Aliens::s_animationMap =
   "URS13", "URS16"
 };
 
-Aliens::Aliens()
+Aliens::Aliens(DatLibrary& lib, Palette& pal) :
+  m_lib(&lib),
+  m_pal(&pal)
 {
 
+}
+
+void Aliens::clear()
+{
+  m_alienList.clear();
+}
+
+QMap<int,Alien> Aliens::getAlienList()
+{
+  if (m_alienList.isEmpty())
+  {
+    populateAlienList();
+  }
+
+  return m_alienList;
+}
+
+bool Aliens::getAlien(int id, Alien& alien)
+{
+  bool status = false;
+
+  if (m_alienList.isEmpty())
+  {
+    populateAlienList();
+  }
+
+  if (m_alienList.contains(id))
+  {
+    status = true;
+    alien = m_alienList[id];
+  }
+
+  return status;
+}
+
+bool Aliens::populateAlienList()
+{
+  QByteArray aliendata;
+  bool status = false;
+
+  if (m_lib->getFileByName(DatFileType_CONVERSE, "ALIEN.TAB", aliendata))
+  {
+    status = true;
+    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(aliendata.data());
+    unsigned int offset = 0;
+    int id = 0;
+
+    while (offset <= (aliendata.size() - sizeof(AlienTableEntry)))
+    {
+      const AlienTableEntry* currentEntry = reinterpret_cast<const AlienTableEntry*>(rawdata + offset);
+
+      // the object is only valid if the name offset into GAMETEXT.TXT is not 0xFFFF
+      if (currentEntry->nameOffset != 0xFFFF)
+      {
+        Alien a;
+        a.id = id;
+        a.name = m_lib->getGameText(currentEntry->nameOffset);
+        a.race = static_cast<AlienRace>(currentEntry->race);
+
+        if (!a.name.isEmpty())
+        {
+          m_alienList.insert(id, a);
+        }
+      }
+      offset += sizeof(AlienTableEntry);
+      id++;
+    }
+  }
+
+  return status;
+}
+
+bool Aliens::getPortrait(int id, QPixmap& pm)
+{
+  bool status = false;
+
+  if ((id > 0) && (id < s_animationMap.size()))
+  {
+    const QString anmFilename = QString("%1.ANM").arg(s_animationMap[id]);
+    QByteArray anmFileData;
+
+    if (m_lib->getFileByName(DatFileType_ANIM, anmFilename, anmFileData))
+    {
+      QString delFilename = anmFilename.mid(0, 2).toLower() + "0001.del";
+      QString palFilename = QString::fromLocal8Bit(anmFileData.data());
+
+      QVector<QRgb> pal;
+      QByteArray delFileData;
+
+      if (m_lib->getFileByName(DatFileType_ANIM, delFilename, delFileData) &&
+          m_pal->paletteByName(DatFileType_ANIM, palFilename, pal))
+      {
+        pm = ImageConverter::delToPixmap(delFileData, pal, status);
+      }
+    }
+  }
+
+  return status;
 }

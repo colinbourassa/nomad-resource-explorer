@@ -19,12 +19,12 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>811</width>
-      <height>511</height>
+      <width>791</width>
+      <height>501</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="m_tabShips">
      <attribute name="title">
@@ -40,7 +40,7 @@
      <attribute name="title">
       <string>Planets</string>
      </attribute>
-     <layout class="QGridLayout" name="gridLayout_4">
+     <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,2">
       <item row="0" column="1">
        <widget class="QGraphicsView" name="m_planetView"/>
       </item>
@@ -61,16 +61,16 @@
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QLabel" name="m_travelDestinationLabel">
+         <widget class="QLabel" name="m_planetTemperatureLabel">
           <property name="text">
-           <string>Travel destination:</string>
+           <string>Temperature:</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLabel" name="m_planetDestinationData">
+         <widget class="QLabel" name="m_planetTemperatureData">
           <property name="text">
-           <string>&lt;dest&gt;</string>
+           <string>&lt;temp&gt;</string>
           </property>
          </widget>
         </item>
@@ -158,64 +158,99 @@
      <attribute name="title">
       <string>Aliens</string>
      </attribute>
+     <layout class="QGridLayout" name="m_alienTabLayout" columnstretch="3,5">
+      <item row="0" column="1">
+       <widget class="QGraphicsView" name="m_alienView"/>
+      </item>
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="m_alienDataGrid">
+        <item row="0" column="0">
+         <widget class="QLabel" name="m_alienRaceLabel">
+          <property name="text">
+           <string>Race:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="m_alienRaceData">
+          <property name="text">
+           <string>&lt;race&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0" rowspan="2">
+       <widget class="QTableWidget" name="m_alienTable">
+        <property name="columnCount">
+         <number>3</number>
+        </property>
+        <attribute name="horizontalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <column/>
+        <column/>
+        <column/>
+       </widget>
+      </item>
+     </layout>
     </widget>
     <widget class="QWidget" name="m_tabObjects">
      <attribute name="title">
       <string>Objects</string>
      </attribute>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="3" column="1">
-         <widget class="QLabel" name="m_objectUniqueLabel">
-          <property name="text">
-           <string>Unique:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="Line" name="m_objectHLine">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" rowspan="5">
-         <widget class="QTableWidget" name="m_objTable">
-          <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectRows</enum>
-          </property>
-          <property name="columnCount">
-           <number>2</number>
-          </property>
-          <attribute name="horizontalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
-          <attribute name="verticalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
-          <column/>
-          <column/>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QGraphicsView" name="m_objectImageView"/>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="m_objectTypeLabel">
-          <property name="text">
-           <string>Type:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QLabel" name="m_objectValueLabel">
-          <property name="text">
-           <string>Value:</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+     <layout class="QGridLayout" name="m_objectTabLayout" columnstretch="1,2">
+      <item row="0" column="1">
+       <widget class="QGraphicsView" name="m_objectImageView"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="Line" name="m_objectHLine">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="m_objectTypeLabel">
+        <property name="text">
+         <string>Type:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="m_objectUniqueLabel">
+        <property name="text">
+         <string>Unique:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="m_objectValueLabel">
+        <property name="text">
+         <string>Value by race:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" rowspan="5">
+       <widget class="QTableWidget" name="m_objTable">
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="columnCount">
+         <number>2</number>
+        </property>
+        <attribute name="horizontalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <column/>
+        <column/>
+       </widget>
       </item>
      </layout>
     </widget>
