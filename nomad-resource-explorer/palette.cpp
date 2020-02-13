@@ -73,6 +73,11 @@ bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector
       uint8_t startIndex = static_cast<uint8_t>(paldata[1]);
       int colorCount = paldata[2];
 
+      if (colorCount == 0)
+      {
+        colorCount = 256;
+      }
+
       if (paldata.size() >= (3 + 3 * (colorCount)))
       {
         for (int sourcePalIdx = 0; sourcePalIdx < colorCount; sourcePalIdx++)
