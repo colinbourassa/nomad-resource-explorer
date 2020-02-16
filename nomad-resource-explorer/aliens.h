@@ -1,13 +1,17 @@
 #ifndef ALIENS_H
 #define ALIENS_H
 
+#include <QByteArray>
 #include <QVector>
 #include <QString>
-#include <QPixmap>
+#include <QImage>
 #include <QMap>
 #include "enums.h"
 #include "palette.h"
 #include "datlibrary.h"
+
+#define ANM_RECORD_SIZE_BYTES 16
+#define ANM_FIRST_RECORD_OFFSET 0x1A
 
 struct Alien
 {
@@ -30,7 +34,7 @@ public:
   void clear();
   QMap<int,Alien> getAlienList();
   bool getAlien(int id, Alien& alien);
-  bool getPortrait(int id, QPixmap& status);
+  bool getAnimationFrames(int id, QMap<int,QImage>& frames);
 
 private:
   DatLibrary* m_lib;
@@ -39,6 +43,8 @@ private:
   QMap<int,Alien> m_alienList;
 
   bool populateAlienList();
+  QMap< int, QVector<int> > getListOfFrames(const QByteArray& anmData) const;
+  bool buildFrame(QVector<int> delIdList, QString delFilenamePrefix, const QVector<QRgb> pal, QImage& frame) const;
 };
 
 #endif // ALIENS_H

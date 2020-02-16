@@ -156,11 +156,11 @@ void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentC
   Alien a;
   if (m_aliens.getAlien(id, a))
   {
-    QPixmap pm;
-    if (m_aliens.getPortrait(id, pm))
+    QMap<int,QImage> animFrames;
+    if (m_aliens.getAnimationFrames(id, animFrames) && (animFrames.count() > 0))
     {
       m_alienScene.clear();
-      m_alienScene.addPixmap(pm);
+      m_alienScene.addPixmap(QPixmap::fromImage(animFrames.values().at(0)));
       ui->m_alienView->setScene(&m_alienScene);
     }
   }

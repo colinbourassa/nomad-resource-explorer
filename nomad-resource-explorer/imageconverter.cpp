@@ -154,16 +154,26 @@ QPixmap ImageConverter::stpToPixmap(QByteArray &stpData, QVector<QRgb> palette, 
   return QPixmap::fromImage(img);
 }
 
-QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, bool& status)
+bool ImageConverter::delToPixmap(const QByteArray& delData, QVector<QRgb> palette, QImage& image)
 {
-  status = true;
   const uint16_t width = qFromLittleEndian<quint16>(delData.data() + 0);
   const uint16_t height = qFromLittleEndian<quint16>(delData.data() + 2);
   int inputpos = 4;
   int outputpos = 0;
 
-  QImage img(width, height, QImage::Format_Indexed8);
-  img.setColorTable(palette);
+  // if we were provided a null image as a param, the caller doesn't expect this image to
+  // be drawn as an overlay on an existing image, so we need to create a new one
+  if (image.isNull())
+  {
+    image = QImage(width, height, QImage::Format_Indexed8);
+    image.setColorTable(palette);
+  }
+  else if ((width != image.width()) || (height != image.height()))
+  {
+    // if we were provided a non-null existing image, then the dimensions of the image
+    // we're decoding now must match the dimensions of the existing image
+    return false;
+  }
 
   while (inputpos < delData.size())
   {
@@ -181,7 +191,7 @@ QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, 
       if (cmdbyte & 0x02)
       {
         // single byte copy from input (low two bits of command are 11)
-        img.setPixel(getPixelLocation(width, outputpos), databyte);
+        image.setPixel(getPixelLocation(width, outputpos), databyte);
         outputpos++;
       }
       else
@@ -189,7 +199,7 @@ QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, 
         // repeat byte from input (low two bits of command are 01)
         for (int repeatidx = 0; repeatidx < (cmdbyte >> 2); repeatidx++)
         {
-          img.setPixel(getPixelLocation(width, outputpos), databyte);
+          image.setPixel(getPixelLocation(width, outputpos), databyte);
           outputpos++;
         }
       }
@@ -212,7 +222,6 @@ QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, 
 
         for (int repeatidx = 0; repeatidx < repeatcount; repeatidx++)
         {
-          img.setPixel(getPixelLocation(width, outputpos), 0);
           outputpos++;
         }
       }
@@ -232,7 +241,7 @@ QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, 
           databyte = static_cast<uint8_t>(delData.at(inputpos));
           inputpos++;
 
-          img.setPixel(getPixelLocation(width, outputpos), databyte);
+          image.setPixel(getPixelLocation(width, outputpos), databyte);
           outputpos++;
 
           int sequenceCount = 1;
@@ -242,7 +251,7 @@ QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, 
             uint8_t nibble = static_cast<uint8_t>(delData.at(inputpos)) >> 4;
 
             databyte += s_deltas[nibble];
-            img.setPixel(getPixelLocation(width, outputpos), databyte);
+            image.setPixel(getPixelLocation(width, outputpos), databyte);
             outputpos++;
             sequenceCount++;
 
@@ -253,7 +262,7 @@ QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, 
               nibble = static_cast<uint8_t>(delData.at(inputpos)) & 0x0F;
 
               databyte += s_deltas[nibble];
-              img.setPixel(getPixelLocation(width, outputpos), databyte);
+              image.setPixel(getPixelLocation(width, outputpos), databyte);
               outputpos++;
 
               sequenceCount++;
@@ -266,5 +275,5 @@ QPixmap ImageConverter::delToPixmap(QByteArray& delData, QVector<QRgb> palette, 
     }
   }
 
-  return QPixmap::fromImage(img);
+  return true;
 }

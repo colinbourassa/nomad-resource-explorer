@@ -115,30 +115,109 @@ bool Aliens::populateAlienList()
   return status;
 }
 
-bool Aliens::getPortrait(int id, QPixmap& pm)
+bool Aliens::getAnimationFrames(int alienId, QMap<int, QImage>& frames)
 {
-  bool status = false;
+  bool status = true;
 
-  if ((id > 0) && (id < s_animationMap.size()))
+  if ((alienId > 0) && (alienId < s_animationMap.size()))
   {
-    const QString anmFilename = QString("%1.ANM").arg(s_animationMap[id]);
+    // first, determine the filename of the ANM and attempt to open it
+    const QString anmFilename = QString("%1.ANM").arg(s_animationMap[alienId]);
     QByteArray anmFileData;
 
     if (m_lib->getFileByName(DatFileType_ANIM, anmFilename, anmFileData))
     {
-      QString delFilename = anmFilename.mid(0, 2).toLower() + "0001.del";
-      QString palFilename = QString::fromLocal8Bit(anmFileData.data());
-
+      // the ASCII string for the palette filename begins at offset 00 in the ANM file
+      const QString palFilename = QString::fromLocal8Bit(anmFileData.data());
       QVector<QRgb> pal;
-      QByteArray delFileData;
 
-      if (m_lib->getFileByName(DatFileType_ANIM, delFilename, delFileData) &&
-          m_pal->paletteByName(DatFileType_ANIM, palFilename, pal))
+      if (m_pal->paletteByName(DatFileType_ANIM, palFilename, pal))
       {
-        pm = ImageConverter::delToPixmap(delFileData, pal, status);
+        // get a list of frame numbers, and the list of composite sections (.del files) used to build each frame
+        const QMap<int, QVector<int>> frameList = getListOfFrames(anmFileData);
+
+        // the prefix used on the .del files is the first two letters of the ANM filename, but in lowercase
+        const QString delFilenamePrefix = anmFilename.mid(0, 2).toLower();
+
+        foreach (int frameNum, frameList.keys())
+        {
+          if (status)
+          {
+            QImage frame;
+            if (buildFrame(frameList[frameNum], delFilenamePrefix, pal, frame))
+            {
+              frames.insert(frameNum, frame);
+            }
+            else
+            {
+              status = false;
+            }
+          }
+        }
       }
     }
   }
 
   return status;
+}
+
+bool Aliens::buildFrame(QVector<int> delIdList, QString delFilenamePrefix, const QVector<QRgb> pal, QImage& frame) const
+{
+  bool status = true;
+  QByteArray delFileData;
+
+  foreach (int delNumber, delIdList)
+  {
+    const QString delFilename = delFilenamePrefix + QString("%1.del").arg(delNumber, 4, 10, QChar('0'));
+
+    if (status && m_lib->getFileByName(DatFileType_ANIM, delFilename, delFileData))
+    {
+      if (!ImageConverter::delToPixmap(delFileData, pal, frame))
+      {
+        status = false;
+      }
+    }
+  }
+
+  return status;
+}
+
+QMap<int, QVector<int> > Aliens::getListOfFrames(const QByteArray& anmData) const
+{
+  QMap<int, QVector<int> > frames;
+
+  int anmFrameRecordIndex = 0;
+  int anmFrameRecordOffset = (anmFrameRecordIndex * ANM_RECORD_SIZE_BYTES) + ANM_FIRST_RECORD_OFFSET;
+  const uint8_t* anmDataPtr = reinterpret_cast<const uint8_t*>(anmData.data());
+
+  // keep going until we encounter an unused record (which will start with 0xFF)
+  // or we reach the end of the section (after 64 records)
+  while ((anmDataPtr[anmFrameRecordOffset] != 0xFF) && (anmFrameRecordIndex < 64))
+  {
+    QVector<int> overlayNums;
+
+    int offsetWithinRecord = 0;
+    uint8_t byte = anmDataPtr[anmFrameRecordOffset + offsetWithinRecord];
+    while ((byte != 0xFF) && (byte != 0x00))
+    {
+      overlayNums.append(byte);
+      offsetWithinRecord++;
+      byte = (offsetWithinRecord < ANM_RECORD_SIZE_BYTES) ?
+             anmDataPtr[anmFrameRecordOffset + offsetWithinRecord] : 0xFF;
+    }
+
+    if (!overlayNums.isEmpty())
+    {
+      // the list of composite sections for this single frame is complete, so
+      // add it to the list of frames (indexed by the same index as the record
+      // in the ANM file)
+      frames.insert(anmFrameRecordIndex, overlayNums);
+    }
+
+    // advance offset to the start of the next record
+    anmFrameRecordIndex++;
+    anmFrameRecordOffset = (anmFrameRecordIndex * ANM_RECORD_SIZE_BYTES) + ANM_FIRST_RECORD_OFFSET;
+  }
+
+  return frames;
 }
