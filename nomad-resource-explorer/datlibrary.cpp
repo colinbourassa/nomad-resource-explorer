@@ -94,7 +94,7 @@ bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray&
   return status;
 }
 
-bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray &filedata)
+bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& filedata)
 {
   const char* rawdat = m_datContents[dat].constData();
   const long datsize = m_datContents[dat].size();
@@ -128,7 +128,7 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray &fi
   return status;
 }
 
-bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray &decompressedFile, int skipUncompressedBytes)
+bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes)
 {
   bool status = true;
 
@@ -144,6 +144,8 @@ bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray &decompresse
   uint8_t chunkSize = 0;
   uint16_t chunkSource = 0;
   const int inputBufLen = compressedfile.size();
+
+  decompressedFile.clear();
 
   if (skipUncompressedBytes > 0)
   {
