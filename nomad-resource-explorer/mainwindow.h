@@ -10,6 +10,7 @@
 #include "places.h"
 #include "placeclasses.h"
 #include "aliens.h"
+#include "ships.h"
 
 namespace Ui {
 class MainWindow;
@@ -31,6 +32,8 @@ private slots:
   void on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
 
+  void on_m_alienFrameSlider_valueChanged(int value);
+
 private:
   Ui::MainWindow *ui;
 
@@ -42,6 +45,9 @@ private:
   Palette m_palette;
   PlaceClasses m_pclasses;
   Aliens m_aliens;
+  Ships m_ships;
+
+  QMap<int,QImage> m_alienFrames;
 
   QGraphicsScene m_objScene;
   QGraphicsScene m_planetSurfaceScene;
@@ -50,6 +56,8 @@ private:
   void populatePlaceWidgets();
   void populateObjectWidgets();
   void populateAlienWidgets();
+  void populateShipWidgets();
+  void loadAlienFrame(int frameId);
 };
 
 #endif // MAINWINDOW_H

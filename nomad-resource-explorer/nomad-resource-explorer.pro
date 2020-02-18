@@ -33,7 +33,9 @@ SOURCES += \
     places.cpp \
     imageconverter.cpp \
     aliens.cpp \
-    placeclasses.cpp
+    placeclasses.cpp \
+    audio.cpp \
+    ships.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -44,7 +46,9 @@ HEADERS += \
     places.h \
     imageconverter.h \
     aliens.h \
-    placeclasses.h
+    placeclasses.h \
+    audio.h \
+    ships.h
 
 FORMS += \
         mainwindow.ui

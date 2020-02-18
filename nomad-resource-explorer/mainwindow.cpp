@@ -19,7 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
   m_places(m_lib, m_palette, m_pclasses),
   m_palette(m_lib),
   m_pclasses(m_lib),
-  m_aliens(m_lib, m_palette)
+  m_aliens(m_lib, m_palette),
+  m_ships(m_lib)
 {
   ui->setupUi(this);
   ui->m_objectImageView->scale(3, 3);
@@ -30,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
   populatePlaceWidgets();
   populateObjectWidgets();
   populateAlienWidgets();
+  populateShipWidgets();
 }
 
 MainWindow::~MainWindow()
@@ -103,6 +105,19 @@ void MainWindow::populateAlienWidgets()
   ui->m_alienTable->resizeColumnsToContents();
 }
 
+void MainWindow::populateShipWidgets()
+{
+  QMap<int,Ship> ships = m_ships.getShipList();
+  ui->m_shipTable->clear();
+  foreach (Ship s, ships.values())
+  {
+    const int rowcount = ui->m_shipTable->rowCount();
+    ui->m_shipTable->insertRow(rowcount);
+    ui->m_shipTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(s.id)));
+    ui->m_shipTable->setItem(rowcount, 1, new QTableWidgetItem(s.name));
+  }
+  ui->m_shipTable->resizeColumnsToContents();
+}
 
 void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
@@ -156,12 +171,35 @@ void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentC
   Alien a;
   if (m_aliens.getAlien(id, a))
   {
-    QMap<int,QImage> animFrames;
-    if (m_aliens.getAnimationFrames(id, animFrames) && (animFrames.count() > 0))
+    m_alienFrames.clear();
+    if (m_aliens.getAnimationFrames(id, m_alienFrames) && (m_alienFrames.count() > 0))
     {
+      ui->m_alienFrameSlider->setEnabled(true);
+      ui->m_alienFrameSlider->setMaximum(m_alienFrames.count() - 1);
+      ui->m_alienFrameSlider->setSliderPosition(0);
+      loadAlienFrame(0);
+    }
+    else
+    {
+      ui->m_alienFrameSlider->setMaximum(63);
+      ui->m_alienFrameSlider->setEnabled(false);
       m_alienScene.clear();
-      m_alienScene.addPixmap(QPixmap::fromImage(animFrames.values().at(0)));
       ui->m_alienView->setScene(&m_alienScene);
     }
+  }
+}
+
+void MainWindow::on_m_alienFrameSlider_valueChanged(int value)
+{
+  loadAlienFrame(value);
+}
+
+void MainWindow::loadAlienFrame(int frameId)
+{
+  m_alienScene.clear();
+  if (m_alienFrames.values().count() > frameId)
+  {
+    m_alienScene.addPixmap(QPixmap::fromImage(m_alienFrames.values().at(frameId)));
+    ui->m_alienView->setScene(&m_alienScene);
   }
 }

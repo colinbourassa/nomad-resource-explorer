@@ -14,22 +14,56 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QTabWidget" name="tabWidget">
+   <widget class="QTabWidget" name="m_tabInventory">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>791</width>
-      <height>501</height>
+      <width>811</width>
+      <height>511</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="m_tabShips">
      <attribute name="title">
       <string>Ships</string>
      </attribute>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QTableWidget" name="m_shipTable">
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="columnCount">
+         <number>4</number>
+        </property>
+        <attribute name="horizontalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <column/>
+        <column/>
+        <column/>
+        <column/>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QTableWidget" name="m_shipInventoryTable">
+        <property name="columnCount">
+         <number>2</number>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <column/>
+        <column/>
+       </widget>
+      </item>
+     </layout>
     </widget>
     <widget class="QWidget" name="m_tabShipClasses">
      <attribute name="title">
@@ -140,6 +174,9 @@
         <attribute name="horizontalHeaderVisible">
          <bool>false</bool>
         </attribute>
+        <attribute name="horizontalHeaderHighlightSections">
+         <bool>false</bool>
+        </attribute>
         <attribute name="verticalHeaderVisible">
          <bool>false</bool>
         </attribute>
@@ -164,17 +201,16 @@
       </item>
       <item row="1" column="1">
        <layout class="QGridLayout" name="m_alienDataGrid">
-        <item row="0" column="0">
-         <widget class="QLabel" name="m_alienRaceLabel">
-          <property name="text">
-           <string>Race:</string>
+        <item row="0" column="0" colspan="2">
+         <widget class="QSlider" name="m_alienFrameSlider">
+          <property name="maximum">
+           <number>63</number>
           </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="m_alienRaceData">
-          <property name="text">
-           <string>&lt;race&gt;</string>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::TicksBothSides</enum>
           </property>
          </widget>
         </item>
@@ -253,6 +289,11 @@
        </widget>
       </item>
      </layout>
+    </widget>
+    <widget class="QWidget" name="m_tabSounds">
+     <attribute name="title">
+      <string>Sounds</string>
+     </attribute>
     </widget>
    </widget>
   </widget>
