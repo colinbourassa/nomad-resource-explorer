@@ -12,7 +12,7 @@
 #include <QMap>
 #include "enums.h"
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
   m_inventory(m_lib, m_palette),
@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->m_planetView->scale(2, 2);
   ui->m_alienView->scale(3, 3);
 
-  m_lib.openData("/home/cmb/opt/games/nomad");
+  m_lib.openData(gameDir);
   populatePlaceWidgets();
   populateObjectWidgets();
   populateAlienWidgets();
