@@ -7,11 +7,11 @@
 
 const QMap<DatFileType,QString> DatLibrary::s_datFileNames
 {
-  {DatFileType_ANIM,     "ANIM.DAT"},
-  {DatFileType_CONVERSE, "CONVERSE.DAT"},
-  {DatFileType_INVENT,   "INVENT.DAT"},
-  {DatFileType_SAMPLES,  "SAMPLES.DAT"},
-  {DatFileType_TEST,     "TEST.DAT"},
+  {DatFileType_ANIM,     DAT_FILENAME_ANIM},
+  {DatFileType_CONVERSE, DAT_FILENAME_CONVERSE},
+  {DatFileType_INVENT,   DAT_FILENAME_INVENT},
+  {DatFileType_SAMPLES,  DAT_FILENAME_SAMPLES},
+  {DatFileType_TEST,     DAT_FILENAME_TEST}
 };
 
 DatLibrary::DatLibrary()
@@ -126,6 +126,36 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& fi
   }
 
   return status;
+}
+
+QStringList DatLibrary::getFilenamesByExtension(DatFileType dat, QString extension)
+{
+  const char* rawdat = m_datContents[dat].constData();
+  const long datsize = m_datContents[dat].size();
+  long currentIndexOffset = 2;
+  const DatFileIndex* index = nullptr;
+  const uint16_t totalFileCount = qFromLittleEndian<quint16>(rawdat);
+  int indexnum = 0;
+
+  QStringList filenames;
+  QString currentFilename;
+  const QString extensionUcase = extension.toUpper();
+
+  while ((indexnum < totalFileCount) && ((currentIndexOffset + sizeof(DatFileIndex)) < datsize))
+  {
+    // point to the index struct at the current location
+    index = reinterpret_cast<const DatFileIndex*>(rawdat + currentIndexOffset);
+
+    const QString currentFilename = index->filename;
+    if (currentFilename.toUpper().endsWith(extensionUcase))
+    {
+      filenames.append(currentFilename);
+    }
+    currentIndexOffset += sizeof(DatFileIndex);
+    indexnum++;
+  };
+
+  return filenames;
 }
 
 bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes)

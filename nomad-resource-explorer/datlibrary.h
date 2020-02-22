@@ -9,8 +9,15 @@
 #include <QVector>
 #include <QRgb>
 #include <QPixmap>
+#include <QStringList>
 
 #define LZ_RINGBUF_SIZE 0x1000
+
+#define DAT_FILENAME_ANIM     "ANIM.DAT"
+#define DAT_FILENAME_CONVERSE "CONVERSE.DAT"
+#define DAT_FILENAME_INVENT   "INVENT.DAT"
+#define DAT_FILENAME_SAMPLES  "SAMPLES.DAT"
+#define DAT_FILENAME_TEST     "TEST.DAT"
 
 enum DatFileType
 {
@@ -46,6 +53,7 @@ public:
 
   bool getFileByName(DatFileType dat, QString filename, QByteArray& filedata);
   QString getGameText(int offset);
+  QStringList getFilenamesByExtension(DatFileType dat, QString extension);
 
 private:
   QByteArray m_datContents[DatFileType_NUM_DAT_FILES];

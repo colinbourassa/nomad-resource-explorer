@@ -10,6 +10,9 @@
 #include <QGraphicsScene>
 #include <QTreeWidgetItem>
 #include <QMap>
+#include <QAudioDeviceInfo>
+#include <QBuffer>
+#include <QTime>
 #include "enums.h"
 
 MainWindow::MainWindow(QString gameDir, QWidget *parent) :
@@ -20,23 +23,81 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_palette(m_lib),
   m_pclasses(m_lib),
   m_aliens(m_lib, m_palette),
-  m_ships(m_lib)
+  m_ships(m_lib),
+  m_audio(m_lib),
+  m_currentNNVSoundCount(0),
+  m_currentNNVSoundId(-1),
+  m_currentNNVFilename(""),
+  m_currentSoundDat(DatFileType_INVALID),
+  m_audioOutput(nullptr)
 {
   ui->setupUi(this);
   ui->m_objectImageView->scale(3, 3);
   ui->m_planetView->scale(2, 2);
   ui->m_alienView->scale(3, 3);
 
+  setupAudio();
+
   m_lib.openData(gameDir);
   populatePlaceWidgets();
   populateObjectWidgets();
   populateAlienWidgets();
   populateShipWidgets();
+  populateAudioWidgets();
 }
 
 MainWindow::~MainWindow()
 {
+  delete m_audioOutput;
   delete ui;
+}
+
+void MainWindow::setupAudio()
+{
+  m_audioFormat.setSampleRate(8000);
+  m_audioFormat.setChannelCount(1);
+  m_audioFormat.setSampleSize(8);
+  m_audioFormat.setCodec("audio/pcm");
+  m_audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+  m_audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+  QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+  if (info.isFormatSupported(m_audioFormat))
+  {
+    m_audioOutput = new QAudioOutput(m_audioFormat, this);
+    connect(m_audioOutput, SIGNAL(stateChanged(QAudio::State)), this, SLOT(onAudioStateChanged(QAudio::State)));
+    setAudioStateLabel(m_audioOutput->state());
+  }
+}
+
+void MainWindow::setAudioStateLabel(QAudio::State state)
+{
+  switch (state)
+  {
+  case QAudio::ActiveState:
+    ui->m_soundStateLabel->setText("Playing");
+    break;
+  case QAudio::SuspendedState:
+    ui->m_soundStateLabel->setText("Suspended");
+    break;
+  case QAudio::StoppedState:
+    ui->m_soundStateLabel->setText("Stopped");
+    break;
+  case QAudio::IdleState:
+    ui->m_soundStateLabel->setText("Idle");
+    m_audioOutput->stop();
+    break;
+  case QAudio::InterruptedState:
+    ui->m_soundStateLabel->setText("Interrupted");
+    break;
+  }
+
+  setSoundButtonStates();
+}
+
+void MainWindow::onAudioStateChanged(QAudio::State state)
+{
+  setAudioStateLabel(state);
 }
 
 void MainWindow::on_actionOpen_game_data_dir_triggered()
@@ -45,12 +106,12 @@ void MainWindow::on_actionOpen_game_data_dir_triggered()
   m_lib.openData(m_gamedir);
 }
 
-void MainWindow::on_actionExit_triggered()
+void MainWindow::onExit()
 {
   this->close();
 }
 
-void MainWindow::on_actionClose_data_files_triggered()
+void MainWindow::onCloseDataFiles()
 {
   m_lib.closeData();
   m_aliens.clear();
@@ -117,6 +178,31 @@ void MainWindow::populateShipWidgets()
     ui->m_shipTable->setItem(rowcount, 1, new QTableWidgetItem(s.name));
   }
   ui->m_shipTable->resizeColumnsToContents();
+}
+
+void MainWindow::populateAudioWidgets()
+{
+  ui->m_soundTree->clear();
+
+  const QMap<DatFileType,QStringList> nnvList = m_audio.getAllSoundList();
+  foreach (DatFileType dat, nnvList.keys())
+  {
+    if (nnvList[dat].size() > 0)
+    {
+      const QString datFilename = m_lib.s_datFileNames[dat];
+      QTreeWidgetItem* datTreeParent = new QTreeWidgetItem(ui->m_soundTree);
+      datTreeParent->setText(0, datFilename);
+
+      foreach (QString nnvFilename, nnvList[dat])
+      {
+        QTreeWidgetItem* nnvChild = new QTreeWidgetItem();
+        nnvChild->setText(0, nnvFilename);
+        datTreeParent->addChild(nnvChild);
+      }
+    }
+  }
+
+  ui->m_soundTree->expandAll();
 }
 
 void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
@@ -201,5 +287,133 @@ void MainWindow::loadAlienFrame(int frameId)
   {
     m_alienScene.addPixmap(QPixmap::fromImage(m_alienFrames.values().at(frameId)));
     ui->m_alienView->setScene(&m_alienScene);
+  }
+}
+
+void MainWindow::on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+{
+  Q_UNUSED(previous)
+
+  m_currentNNVFilename = current->text(0);
+  if (current->parent())
+  {
+    const QString datFilename = current->parent()->text(0);
+    m_currentSoundDat = DatLibrary::s_datFileNames.key(datFilename);
+    m_currentNNVSoundCount = m_audio.getNumberOfSoundsInNNV(m_currentSoundDat, m_currentNNVFilename);
+
+    if (m_currentNNVSoundCount > 0)
+    {
+      m_currentNNVSoundId = 0;
+      setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
+    }
+  }
+  else
+  {
+    m_currentNNVSoundId = -1;
+    setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
+  }
+  setSoundButtonStates();
+}
+
+void MainWindow::on_m_soundPrevButton_clicked()
+{
+  if (m_currentNNVSoundId > 0)
+  {
+    m_currentNNVSoundId--;
+    ui->m_soundSlider->setValue(m_currentNNVSoundId);
+    setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
+    setSoundButtonStates();
+  }
+}
+
+void MainWindow::on_m_soundPlayButton_clicked()
+{
+  if (m_currentNNVSoundId >= 0)
+  {
+    m_audioPcmData.clear();
+    if (m_audio.readSound(m_currentSoundDat, m_currentNNVFilename, m_currentNNVSoundId, m_audioPcmData))
+    {
+      if (m_audioBuffer.isOpen())
+      {
+        m_audioBuffer.close();
+      }
+      m_audioBuffer.setData(m_audioPcmData);
+      m_audioBuffer.open(QIODevice::ReadOnly);
+      m_audioOutput->start(&m_audioBuffer);
+    }
+  }
+}
+
+void MainWindow::on_m_soundStopButton_clicked()
+{
+  m_audioOutput->stop();
+}
+
+void MainWindow::on_m_soundNextButton_clicked()
+{
+  if (m_currentNNVSoundId < (m_currentNNVSoundCount - 1))
+  {
+    m_currentNNVSoundId++;
+    ui->m_soundSlider->setValue(m_currentNNVSoundId);
+    setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
+    setSoundButtonStates();
+  }
+}
+
+void MainWindow::setSoundButtonStates()
+{
+  if ((m_audioOutput->state() == QAudio::StoppedState) && (m_currentNNVSoundId >= 0))
+  {
+    ui->m_soundTree->setEnabled(true);
+    ui->m_soundStopButton->setEnabled(false);
+
+    if (m_currentNNVSoundId >= 0)
+    {
+      ui->m_soundPlayButton->setEnabled(true);
+      ui->m_soundSlider->setMaximum(m_currentNNVSoundCount - 1);
+      ui->m_soundSlider->setEnabled(true);
+    }
+    else
+    {
+      ui->m_soundSlider->setMaximum(0);
+      ui->m_soundSlider->setEnabled(false);
+    }
+
+    if (m_currentNNVSoundCount > 0)
+    {
+      ui->m_soundNextButton->setEnabled(m_currentNNVSoundId < (m_currentNNVSoundCount - 1));
+      ui->m_soundPrevButton->setEnabled(m_currentNNVSoundId > 0);
+    }
+    else
+    {
+      ui->m_soundNextButton->setEnabled(false);
+      ui->m_soundPrevButton->setEnabled(false);
+    }
+  }
+  else if (m_audioOutput->state() == QAudio::ActiveState)
+  {
+    ui->m_soundTree->setEnabled(false);
+    ui->m_soundPlayButton->setEnabled(false);
+    ui->m_soundNextButton->setEnabled(false);
+    ui->m_soundPrevButton->setEnabled(false);
+    ui->m_soundStopButton->setEnabled(true);
+    ui->m_soundSlider->setEnabled(false);
+  }
+
+  ui->m_soundSlider->setValue(0);
+}
+
+void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
+{
+  if (soundId >= 0)
+  {
+    int dotPosition = nnvName.indexOf('.');
+    const QString baseFilename = (dotPosition > 0) ? nnvName.mid(0, dotPosition) : nnvName;
+
+    ui->m_soundIDLabel->setText(QString("Sound ID: %1/%2").arg(baseFilename).arg(soundId));
+  }
+  else
+  {
+    ui->m_soundIDLabel->setText("Sound ID: (none selected)");
   }
 }

@@ -1,4 +1,5 @@
 #include <QtEndian>
+#include <QString>
 #include <stdint.h>
 #include "audio.h"
 
@@ -37,8 +38,10 @@ bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteA
     if ((soundId < nnvptr[0]) &&
         (nnvData.size() > (1 + (8 * (nnvptr[0])))))
     {
-      const uint32_t startOffset =    qFromLittleEndian<quint32>(nnvptr[1 + (NNV_INDEX_SIZE * soundId)]);
-      const uint32_t compressedSize = qFromLittleEndian<quint32>(nnvptr[5 + (NNV_INDEX_SIZE * soundId)]);
+      const uint32_t startOffset = qFromLittleEndian<quint32>(nnvptr[1 + (NNV_INDEX_SIZE * soundId)]);
+      uint32_t compressedSize;
+      memcpy(&compressedSize, nnvptr + (5 + (NNV_INDEX_SIZE * soundId)), sizeof(uint32_t));
+      compressedSize = qFromLittleEndian<quint32>(compressedSize);
 
       if (nnvData.size() >= (startOffset + compressedSize))
       {
@@ -54,12 +57,15 @@ bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteA
 void Audio::decode(uint8_t* encoded, unsigned int length, QByteArray& decoded)
 {
   bool upper_nibble = true;
-  bool cmdnibble = false;
-  bool repeatcmd = false;
+  bool cmd_nibble = false;
+  bool repeat_cmd = false;
+  uint8_t repeat_idx = 0;
+  int repeat_count = 0;
+  bool repeat_count_first_nibble = false;
   unsigned int inpos = 0;
   unsigned int delta_table_offset = 0;
   uint8_t nibble;
-  int8_t lastValue = -128;
+  uint8_t last_value = 0x80;
 
   while (inpos < length)
   {
@@ -75,17 +81,33 @@ void Audio::decode(uint8_t* encoded, unsigned int length, QByteArray& decoded)
       inpos++;
     }
 
-    if (repeatcmd)
+    // if we're in the middle of a repeat command
+    if (repeat_cmd)
     {
-      repeatcmd = false;
-      for (int repeatidx = 0; repeatidx < nibble; repeatidx++)
+      // if we haven't yet read the first of two nibbles of the repeat count
+      if (!repeat_count_first_nibble)
       {
-        decoded.append(lastValue);
+        repeat_count = (nibble << 4);
+        repeat_count_first_nibble = true;
+      }
+      else
+      {
+        // we already got the first nibble of the repeat count
+        // on a previous iteration, so get the second nibble and
+        // write the output now
+        repeat_count |= nibble;
+        for (repeat_idx = 0; repeat_idx < repeat_count; repeat_idx++)
+        {
+          decoded.append(static_cast<int8_t>(last_value));
+        }
+        repeat_cmd = false;
+        repeat_count_first_nibble = false;
       }
     }
-    else if (cmdnibble)
+    // otherwise, if we saw a nibble of 0, this indicates the start of a command sequence
+    else if (cmd_nibble)
     {
-      cmdnibble = false;
+      cmd_nibble = false;
 
       // if this nibble is less than 0xF, it is used as an index to the appropriate PCM delta subtable
       if (nibble < 0xF)
@@ -94,53 +116,48 @@ void Audio::decode(uint8_t* encoded, unsigned int length, QByteArray& decoded)
       }
       else
       {
-        // Otherwise, this is a command to repeat the last byte that was written to the output.
-        // Number of times to repeat is the next byte? or nibble?
-        // Not exactly sure of the byte-handling procedure here.
-        repeatcmd = true;
+        // this is the start of a byte-repeat command, so we need to collect
+        // the following two nibbles and combine them into the repeat count
+        repeat_cmd = true;
+        repeat_count_first_nibble = false;
       }
+    }
+    else if (nibble == 0)
+    {
+      cmd_nibble = true;
     }
     else
     {
-      lastValue += s_deltaTable[delta_table_offset + nibble];
+      last_value += s_deltaTable[delta_table_offset + nibble];
+      decoded.append(static_cast<int8_t>(last_value));
     }
   }
 }
 
-bool Audio::getSoundList(DatFileType dat, QString nnvContainer, QVector<unsigned int>& sounds)
+int Audio::getNumberOfSoundsInNNV(DatFileType dat, QString nnvContainer)
 {
-  bool status = false;
   QByteArray nnvData;
+  int soundCount = 0;
+
   if (m_lib->getFileByName(dat, nnvContainer, nnvData) && !nnvData.isEmpty())
   {
     uint8_t* nnvptr = reinterpret_cast<uint8_t*>(nnvData.data());
-
-    // ensure that the NNV is at least large enough to contain all of the index entries for the number
-    // of sounds claimed to be contained in this NNV
-    if (nnvData.size() > (1 + (nnvptr[0] * NNV_INDEX_SIZE)))
-    {
-      status = true;
-      sounds.clear();
-      int soundId = 0;
-
-      while (status && soundId < nnvptr[0])
-      {
-        const uint32_t startOffset =    qFromLittleEndian<quint32>(nnvptr[1 + (NNV_INDEX_SIZE * soundId)]);
-        const uint32_t compressedSize = qFromLittleEndian<quint32>(nnvptr[5 + (NNV_INDEX_SIZE * soundId)]);
-
-        // if the NNV is large enough to contain this file
-        if (nnvData.size() >= (startOffset + compressedSize))
-        {
-          sounds.append(compressedSize);
-          soundId++;
-        }
-        else
-        {
-          status = false;
-        }
-      }
-    }
+    soundCount = nnvptr[0];
   }
 
-  return status;
+  return soundCount;
+}
+
+QMap<DatFileType,QStringList> Audio::getAllSoundList()
+{
+  QMap<DatFileType,QStringList> nnvContainerList;
+
+  for (int datIdx = 0; datIdx < DatFileType_NUM_DAT_FILES; datIdx++)
+  {
+    const DatFileType datType = static_cast<DatFileType>(datIdx);
+    QStringList nnvsInDat = m_lib->getFilenamesByExtension(datType, ".NNV");
+    nnvContainerList[datType] = nnvsInDat;
+  }
+
+  return nnvContainerList;
 }

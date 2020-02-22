@@ -4,6 +4,12 @@
 #include <QMainWindow>
 #include <QString>
 #include <QGraphicsScene>
+#include <QTreeWidgetItem>
+#include <QByteArray>
+#include <QBuffer>
+#include <QAudio>
+#include <QAudioFormat>
+#include <QAudioOutput>
 #include "datlibrary.h"
 #include "inventory.h"
 #include "palette.h"
@@ -11,6 +17,7 @@
 #include "placeclasses.h"
 #include "aliens.h"
 #include "ships.h"
+#include "audio.h"
 
 namespace Ui {
 class MainWindow;
@@ -24,15 +31,22 @@ public:
     explicit MainWindow(QString gameDir, QWidget* parent = nullptr);
     ~MainWindow();
 
+public slots:
+  void onAudioStateChanged(QAudio::State);
+
 private slots:
   void on_actionOpen_game_data_dir_triggered();
-  void on_actionExit_triggered();
-  void on_actionClose_data_files_triggered();
+  void onExit();
+  void onCloseDataFiles();
   void on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
-
   void on_m_alienFrameSlider_valueChanged(int value);
+  void on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
+  void on_m_soundPrevButton_clicked();
+  void on_m_soundPlayButton_clicked();
+  void on_m_soundNextButton_clicked();
+  void on_m_soundStopButton_clicked();
 
 private:
   Ui::MainWindow *ui;
@@ -46,6 +60,7 @@ private:
   PlaceClasses m_pclasses;
   Aliens m_aliens;
   Ships m_ships;
+  Audio m_audio;
 
   QMap<int,QImage> m_alienFrames;
 
@@ -53,11 +68,26 @@ private:
   QGraphicsScene m_planetSurfaceScene;
   QGraphicsScene m_alienScene;
 
+  int m_currentNNVSoundCount;
+  int m_currentNNVSoundId;
+  QString m_currentNNVFilename;
+  DatFileType m_currentSoundDat;
+  QAudioFormat m_audioFormat;
+  QByteArray m_audioPcmData;
+  QAudioOutput* m_audioOutput;
+  QBuffer m_audioBuffer;
+
+  void setupAudio();
   void populatePlaceWidgets();
   void populateObjectWidgets();
   void populateAlienWidgets();
   void populateShipWidgets();
+  void populateAudioWidgets();
   void loadAlienFrame(int frameId);
+
+  void setSoundButtonStates();
+  void setSoundIDLabel(QString nnvName, int soundId);
+  void setAudioStateLabel(QAudio::State state);
 };
 
 #endif // MAINWINDOW_H
