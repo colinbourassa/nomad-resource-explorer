@@ -18,7 +18,7 @@
 MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  m_inventory(m_lib, m_palette),
+  m_invObject(m_lib, m_palette),
   m_places(m_lib, m_palette, m_pclasses),
   m_palette(m_lib),
   m_pclasses(m_lib),
@@ -117,7 +117,7 @@ void MainWindow::onCloseDataFiles()
   m_aliens.clear();
   m_places.clear();
   m_pclasses.clear();
-  m_inventory.clear();
+  m_invObject.clear();
 }
 
 void MainWindow::populatePlaceWidgets()
@@ -136,7 +136,7 @@ void MainWindow::populatePlaceWidgets()
 
 void MainWindow::populateObjectWidgets()
 {
-  QMap<int,InventoryObj> objs = m_inventory.getObjectList();
+  QMap<int,InventoryObj> objs = m_invObject.getObjectList();
   ui->m_objTable->clear();
   foreach (InventoryObj obj, objs.values())
   {
@@ -212,10 +212,10 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   Q_UNUSED(previousColumn)
 
   int id = ui->m_objTable->item(currentRow, 0)->text().toInt();
-  QPixmap pm = m_inventory.getInventoryImage(id);
+  QPixmap pm = m_invObject.getObjectImage(id);
   m_objScene.addPixmap(pm);
   ui->m_objectImageView->setScene(&m_objScene);
-  ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_inventory.getObjectType(id)));
+  ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
 }
 
 void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)

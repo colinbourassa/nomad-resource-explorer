@@ -88,11 +88,11 @@ typedef struct __attribute__((packed)) ObjectTableEntry
   uint8_t unusued;
 } ObjectTableEntry;
 
-class Inventory
+class InvObject
 {
 public:
-  Inventory(DatLibrary& lib, Palette& pal);
-  QPixmap getInventoryImage(int id);
+  InvObject(DatLibrary& lib, Palette& pal);
+  QPixmap getObjectImage(int id);
   QMap<int,InventoryObj> getObjectList();
   InventoryObjType getObjectType(int id);
   void clear();

@@ -1,19 +1,19 @@
-#include "inventory.h"
+#include "invobject.h"
 #include "imageconverter.h"
 
-Inventory::Inventory(DatLibrary& lib, Palette& pal) :
+InvObject::InvObject(DatLibrary& lib, Palette& pal) :
   m_lib(&lib),
   m_pal(&pal)
 {
 
 }
 
-void Inventory::clear()
+void InvObject::clear()
 {
   m_objList.clear();
 }
 
-void Inventory::populateObjectList()
+void InvObject::populateObjectList()
 {
   QByteArray objdata;
 
@@ -53,7 +53,7 @@ void Inventory::populateObjectList()
   }
 }
 
-QMap<int,InventoryObj> Inventory::getObjectList()
+QMap<int,InventoryObj> InvObject::getObjectList()
 {
   if (m_objList.isEmpty())
   {
@@ -62,7 +62,7 @@ QMap<int,InventoryObj> Inventory::getObjectList()
   return m_objList;
 }
 
-QPixmap Inventory::getInventoryImage(int id)
+QPixmap InvObject::getObjectImage(int id)
 {
   bool status = false;
   QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
@@ -81,7 +81,7 @@ QPixmap Inventory::getInventoryImage(int id)
   return objImage;
 }
 
-InventoryObjType Inventory::getObjectType(int id)
+InventoryObjType InvObject::getObjectType(int id)
 {
   InventoryObjType type = InventoryObjType_Invalid;
 

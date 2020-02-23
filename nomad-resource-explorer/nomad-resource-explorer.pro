@@ -28,7 +28,7 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     datlibrary.cpp \
-    inventory.cpp \
+    invobject.cpp \
     palette.cpp \
     places.cpp \
     imageconverter.cpp \
@@ -40,7 +40,7 @@ SOURCES += \
 HEADERS += \
         mainwindow.h \
     datlibrary.h \
-    inventory.h \
+    invobject.h \
     enums.h \
     palette.h \
     places.h \

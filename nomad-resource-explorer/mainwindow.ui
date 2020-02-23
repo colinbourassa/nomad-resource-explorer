@@ -18,14 +18,39 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="m_tabInventory">
       <property name="currentIndex">
-       <number>6</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
         <string>Ships</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="0">
+        <item row="1" column="1">
+         <widget class="QTableWidget" name="m_shipInventoryTable">
+          <property name="columnCount">
+           <number>3</number>
+          </property>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Quantity</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="1" column="0">
          <widget class="QTableWidget" name="m_shipTable">
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
@@ -46,15 +71,10 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QTableWidget" name="m_shipInventoryTable">
-          <property name="columnCount">
-           <number>2</number>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Inventory:</string>
           </property>
-          <attribute name="verticalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
-          <column/>
-          <column/>
          </widget>
         </item>
        </layout>

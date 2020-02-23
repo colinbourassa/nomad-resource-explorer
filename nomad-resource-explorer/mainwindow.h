@@ -11,7 +11,7 @@
 #include <QAudioFormat>
 #include <QAudioOutput>
 #include "datlibrary.h"
-#include "inventory.h"
+#include "invobject.h"
 #include "palette.h"
 #include "places.h"
 #include "placeclasses.h"
@@ -54,7 +54,7 @@ private:
   QString m_gamedir;
 
   DatLibrary m_lib;
-  Inventory m_inventory;
+  InvObject m_invObject;
   Places m_places;
   Palette m_palette;
   PlaceClasses m_pclasses;
