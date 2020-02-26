@@ -97,3 +97,20 @@ InventoryObjType InvObject::getObjectType(int id)
 
   return type;
 }
+
+QString InvObject::getObjectName(int id)
+{
+  QString name("");
+
+  if (m_objList.isEmpty())
+  {
+    populateObjectList();
+  }
+
+  if (m_objList.contains(id))
+  {
+    name = m_objList[id].name;
+  }
+
+  return name;
+}

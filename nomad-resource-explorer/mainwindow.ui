@@ -27,6 +27,12 @@
        <layout class="QGridLayout" name="gridLayout">
         <item row="1" column="1">
          <widget class="QTableWidget" name="m_shipInventoryTable">
+          <property name="selectionMode">
+           <enum>QAbstractItemView::NoSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
           <property name="columnCount">
            <number>3</number>
           </property>
@@ -40,34 +46,14 @@
           </column>
           <column>
            <property name="text">
-            <string>Quantity</string>
+            <string>Name</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Name</string>
+            <string>Quantity</string>
            </property>
           </column>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QTableWidget" name="m_shipTable">
-          <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectRows</enum>
-          </property>
-          <property name="columnCount">
-           <number>4</number>
-          </property>
-          <attribute name="horizontalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
-          <attribute name="verticalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
-          <column/>
-          <column/>
-          <column/>
-          <column/>
          </widget>
         </item>
         <item row="0" column="1">
@@ -75,6 +61,42 @@
           <property name="text">
            <string>Inventory:</string>
           </property>
+         </widget>
+        </item>
+        <item row="0" column="0" rowspan="2">
+         <widget class="QTableWidget" name="m_shipTable">
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="columnCount">
+           <number>4</number>
+          </property>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Pilot</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Location</string>
+           </property>
+          </column>
          </widget>
         </item>
        </layout>

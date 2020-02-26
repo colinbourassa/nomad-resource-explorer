@@ -17,6 +17,7 @@
 #include "placeclasses.h"
 #include "aliens.h"
 #include "ships.h"
+#include "shipinventory.h"
 #include "audio.h"
 
 namespace Ui {
@@ -48,6 +49,8 @@ private slots:
   void on_m_soundNextButton_clicked();
   void on_m_soundStopButton_clicked();
 
+  void on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+
 private:
   Ui::MainWindow *ui;
 
@@ -60,6 +63,7 @@ private:
   PlaceClasses m_pclasses;
   Aliens m_aliens;
   Ships m_ships;
+  ShipInventory m_inventory;
   Audio m_audio;
 
   QMap<int,QImage> m_alienFrames;

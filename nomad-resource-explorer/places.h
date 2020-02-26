@@ -42,6 +42,7 @@ public:
   QMap<int,Place> getPlaceList();
   bool getPlace(int id, Place& p);
   QPixmap getPlaceSurfaceImage(int id, bool& status);
+  QString getName(int id);
 
 private:
   DatLibrary* m_lib;

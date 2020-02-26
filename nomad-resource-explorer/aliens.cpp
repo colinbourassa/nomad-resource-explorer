@@ -78,6 +78,23 @@ bool Aliens::getAlien(int id, Alien& alien)
   return status;
 }
 
+QString Aliens::getName(int id)
+{
+  QString name("");
+
+  if (m_alienList.isEmpty())
+  {
+    populateAlienList();
+  }
+
+  if (m_alienList.contains(id))
+  {
+    name = m_alienList[id].name;
+  }
+
+  return name;
+}
+
 bool Aliens::populateAlienList()
 {
   QByteArray aliendata;

@@ -95,6 +95,7 @@ public:
   QPixmap getObjectImage(int id);
   QMap<int,InventoryObj> getObjectList();
   InventoryObjType getObjectType(int id);
+  QString getObjectName(int id);
   void clear();
 
 private:

@@ -35,7 +35,8 @@ SOURCES += \
     aliens.cpp \
     placeclasses.cpp \
     audio.cpp \
-    ships.cpp
+    ships.cpp \
+    shipinventory.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -48,7 +49,8 @@ HEADERS += \
     aliens.h \
     placeclasses.h \
     audio.h \
-    ships.h
+    ships.h \
+    shipinventory.h
 
 FORMS += \
         mainwindow.ui

@@ -35,6 +35,7 @@ public:
   QMap<int,Alien> getAlienList();
   bool getAlien(int id, Alien& alien);
   bool getAnimationFrames(int id, QMap<int,QImage>& frames);
+  QString getName(int id);
 
 private:
   DatLibrary* m_lib;

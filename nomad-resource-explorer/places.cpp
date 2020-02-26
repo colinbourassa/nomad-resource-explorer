@@ -71,6 +71,21 @@ void Places::clear()
   m_placeList.clear();
 }
 
+QString Places::getName(int id)
+{
+  if (m_placeList.isEmpty())
+  {
+    populatePlaceList();
+  }
+
+  if (m_placeList.contains(id))
+  {
+    return  m_placeList[id].name;
+  }
+
+  return QString();
+}
+
 void Places::populatePlaceList()
 {
   QByteArray placedata;

@@ -24,6 +24,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_pclasses(m_lib),
   m_aliens(m_lib, m_palette),
   m_ships(m_lib),
+  m_inventory(m_lib),
   m_audio(m_lib),
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
@@ -123,6 +124,7 @@ void MainWindow::onCloseDataFiles()
 void MainWindow::populatePlaceWidgets()
 {
   QMap<int,Place> places = m_places.getPlaceList();
+  ui->m_placeTable->clearContents();
 
   foreach (Place p, places.values())
   {
@@ -137,7 +139,8 @@ void MainWindow::populatePlaceWidgets()
 void MainWindow::populateObjectWidgets()
 {
   QMap<int,InventoryObj> objs = m_invObject.getObjectList();
-  ui->m_objTable->clear();
+  ui->m_objTable->clearContents();
+
   foreach (InventoryObj obj, objs.values())
   {
     const int rowcount = ui->m_objTable->rowCount();
@@ -152,7 +155,8 @@ void MainWindow::populateObjectWidgets()
 void MainWindow::populateAlienWidgets()
 {
   QMap<int,Alien> aliens = m_aliens.getAlienList();
-  ui->m_alienTable->clear();
+  ui->m_alienTable->clearContents();
+
   foreach (Alien a, aliens.values())
   {
     const int rowcount = ui->m_alienTable->rowCount();
@@ -169,13 +173,16 @@ void MainWindow::populateAlienWidgets()
 void MainWindow::populateShipWidgets()
 {
   QMap<int,Ship> ships = m_ships.getShipList();
-  ui->m_shipTable->clear();
+  ui->m_shipTable->clearContents();
+
   foreach (Ship s, ships.values())
   {
     const int rowcount = ui->m_shipTable->rowCount();
     ui->m_shipTable->insertRow(rowcount);
     ui->m_shipTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(s.id)));
     ui->m_shipTable->setItem(rowcount, 1, new QTableWidgetItem(s.name));
+    ui->m_shipTable->setItem(rowcount, 2, new QTableWidgetItem(m_aliens.getName(s.pilot)));
+    ui->m_shipTable->setItem(rowcount, 3, new QTableWidgetItem(m_places.getName(s.location)));
   }
   ui->m_shipTable->resizeColumnsToContents();
 }
@@ -205,13 +212,35 @@ void MainWindow::populateAudioWidgets()
   ui->m_soundTree->expandAll();
 }
 
+void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
+{
+  Q_UNUSED(currentColumn)
+  Q_UNUSED(previousRow)
+  Q_UNUSED(previousColumn)
+
+  ui->m_shipInventoryTable->setRowCount(0);
+  const int shipid = ui->m_shipTable->item(currentRow, 0)->text().toInt();
+  QMap<int,int> inventory = m_inventory.getInventory(shipid);
+
+  foreach(int obj, inventory.keys())
+  {
+    const int count = inventory[obj];
+    const int rowcount = ui->m_shipInventoryTable->rowCount();
+    ui->m_shipInventoryTable->insertRow(rowcount);
+    ui->m_shipInventoryTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(obj)));
+    ui->m_shipInventoryTable->setItem(rowcount, 1, new QTableWidgetItem(m_invObject.getObjectName(obj)));
+    ui->m_shipInventoryTable->setItem(rowcount, 2, new QTableWidgetItem(QString("%1").arg(count)));
+  }
+  ui->m_shipInventoryTable->resizeColumnsToContents();
+}
+
 void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentColumn)
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  int id = ui->m_objTable->item(currentRow, 0)->text().toInt();
+  const int id = ui->m_objTable->item(currentRow, 0)->text().toInt();
   QPixmap pm = m_invObject.getObjectImage(id);
   m_objScene.addPixmap(pm);
   ui->m_objectImageView->setScene(&m_objScene);
