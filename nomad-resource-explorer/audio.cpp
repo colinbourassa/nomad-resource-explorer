@@ -43,7 +43,8 @@ bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteA
       memcpy(&compressedSize, nnvptr + (5 + (NNV_INDEX_SIZE * soundId)), sizeof(uint32_t));
       compressedSize = qFromLittleEndian<quint32>(compressedSize);
 
-      if (nnvData.size() >= (startOffset + compressedSize))
+      if ((compressedSize > 0) &&
+          (nnvData.size() >= (startOffset + compressedSize)))
       {
         decode(nnvptr + startOffset, compressedSize, pcmData);
         status = true;
