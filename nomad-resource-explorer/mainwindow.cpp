@@ -181,8 +181,8 @@ void MainWindow::populateShipWidgets()
     ui->m_shipTable->insertRow(rowcount);
     ui->m_shipTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(s.id)));
     ui->m_shipTable->setItem(rowcount, 1, new QTableWidgetItem(s.name));
-    ui->m_shipTable->setItem(rowcount, 2, new QTableWidgetItem(m_aliens.getName(s.pilot)));
-    ui->m_shipTable->setItem(rowcount, 3, new QTableWidgetItem(m_places.getName(s.location)));
+    ui->m_shipTable->setItem(rowcount, 3, new QTableWidgetItem(m_aliens.getName(s.pilot)));
+    ui->m_shipTable->setItem(rowcount, 4, new QTableWidgetItem(m_places.getName(s.location)));
   }
   ui->m_shipTable->resizeColumnsToContents();
 }
@@ -271,6 +271,8 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
       ui->m_planetClassData->setText(pclassData.name);
       const QString tempString = QString("%1 (%2)").arg(pclassData.temperature).arg(pclassData.temperatureRange);
       ui->m_planetTemperatureData->setText(tempString);
+      ui->m_planetRaceData->setText(s_raceNames.contains(p.race) ? s_raceNames[p.race] : "(none)");
+      ui->m_planetRepData->setText(m_aliens.getName(p.representativeId));
     }
   }
 }
