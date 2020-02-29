@@ -1,6 +1,12 @@
 /**
  * Extracts files from the .DAT containers used by the 1993 space exploration
  * game "Nomad" (Gametek / Intense! / Papyrus).
+ *
+ * TODO:
+ * Some files (fullscreen LBM images) are stored with the first four bytes
+ * uncompressed, but the remainder of the file compressed. The graphical
+ * Nomad Resource Explorer utility has the ability to unpack these, but
+ * that capability was never rolled back into this standalone utility.
  */
 
 #include <stdio.h>
