@@ -3,13 +3,13 @@
 
 #include <QString>
 #include <QMap>
-#include "datlibrary.h"
+#include "dattable.h"
 
 struct Ship
 {
   int id;
   QString name;
-  QString shipclass;
+  int shipclass;
   QMap<int,int> inventory;
   int location;
   int pilot;
@@ -44,17 +44,18 @@ typedef struct __attribute__((packed)) ShipTableEntry
   uint8_t jammerType;
 } ShipTableEntry;
 
-class Ships
+class Ships : public DatTable<ShipTableEntry>
 {
 public:
   Ships(DatLibrary& lib);
-  QMap<int,Ship> getShipList();
+  virtual ~Ships();
+  QMap<int,Ship> getList();
+
+protected:
+  bool populateList();
 
 private:
-  DatLibrary* m_lib;
   QMap<int,Ship> m_shipList;
-
-  bool populateShipList();
 };
 
 #endif // SHIPS_H

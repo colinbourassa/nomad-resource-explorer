@@ -10,6 +10,8 @@
 #include <QAudio>
 #include <QAudioFormat>
 #include <QAudioOutput>
+#include <QListWidgetItem>
+#include <QProgressBar>
 #include "datlibrary.h"
 #include "invobject.h"
 #include "palette.h"
@@ -17,7 +19,9 @@
 #include "placeclasses.h"
 #include "aliens.h"
 #include "ships.h"
+#include "shipclasses.h"
 #include "shipinventory.h"
+#include "facts.h"
 #include "audio.h"
 
 namespace Ui {
@@ -51,6 +55,8 @@ private slots:
 
   void on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
 
+  void on_m_factList_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+
 private:
   Ui::MainWindow *ui;
 
@@ -63,7 +69,9 @@ private:
   PlaceClasses m_pclasses;
   Aliens m_aliens;
   Ships m_ships;
+  ShipClasses m_shipClasses;
   ShipInventory m_inventory;
+  Facts m_facts;
   Audio m_audio;
 
   QMap<int,QImage> m_alienFrames;
@@ -81,17 +89,22 @@ private:
   QAudioOutput* m_audioOutput;
   QBuffer m_audioBuffer;
 
+  QMap<AlienRace,QProgressBar*> m_factProgressBars;
+
   void setupAudio();
   void populatePlaceWidgets();
   void populateObjectWidgets();
   void populateAlienWidgets();
   void populateShipWidgets();
   void populateAudioWidgets();
+  void populateFactWidgets();
   void loadAlienFrame(int frameId);
 
   void setSoundButtonStates();
   void setSoundIDLabel(QString nnvName, int soundId);
   void setAudioStateLabel(QAudio::State state);
+
+  void putFactReceptivityBarsInArray();
 };
 
 #endif // MAINWINDOW_H

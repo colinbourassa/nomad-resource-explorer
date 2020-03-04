@@ -24,7 +24,9 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_pclasses(m_lib),
   m_aliens(m_lib, m_palette),
   m_ships(m_lib),
+  m_shipClasses(m_lib),
   m_inventory(m_lib),
+  m_facts(m_lib),
   m_audio(m_lib),
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
@@ -38,19 +40,36 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   ui->m_alienView->scale(3, 3);
 
   setupAudio();
-
   m_lib.openData(gameDir);
   populatePlaceWidgets();
   populateObjectWidgets();
   populateAlienWidgets();
   populateShipWidgets();
   populateAudioWidgets();
+  populateFactWidgets();
+  putFactReceptivityBarsInArray();
 }
 
 MainWindow::~MainWindow()
 {
   delete m_audioOutput;
   delete ui;
+}
+
+void MainWindow::putFactReceptivityBarsInArray()
+{
+  m_factProgressBars[AlienRace_Altec]       = ui->m_factBarAltec;
+  m_factProgressBars[AlienRace_Arden]       = ui->m_factBarArden;
+  m_factProgressBars[AlienRace_Bellicosian] = ui->m_factBarBellicosian;
+  m_factProgressBars[AlienRace_Chanticleer] = ui->m_factBarChanticleer;
+  m_factProgressBars[AlienRace_Human]       = ui->m_factBarHuman;
+  m_factProgressBars[AlienRace_Kenelm]      = ui->m_factBarKenelm;
+  m_factProgressBars[AlienRace_Korok]       = ui->m_factBarKorok;
+  m_factProgressBars[AlienRace_Musin]       = ui->m_factBarMusin;
+  m_factProgressBars[AlienRace_Pahrump]     = ui->m_factBarPahrump;
+  m_factProgressBars[AlienRace_Phelonese]   = ui->m_factBarPhelonese;
+  m_factProgressBars[AlienRace_Shaasa]      = ui->m_factBarShaasa;
+  m_factProgressBars[AlienRace_Ursor]       = ui->m_factBarUrsor;
 }
 
 void MainWindow::setupAudio()
@@ -138,7 +157,7 @@ void MainWindow::populatePlaceWidgets()
 
 void MainWindow::populateObjectWidgets()
 {
-  QMap<int,InventoryObj> objs = m_invObject.getObjectList();
+  QMap<int,InventoryObj> objs = m_invObject.getList();
   ui->m_objTable->clearContents();
 
   foreach (InventoryObj obj, objs.values())
@@ -154,7 +173,7 @@ void MainWindow::populateObjectWidgets()
 
 void MainWindow::populateAlienWidgets()
 {
-  QMap<int,Alien> aliens = m_aliens.getAlienList();
+  QMap<int,Alien> aliens = m_aliens.getList();
   ui->m_alienTable->clearContents();
 
   foreach (Alien a, aliens.values())
@@ -172,7 +191,7 @@ void MainWindow::populateAlienWidgets()
 
 void MainWindow::populateShipWidgets()
 {
-  QMap<int,Ship> ships = m_ships.getShipList();
+  QMap<int,Ship> ships = m_ships.getList();
   ui->m_shipTable->clearContents();
 
   foreach (Ship s, ships.values())
@@ -181,10 +200,22 @@ void MainWindow::populateShipWidgets()
     ui->m_shipTable->insertRow(rowcount);
     ui->m_shipTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(s.id)));
     ui->m_shipTable->setItem(rowcount, 1, new QTableWidgetItem(s.name));
+    ui->m_shipTable->setItem(rowcount, 2, new QTableWidgetItem(m_shipClasses.getName(s.shipclass)));
     ui->m_shipTable->setItem(rowcount, 3, new QTableWidgetItem(m_aliens.getName(s.pilot)));
     ui->m_shipTable->setItem(rowcount, 4, new QTableWidgetItem(m_places.getName(s.location)));
   }
   ui->m_shipTable->resizeColumnsToContents();
+}
+
+void MainWindow::populateFactWidgets()
+{
+  QMap<int,Fact> facts = m_facts.getList();
+  ui->m_factList->clear();
+
+  foreach (int key, facts.keys())
+  {
+    ui->m_factList->addItem(QString("%1").arg(key));
+  }
 }
 
 void MainWindow::populateAudioWidgets()
@@ -228,7 +259,7 @@ void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentCo
     const int rowcount = ui->m_shipInventoryTable->rowCount();
     ui->m_shipInventoryTable->insertRow(rowcount);
     ui->m_shipInventoryTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(obj)));
-    ui->m_shipInventoryTable->setItem(rowcount, 1, new QTableWidgetItem(m_invObject.getObjectName(obj)));
+    ui->m_shipInventoryTable->setItem(rowcount, 1, new QTableWidgetItem(m_invObject.getName(obj)));
     ui->m_shipInventoryTable->setItem(rowcount, 2, new QTableWidgetItem(QString("%1").arg(count)));
   }
   ui->m_shipInventoryTable->resizeColumnsToContents();
@@ -241,10 +272,34 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   Q_UNUSED(previousColumn)
 
   const int id = ui->m_objTable->item(currentRow, 0)->text().toInt();
-  QPixmap pm = m_invObject.getObjectImage(id);
+  QPixmap pm = m_invObject.getImage(id);
   m_objScene.addPixmap(pm);
   ui->m_objectImageView->setScene(&m_objScene);
   ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
+}
+
+void MainWindow::on_m_factList_currentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
+{
+  Q_UNUSED(previous)
+
+  const int id = current->text().toInt();
+  const Fact f = m_facts.getFact(id);
+  if (f.text.isEmpty())
+  {
+    foreach (AlienRace race, f.receptivity.keys())
+    {
+      m_factProgressBars[race]->setValue(0);
+    }
+  }
+  else
+  {
+    ui->m_factText->setPlainText(f.text);
+
+    foreach (AlienRace race, f.receptivity.keys())
+    {
+      m_factProgressBars[race]->setValue(f.receptivity[race]);
+    }
+  }
 }
 
 void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
@@ -255,26 +310,47 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
 
   bool status = true;
   const int id = ui->m_placeTable->item(currentRow, 0)->text().toInt();
-  QPixmap pm = m_places.getPlaceSurfaceImage(id, status);
-  if (status)
-  {
-    m_planetSurfaceScene.addPixmap(pm);
-    ui->m_planetView->setScene(&m_planetSurfaceScene);
-  }
+  m_planetSurfaceScene.clear();
 
   Place p;
   if (m_places.getPlace(id, p))
   {
-    PlaceClass pclassData;
-    if (m_pclasses.pclassData(p.pclass, pclassData))
+    if (p.isPlanet)
     {
-      ui->m_planetClassData->setText(pclassData.name);
-      const QString tempString = QString("%1 (%2)").arg(pclassData.temperature).arg(pclassData.temperatureRange);
-      ui->m_planetTemperatureData->setText(tempString);
-      ui->m_planetRaceData->setText(s_raceNames.contains(p.race) ? s_raceNames[p.race] : "(none)");
-      ui->m_planetRepData->setText(m_aliens.getName(p.representativeId));
+      ui->m_placeTypeData->setText("Planet");
+
+      if (id != 0x132) // special check for Second Harmony space station, which uses a 3D model
+      {
+        QPixmap pm = m_places.getPlaceSurfaceImage(id, status);
+        if (status)
+        {
+          m_planetSurfaceScene.addPixmap(pm);
+          ui->m_planetView->setScene(&m_planetSurfaceScene);
+        }
+      }
+
+      PlanetClass pclassData;
+      if (m_pclasses.pclassData(p.classId, pclassData))
+      {
+        ui->m_placeClassData->setText(pclassData.name);
+        const QString tempString = QString("%1 (%2)").arg(pclassData.temperature).arg(pclassData.temperatureRange);
+        ui->m_placeTemperatureData->setText(tempString);
+        ui->m_placeRaceData->setText(s_raceNames.contains(p.race) ? s_raceNames[p.race] : "(none)");
+        ui->m_placeRepData->setText(m_aliens.getName(p.representativeId));
+      }
+    }
+    else // place is a star
+    {
+      ui->m_placeTypeData->setText("Star");
+      ui->m_placeClassData->setText(m_pclasses.getStarClassName(p.classId));
+      ui->m_placeRaceData->setText("");
+      ui->m_placeTemperatureData->setText("");
+      ui->m_placeRepData->setText("");
     }
   }
+
+  ui->m_placeLaborBotData->setText("");
+  ui->m_placeKnownData->setText("");
 }
 
 void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
@@ -284,11 +360,11 @@ void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentC
   Q_UNUSED(previousColumn)
 
   const int id = ui->m_alienTable->item(currentRow, 0)->text().toInt();
+  m_alienFrames.clear();
 
   Alien a;
   if (m_aliens.getAlien(id, a))
   {
-    m_alienFrames.clear();
     if (m_aliens.getAnimationFrames(id, m_alienFrames) && (m_alienFrames.count() > 0))
     {
       ui->m_alienFrameSlider->setEnabled(true);
@@ -351,7 +427,6 @@ void MainWindow::on_m_soundPrevButton_clicked()
   if (m_currentNNVSoundId > 0)
   {
     m_currentNNVSoundId--;
-    ui->m_soundSlider->setValue(m_currentNNVSoundId);
     setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
     setSoundButtonStates();
   }
@@ -385,7 +460,6 @@ void MainWindow::on_m_soundNextButton_clicked()
   if (m_currentNNVSoundId < (m_currentNNVSoundCount - 1))
   {
     m_currentNNVSoundId++;
-    ui->m_soundSlider->setValue(m_currentNNVSoundId);
     setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
     setSoundButtonStates();
   }
@@ -401,13 +475,6 @@ void MainWindow::setSoundButtonStates()
     if (m_currentNNVSoundId >= 0)
     {
       ui->m_soundPlayButton->setEnabled(true);
-      ui->m_soundSlider->setMaximum(m_currentNNVSoundCount - 1);
-      ui->m_soundSlider->setEnabled(true);
-    }
-    else
-    {
-      ui->m_soundSlider->setMaximum(0);
-      ui->m_soundSlider->setEnabled(false);
     }
 
     if (m_currentNNVSoundCount > 0)
@@ -428,10 +495,7 @@ void MainWindow::setSoundButtonStates()
     ui->m_soundNextButton->setEnabled(false);
     ui->m_soundPrevButton->setEnabled(false);
     ui->m_soundStopButton->setEnabled(true);
-    ui->m_soundSlider->setEnabled(false);
   }
-
-  ui->m_soundSlider->setValue(0);
 }
 
 void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
@@ -448,3 +512,4 @@ void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
     ui->m_soundIDLabel->setText("Sound ID: (none selected)");
   }
 }
+

@@ -104,17 +104,24 @@ void Places::populatePlaceList()
       if (currentEntry->nameOffset != 0xFFFF)
       {
         Place p;
-        PlaceClass pclassData;
-        if (m_placeClasses->pclassData(currentEntry->pclass, pclassData))
-        {
-          p.pclassName = pclassData.name;
-        }
         p.id = id;
         p.name = m_lib->getGameText(currentEntry->nameOffset);
-        p.representativeId = currentEntry->planetRepId;
-        p.planetStarId = currentEntry->parentStarId;
-        p.pclass = currentEntry->pclass;
-        p.race = static_cast<AlienRace>(currentEntry->race);
+        p.isPlanet = currentEntry->isPlanet;
+        p.classId = currentEntry->pclass;
+
+        if (p.isPlanet)
+        {
+          /* keep Planet/Star Class data separate from Place data?
+          PlanetClass pclassData;
+          if (m_placeClasses->pclassData(currentEntry->pclass, pclassData))
+          {
+            p.pclassName = pclassData.name;
+          }
+          */
+          p.race = static_cast<AlienRace>(currentEntry->race);
+          p.representativeId = currentEntry->planetRepId;
+          p.parentStarId = currentEntry->parentStarId;
+        }
 
         if (!p.name.isEmpty())
         {

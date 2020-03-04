@@ -3,54 +3,55 @@
 #include <QByteArray>
 
 Ships::Ships(DatLibrary& lib) :
-  m_lib(&lib)
+  DatTable<ShipTableEntry> (lib)
 {
 
 }
 
-QMap<int,Ship> Ships::getShipList()
+Ships::~Ships()
+{
+
+}
+
+QMap<int,Ship> Ships::getList()
 {
   if (m_shipList.isEmpty())
   {
-    populateShipList();
+    populateList();
   }
 
   return m_shipList;
 }
 
-bool Ships::populateShipList()
+bool Ships::populateList()
 {
   bool status = false;
-  QByteArray shipdata;
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "SHIP.TAB", shipdata))
+  if (openFile(DatFileType_CONVERSE, "SHIP.TAB"))
   {
     status = true;
-    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(shipdata.data());
-    unsigned int offset = 0;
-    int id = 0;
+    int index = 0;
+    ShipTableEntry* currentEntry = getEntry(index);
 
-    while (offset <= (shipdata.size() - sizeof(ShipTableEntry)))
+    while (currentEntry != nullptr)
     {
-      const ShipTableEntry* currentEntry = reinterpret_cast<const ShipTableEntry*>(rawdata + offset);
-
-      // the object is only valid if the name offset into GAMETEXT.TXT is not 0xFFFF
       if (currentEntry->nameOffset != 0xFFFF)
       {
         Ship s;
-        s.name = m_lib->getGameText(currentEntry->nameOffset);
+        s.name = getGameText(currentEntry->nameOffset);
 
         if (!s.name.isEmpty())
         {
-          s.id = id;
+          s.id = index;
           s.location = currentEntry->location;
           s.pilot = currentEntry->pilot;
+          s.shipclass = currentEntry->shipclass;
 
-          m_shipList.insert(id, s);
+          m_shipList.insert(index, s);
         }
       }
-      offset += sizeof(ShipTableEntry);
-      id++;
+      index++;
+      currentEntry = getEntry(index);
     }
   }
 

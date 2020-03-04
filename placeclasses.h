@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "datlibrary.h"
 
-struct PlaceClass
+struct PlanetClass
 {
   QString name;
   int temperature;
@@ -17,6 +17,11 @@ struct PlaceClass
   QMap<int,int> gasses;
   QMap<int,int> animals;
   QMap<int,int> intelligenceArtifacts;
+};
+
+struct StarClass
+{
+  QString name;
 };
 
 // TODO: better multi-compiler support for struct packing?
@@ -43,17 +48,25 @@ typedef struct __attribute__((packed)) PClassTableEntry
   uint8_t  unknown_c;
 } PClassTableEntry;
 
+typedef struct __attribute__((packed)) StClassTableEntry
+{
+  uint16_t nameOffset;
+  uint8_t unknown[4];
+} StClassTableEntry;
+
 class PlaceClasses
 {
 public:
   PlaceClasses(DatLibrary& lib);
-  QMap<int,PlaceClass>* pclassDataList();
-  bool pclassData(int id, PlaceClass& pclass);
+  const QMap<int,PlanetClass>* planetClassDataList();
+  bool pclassData(int id, PlanetClass& pclass);
   void clear();
+  QString getStarClassName(int id);
 
 private:
   DatLibrary* m_lib;
-  QMap<int,PlaceClass> m_pclassList;
+  QMap<int,PlanetClass> m_planetClassList;
+  QMap<int,StarClass> m_starClassList;
   static const QMap<int,QString> s_tempRanges;
 
   void populatePlaceClassList();

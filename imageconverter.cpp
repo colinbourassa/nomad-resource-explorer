@@ -10,6 +10,10 @@ ImageConverter::ImageConverter()
 
 }
 
+/**
+ * Uses a zero-based pixel index and an image width to determine the x,y position
+ * of the pixel in question.
+ */
 QPoint ImageConverter::getPixelLocation(int imgWidth, int pixelNum)
 {
   QPoint pt (pixelNum % imgWidth, pixelNum / imgWidth);
@@ -81,7 +85,7 @@ QPixmap ImageConverter::plnToPixmap(QByteArray &plnData, QVector<QRgb> palette, 
   return pmap;
 }
 
-QPixmap ImageConverter::stpToPixmap(QByteArray &stpData, QVector<QRgb> palette, bool &status)
+QPixmap ImageConverter::stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, bool &status)
 {
   status = true;
   const uint16_t width = qFromLittleEndian<quint16>(stpData.data() + 0);
@@ -89,6 +93,8 @@ QPixmap ImageConverter::stpToPixmap(QByteArray &stpData, QVector<QRgb> palette, 
 
   QImage img(width, height, QImage::Format_Indexed8);
   img.setColorTable(palette);
+
+  uint8_t* const stpDataUnsigned = reinterpret_cast<uint8_t*>(stpData.data());
 
   const int pixelcount = width * height;
   int inputpos = 8; // STP image data begins at byte index 8
@@ -120,7 +126,7 @@ QPixmap ImageConverter::stpToPixmap(QByteArray &stpData, QVector<QRgb> palette, 
       {
         endptr = outputpos + (rlebyte & 0x3F);
 
-        unsigned int palindex = static_cast<unsigned int>(stpData.at(inputpos));
+        unsigned int palindex = stpDataUnsigned[inputpos];
         while ((outputpos < endptr) && (outputpos < pixelcount))
         {
           img.setPixel(getPixelLocation(width, outputpos), palindex);
@@ -137,7 +143,7 @@ QPixmap ImageConverter::stpToPixmap(QByteArray &stpData, QVector<QRgb> palette, 
       endptr = outputpos + rlebyte;
       while ((outputpos < endptr) && (outputpos < pixelcount) && (inputpos < stpData.size()))
       {
-        unsigned int palindex = static_cast<unsigned int>(stpData.at(inputpos));
+        unsigned int palindex = stpDataUnsigned[inputpos];
         img.setPixel(getPixelLocation(width, outputpos), palindex);
         inputpos++;
         outputpos++;

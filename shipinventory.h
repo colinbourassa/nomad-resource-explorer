@@ -1,7 +1,7 @@
 #ifndef SHIPINVENTORY_H
 #define SHIPINVENTORY_H
 
-#include "datlibrary.h"
+#include "dattable.h"
 #include <QMap>
 
 #define INVENT_TABLE_RECORD_SIZE_BYTES 4

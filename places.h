@@ -13,10 +13,10 @@ struct Place
 {
   int id;
   QString name;
+  bool isPlanet;
   int representativeId;
-  int planetStarId;
-  int pclass;
-  QString pclassName;
+  int parentStarId;
+  int classId;
   AlienRace race;
 };
 
@@ -25,7 +25,7 @@ typedef struct __attribute__((packed)) PlaceTableEntry
   uint16_t nameOffset;
   uint16_t flags;
   uint8_t pclass;
-  uint8_t travelDest;
+  uint8_t isPlanet;
   uint8_t parentStarId;
   uint8_t unknown_a;
   uint8_t planetRepId;

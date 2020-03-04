@@ -2,8 +2,13 @@
 #include "imageconverter.h"
 
 InvObject::InvObject(DatLibrary& lib, Palette& pal) :
-  m_lib(&lib),
+  DatTable<ObjectTableEntry> (lib),
   m_pal(&pal)
+{
+
+}
+
+InvObject::~InvObject()
 {
 
 }
@@ -13,56 +18,56 @@ void InvObject::clear()
   m_objList.clear();
 }
 
-void InvObject::populateObjectList()
+bool InvObject::populateList()
 {
-  QByteArray objdata;
+  bool status = false;
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "OBJECT.TAB", objdata))
+  if (openFile(DatFileType_CONVERSE, "OBJECT.TAB"))
   {
-    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(objdata.data());
-    unsigned int offset = 0;
-    int id = 0;
+    status = true;
+    int index = 0;
+    ObjectTableEntry* currentEntry = getEntry(index);
 
-    while (offset <= (objdata.size() - sizeof(ObjectTableEntry)))
+    while (currentEntry != nullptr)
     {
-      const ObjectTableEntry* currentEntry = reinterpret_cast<const ObjectTableEntry*>(rawdata + offset);
-
-      // the object is only valid if the name offset into GAMETEXT.TXT is not 0xFFFF
       if (currentEntry->nameOffset != 0xFFFF)
       {
         InventoryObj obj;
-        obj.id = id;
-        obj.name = m_lib->getGameText(currentEntry->nameOffset);
-        obj.tradeable = currentEntry->isTradeable;
-        obj.unique = (currentEntry->type & 0x80);
-        obj.type = static_cast<InventoryObjType>(currentEntry->type & 0x7F);
-        obj.knownByPlayer = (currentEntry->flags & 0x04);
-        for (int raceid = 0; raceid < AlienRace_NumRaces; ++raceid)
-        {
-          obj.valueByRace[raceid] = currentEntry->valueByRace[raceid];
-        }
+        obj.name = getGameText(currentEntry->nameOffset);
 
         if (!obj.name.isEmpty())
         {
-          m_objList.insert(id,obj);
+          obj.id = index;
+          obj.tradeable = currentEntry->isTradeable;
+          obj.unique = (currentEntry->type & 0x80);
+          obj.type = static_cast<InventoryObjType>(currentEntry->type & 0x7F);
+          obj.knownByPlayer = (currentEntry->flags & 0x04);
+          for (int raceid = 0; raceid < AlienRace_NumRaces; ++raceid)
+          {
+            obj.valueByRace[raceid] = currentEntry->valueByRace[raceid];
+          }
+
+          m_objList.insert(index, obj);
         }
       }
-      offset += sizeof(ObjectTableEntry);
-      id++;
+      index++;
+      currentEntry = getEntry(index);
     }
   }
+
+  return status;
 }
 
-QMap<int,InventoryObj> InvObject::getObjectList()
+QMap<int,InventoryObj> InvObject::getList()
 {
   if (m_objList.isEmpty())
   {
-    populateObjectList();
+    populateList();
   }
   return m_objList;
 }
 
-QPixmap InvObject::getObjectImage(int id)
+QPixmap InvObject::getImage(int id)
 {
   bool status = false;
   QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
@@ -87,7 +92,7 @@ InventoryObjType InvObject::getObjectType(int id)
 
   if (m_objList.isEmpty())
   {
-    populateObjectList();
+    populateList();
   }
 
   if (m_objList.contains(id))
@@ -98,13 +103,13 @@ InventoryObjType InvObject::getObjectType(int id)
   return type;
 }
 
-QString InvObject::getObjectName(int id)
+QString InvObject::getName(int id)
 {
   QString name("");
 
   if (m_objList.isEmpty())
   {
-    populateObjectList();
+    populateList();
   }
 
   if (m_objList.contains(id))

@@ -4,7 +4,7 @@
 #include <QMap>
 #include <QPixmap>
 #include <stdint.h>
-#include "datlibrary.h"
+#include "dattable.h"
 #include "enums.h"
 #include "palette.h"
 
@@ -88,22 +88,23 @@ typedef struct __attribute__((packed)) ObjectTableEntry
   uint8_t unusued;
 } ObjectTableEntry;
 
-class InvObject
+class InvObject : public DatTable<ObjectTableEntry>
 {
 public:
   InvObject(DatLibrary& lib, Palette& pal);
-  QPixmap getObjectImage(int id);
-  QMap<int,InventoryObj> getObjectList();
+  virtual ~InvObject();
+  QPixmap getImage(int id);
+  QMap<int,InventoryObj> getList();
   InventoryObjType getObjectType(int id);
-  QString getObjectName(int id);
+  QString getName(int id);
   void clear();
 
+protected:
+  bool populateList();
+
 private:
-  DatLibrary* m_lib;
   Palette* m_pal;
   QMap<int,InventoryObj> m_objList;
-
-  void populateObjectList();
 };
 
 #endif // INVENTORY_H

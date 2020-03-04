@@ -39,8 +39,13 @@ const QVector<QString> Aliens::s_animationMap =
 };
 
 Aliens::Aliens(DatLibrary& lib, Palette& pal) :
-  m_lib(&lib),
+  DatTable<AlienTableEntry> (lib),
   m_pal(&pal)
+{
+
+}
+
+Aliens::~Aliens()
 {
 
 }
@@ -50,11 +55,11 @@ void Aliens::clear()
   m_alienList.clear();
 }
 
-QMap<int,Alien> Aliens::getAlienList()
+QMap<int,Alien> Aliens::getList()
 {
   if (m_alienList.isEmpty())
   {
-    populateAlienList();
+    populateList();
   }
 
   return m_alienList;
@@ -66,7 +71,7 @@ bool Aliens::getAlien(int id, Alien& alien)
 
   if (m_alienList.isEmpty())
   {
-    populateAlienList();
+    populateList();
   }
 
   if (m_alienList.contains(id))
@@ -84,7 +89,7 @@ QString Aliens::getName(int id)
 
   if (m_alienList.isEmpty())
   {
-    populateAlienList();
+    populateList();
   }
 
   if (m_alienList.contains(id))
@@ -95,37 +100,33 @@ QString Aliens::getName(int id)
   return name;
 }
 
-bool Aliens::populateAlienList()
+bool Aliens::populateList()
 {
-  QByteArray aliendata;
   bool status = false;
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "ALIEN.TAB", aliendata))
+  if (openFile(DatFileType_CONVERSE, "ALIEN.TAB"))
   {
     status = true;
-    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(aliendata.data());
-    unsigned int offset = 0;
-    int id = 0;
+    int index = 0;
+    AlienTableEntry* currentEntry = getEntry(index);
 
-    while (offset <= (aliendata.size() - sizeof(AlienTableEntry)))
+    while (currentEntry != nullptr)
     {
-      const AlienTableEntry* currentEntry = reinterpret_cast<const AlienTableEntry*>(rawdata + offset);
-
-      // the object is only valid if the name offset into GAMETEXT.TXT is not 0xFFFF
       if (currentEntry->nameOffset != 0xFFFF)
       {
         Alien a;
-        a.id = id;
-        a.name = m_lib->getGameText(currentEntry->nameOffset);
-        a.race = static_cast<AlienRace>(currentEntry->race);
+        a.name = getGameText(currentEntry->nameOffset);
 
         if (!a.name.isEmpty())
         {
-          m_alienList.insert(id, a);
+          a.id = index;
+          a.race = static_cast<AlienRace>(currentEntry->race);
+
+          m_alienList.insert(index, a);
         }
       }
-      offset += sizeof(AlienTableEntry);
-      id++;
+      index++;
+      currentEntry = getEntry(index);
     }
   }
 

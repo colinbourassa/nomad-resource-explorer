@@ -37,7 +37,8 @@ SOURCES += \
     audio.cpp \
     ships.cpp \
     shipinventory.cpp \
-    shipclasses.cpp
+    shipclasses.cpp \
+    facts.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -52,7 +53,9 @@ HEADERS += \
     audio.h \
     ships.h \
     shipinventory.h \
-    shipclasses.h
+    shipclasses.h \
+    dattable.h \
+    facts.h
 
 FORMS += \
         mainwindow.ui

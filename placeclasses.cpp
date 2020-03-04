@@ -18,27 +18,29 @@ PlaceClasses::PlaceClasses(DatLibrary& lib) :
 
 void PlaceClasses::clear()
 {
-  m_pclassList.clear();
+  m_planetClassList.clear();
+  m_starClassList.clear();
 }
 
 void PlaceClasses::populatePlaceClassList()
 {
-  QByteArray pclassdata;
+  QByteArray classdata;
+  clear();
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "PCLASS.TAB", pclassdata))
+  if (m_lib->getFileByName(DatFileType_CONVERSE, "PCLASS.TAB", classdata))
   {
-    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(pclassdata.data());
+    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(classdata.data());
     unsigned int offset = 0;
     int id = 0;
 
-    while (offset <= (pclassdata.size() - sizeof(PClassTableEntry)))
+    while (offset <= (classdata.size() - sizeof(PClassTableEntry)))
     {
       const PClassTableEntry* currentEntry = reinterpret_cast<const PClassTableEntry*>(rawdata + offset);
 
       // the place class is only valid if the name offset into GAMETEXT.TXT is not 0xFFFF
       if (currentEntry->nameOffset != 0xFFFF)
       {
-        PlaceClass pclass;
+        PlanetClass pclass;
         pclass.name = m_lib->getGameText(currentEntry->nameOffset);
         pclass.temperature = currentEntry->temperature;
 
@@ -70,39 +72,84 @@ void PlaceClasses::populatePlaceClassList()
 
         if (!pclass.name.isEmpty())
         {
-          m_pclassList.insert(id, pclass);
+          m_planetClassList.insert(id, pclass);
         }
       }
       offset += sizeof(PClassTableEntry);
       id++;
     }
   }
+
+  classdata.clear();
+
+  if (m_lib->getFileByName(DatFileType_CONVERSE, "STCLASS.TAB", classdata))
+  {
+    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(classdata.data());
+    unsigned int offset = 0;
+    int id = 0;
+
+    while (offset <= (classdata.size() - sizeof(StClassTableEntry)))
+    {
+      const StClassTableEntry* currentEntry = reinterpret_cast<const StClassTableEntry*>(rawdata + offset);
+
+      // the place class is only valid if the name offset into GAMETEXT.TXT is not 0xFFFF
+      if (currentEntry->nameOffset != 0xFFFF)
+      {
+        StarClass stclass;
+        stclass.name = m_lib->getGameText(currentEntry->nameOffset);
+
+        if (!stclass.name.isEmpty())
+        {
+          m_starClassList.insert(id, stclass);
+        }
+      }
+      offset += sizeof(StClassTableEntry);
+      id++;
+    }
+  }
 }
 
-QMap<int,PlaceClass>* PlaceClasses::pclassDataList()
+const QMap<int,PlanetClass>* PlaceClasses::planetClassDataList()
 {
-  if (m_pclassList.isEmpty())
+  if (m_planetClassList.isEmpty())
   {
     populatePlaceClassList();
   }
 
-  return &m_pclassList;
+  return &m_planetClassList;
 }
 
-bool PlaceClasses::pclassData(int id, PlaceClass& pclass)
+bool PlaceClasses::pclassData(int id, PlanetClass& pclass)
 {
   bool status = false;
 
-  if (m_pclassList.isEmpty())
+  if (m_planetClassList.isEmpty())
   {
     populatePlaceClassList();
   }
 
-  if (m_pclassList.contains(id))
+  if (m_planetClassList.contains(id))
   {
     status = true;
-    pclass = m_pclassList[id];
+    pclass = m_planetClassList[id];
   }
 
   return status;
+}
+
+QString PlaceClasses::getStarClassName(int id)
+{
+  QString name;
+
+  if (m_starClassList.isEmpty())
+  {
+    populatePlaceClassList();
+  }
+
+  if (m_starClassList.contains(id))
+  {
+    name = m_starClassList[id].name;
+  }
+
+  return name;
 }
