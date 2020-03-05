@@ -74,7 +74,7 @@ void MainWindow::putFactReceptivityBarsInArray()
 
 void MainWindow::setupAudio()
 {
-  m_audioFormat.setSampleRate(8000);
+  m_audioFormat.setSampleRate(7042);
   m_audioFormat.setChannelCount(1);
   m_audioFormat.setSampleSize(8);
   m_audioFormat.setCodec("audio/pcm");

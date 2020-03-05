@@ -60,7 +60,7 @@ void Audio::decode(uint8_t* encoded, unsigned int length, QByteArray& decoded)
   bool upper_nibble = true;
   bool cmd_nibble = false;
   bool repeat_cmd = false;
-  uint8_t repeat_idx = 0;
+  int repeat_idx = 0;
   int repeat_count = 0;
   bool repeat_count_first_nibble = false;
   unsigned int inpos = 0;
@@ -97,6 +97,13 @@ void Audio::decode(uint8_t* encoded, unsigned int length, QByteArray& decoded)
         // on a previous iteration, so get the second nibble and
         // write the output now
         repeat_count |= nibble;
+
+        // the repeat count value of 0 is reserved to indicate 0x100
+        if (repeat_count == 0)
+        {
+          repeat_count = 0x100;
+        }
+
         for (repeat_idx = 0; repeat_idx < repeat_count; repeat_idx++)
         {
           decoded.append(static_cast<int8_t>(last_value));
