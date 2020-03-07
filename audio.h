@@ -21,7 +21,9 @@ private:
   static const int8_t s_deltaTable[];
   DatLibrary* m_lib;
 
-  static void decode(uint8_t* encoded, unsigned int length, QByteArray& decoded);
+  static int getStartLocation(QByteArray& nnvData, int soundId);
+  static int getSoundDataLength(QByteArray& nnvData, int soundId);
+  static void decode(uint8_t* encoded, int length, QByteArray& decoded);
 };
 
 #endif // AUDIO_H

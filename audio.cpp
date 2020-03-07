@@ -1,6 +1,7 @@
 #include <QtEndian>
 #include <QString>
 #include <stdint.h>
+#include <string.h>
 #include "audio.h"
 
 const int8_t Audio::s_deltaTable[240] =
@@ -28,6 +29,38 @@ Audio::Audio(DatLibrary& lib) :
 
 }
 
+int Audio::getStartLocation(QByteArray& nnvData, int soundId)
+{
+  int loc = -1;
+
+  // if the NNV file is at least big enough to contain the header fields for the requested sound ID
+  if (nnvData.size() >= 1 + (NNV_INDEX_SIZE * (soundId + 1)))
+  {
+    int32_t locationField;
+    memcpy (&locationField, nnvData.data() + 1 + (NNV_INDEX_SIZE * soundId), sizeof(int32_t));
+    locationField = qFromLittleEndian<qint32>(locationField);
+    loc = locationField;
+  }
+
+  return loc;
+}
+
+int Audio::getSoundDataLength(QByteArray& nnvData, int soundId)
+{
+  int len = -1;
+
+  // if the NNV file is at least big enough to contain the header fields for the requested sound ID
+  if (nnvData.size() >= 1 + (NNV_INDEX_SIZE * (soundId + 1)))
+  {
+    int32_t lengthField;
+    memcpy (&lengthField, nnvData.data() + 1 + (NNV_INDEX_SIZE * soundId) + 4, sizeof(int32_t));
+    lengthField = qFromLittleEndian<qint32>(lengthField);
+    len = lengthField;
+  }
+
+  return len;
+}
+
 bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteArray& pcmData)
 {
   bool status = false;
@@ -35,16 +68,12 @@ bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteA
   if (m_lib->getFileByName(dat, nnvContainer, nnvData) && !nnvData.isEmpty())
   {
     uint8_t* nnvptr = reinterpret_cast<uint8_t*>(nnvData.data());
-    if ((soundId < nnvptr[0]) &&
-        (nnvData.size() > (1 + (8 * (nnvptr[0])))))
+    if (soundId < nnvptr[0])
     {
-      const uint32_t startOffset = qFromLittleEndian<quint32>(nnvptr[1 + (NNV_INDEX_SIZE * soundId)]);
-      uint32_t compressedSize;
-      memcpy(&compressedSize, nnvptr + (5 + (NNV_INDEX_SIZE * soundId)), sizeof(uint32_t));
-      compressedSize = qFromLittleEndian<quint32>(compressedSize);
+      const int32_t startOffset = getStartLocation(nnvData, soundId);
+      const int32_t compressedSize = getSoundDataLength(nnvData, soundId);
 
-      if ((compressedSize > 0) &&
-          (nnvData.size() >= (startOffset + compressedSize)))
+      if ((compressedSize > 0) && (nnvData.size() >= (startOffset + compressedSize)))
       {
         decode(nnvptr + startOffset, compressedSize, pcmData);
         status = true;
@@ -55,7 +84,7 @@ bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteA
   return status;
 }
 
-void Audio::decode(uint8_t* encoded, unsigned int length, QByteArray& decoded)
+void Audio::decode(uint8_t* encoded, int length, QByteArray& decoded)
 {
   bool upper_nibble = true;
   bool cmd_nibble = false;
@@ -63,7 +92,7 @@ void Audio::decode(uint8_t* encoded, unsigned int length, QByteArray& decoded)
   int repeat_idx = 0;
   int repeat_count = 0;
   bool repeat_count_first_nibble = false;
-  unsigned int inpos = 0;
+  int inpos = 0;
   unsigned int delta_table_offset = 0;
   uint8_t nibble;
   uint8_t last_value = 0x80;
