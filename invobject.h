@@ -93,7 +93,7 @@ class InvObject : public DatTable<ObjectTableEntry>
 public:
   InvObject(DatLibrary& lib, Palette& pal);
   virtual ~InvObject();
-  QPixmap getImage(int id);
+  QPixmap getImage(int id, bool& status);
   QMap<int,InventoryObj> getList();
   InventoryObjType getObjectType(int id);
   QString getName(int id);

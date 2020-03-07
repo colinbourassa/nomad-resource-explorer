@@ -150,7 +150,7 @@ void MainWindow::populatePlaceWidgets()
   {
     const int rowcount = ui->m_placeTable->rowCount();
     ui->m_placeTable->insertRow(rowcount);
-    ui->m_placeTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(p.id)));
+    ui->m_placeTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(p.id)));
     ui->m_placeTable->setItem(rowcount, 1, new QTableWidgetItem(p.name));
   }
   ui->m_placeTable->resizeColumnsToContents();
@@ -166,7 +166,7 @@ void MainWindow::populateObjectWidgets()
     const int rowcount = ui->m_objTable->rowCount();
 
     ui->m_objTable->insertRow(rowcount);
-    ui->m_objTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(obj.id)));
+    ui->m_objTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(obj.id)));
     ui->m_objTable->setItem(rowcount, 1, new QTableWidgetItem(obj.name));
     for (int r = 0; r < AlienRace_NumRaces; r++)
     {
@@ -185,7 +185,7 @@ void MainWindow::populateAlienWidgets()
   {
     const int rowcount = ui->m_alienTable->rowCount();
     ui->m_alienTable->insertRow(rowcount);
-    ui->m_alienTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(a.id)));
+    ui->m_alienTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(a.id)));
     ui->m_alienTable->setItem(rowcount, 1, new QTableWidgetItem(a.name));
 
     const QString racename = s_raceNames.contains(a.race) ? s_raceNames[a.race] : "(invalid/unknown)";
@@ -203,7 +203,7 @@ void MainWindow::populateShipWidgets()
   {
     const int rowcount = ui->m_shipTable->rowCount();
     ui->m_shipTable->insertRow(rowcount);
-    ui->m_shipTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(s.id)));
+    ui->m_shipTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(s.id)));
     ui->m_shipTable->setItem(rowcount, 1, new QTableWidgetItem(s.name));
     ui->m_shipTable->setItem(rowcount, 2, new QTableWidgetItem(m_shipClasses.getName(s.shipclass)));
     ui->m_shipTable->setItem(rowcount, 3, new QTableWidgetItem(m_aliens.getName(s.pilot)));
@@ -277,9 +277,17 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   Q_UNUSED(previousColumn)
 
   const int id = ui->m_objTable->item(currentRow, 0)->text().toInt();
-  QPixmap pm = m_invObject.getImage(id);
-  m_objScene.addPixmap(pm);
-  ui->m_objectImageView->setScene(&m_objScene);
+  m_objScene.clear();
+
+  bool pixmapStatus = false;
+  QPixmap pm = m_invObject.getImage(id, pixmapStatus);
+
+  if (pixmapStatus)
+  {
+    m_objScene.addPixmap(pm);
+    ui->m_objectImageView->setScene(&m_objScene);
+  }
+
   ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
 }
 
@@ -515,6 +523,7 @@ void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
   else
   {
     ui->m_soundIDLabel->setText("Sound ID: (none selected)");
+    ui->m_soundPlayButton->setEnabled(false);
   }
 }
 

@@ -67,9 +67,9 @@ QMap<int,InventoryObj> InvObject::getList()
   return m_objList;
 }
 
-QPixmap InvObject::getImage(int id)
+QPixmap InvObject::getImage(int id, bool& status)
 {
-  bool status = false;
+  status = false;
   QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
   QByteArray stpData;
   QPixmap objImage;

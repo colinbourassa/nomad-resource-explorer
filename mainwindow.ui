@@ -16,9 +16,9 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
-     <widget class="QTabWidget" name="m_tabInventory">
+     <widget class="QTabWidget" name="m_tabs">
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
@@ -71,6 +71,9 @@
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
           <property name="columnCount">
            <number>5</number>
           </property>
@@ -108,11 +111,6 @@
          </widget>
         </item>
        </layout>
-      </widget>
-      <widget class="QWidget" name="m_tabShipClasses">
-       <attribute name="title">
-        <string>Ship Classes</string>
-       </attribute>
       </widget>
       <widget class="QWidget" name="m_tabPlaces">
        <attribute name="title">
@@ -232,28 +230,31 @@
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
           <property name="columnCount">
            <number>2</number>
           </property>
-          <attribute name="horizontalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
           <attribute name="horizontalHeaderHighlightSections">
            <bool>false</bool>
           </attribute>
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
           </attribute>
-          <column/>
-          <column/>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </column>
          </widget>
         </item>
        </layout>
-      </widget>
-      <widget class="QWidget" name="m_tabPlaceClasses">
-       <attribute name="title">
-        <string>Place Classes</string>
-       </attribute>
       </widget>
       <widget class="QWidget" name="m_tabAliens">
        <attribute name="title">
@@ -288,21 +289,33 @@
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
           <property name="columnCount">
            <number>3</number>
           </property>
-          <attribute name="horizontalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
           <attribute name="horizontalHeaderHighlightSections">
            <bool>false</bool>
           </attribute>
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
           </attribute>
-          <column/>
-          <column/>
-          <column/>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Race</string>
+           </property>
+          </column>
          </widget>
         </item>
         <item row="1" column="1">
@@ -670,23 +683,7 @@
        <attribute name="title">
         <string>Sounds</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0,0,0,0">
-        <item row="0" column="3">
-         <widget class="QLabel" name="m_soundStateLabel">
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
-          <property name="text">
-           <string>Stopped</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
+       <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0,0,0,0,0">
         <item row="0" column="0" rowspan="4">
          <widget class="QTreeWidget" name="m_soundTree">
           <column>
@@ -694,16 +691,6 @@
             <string notr="true">Sound containers</string>
            </property>
           </column>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QPushButton" name="m_soundNextButton">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Next</string>
-          </property>
          </widget>
         </item>
         <item row="1" column="2">
@@ -716,25 +703,26 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
-         <widget class="QPushButton" name="m_soundStopButton">
+        <item row="0" column="5" rowspan="4">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="m_soundNextButton">
           <property name="enabled">
            <bool>false</bool>
           </property>
           <property name="text">
-           <string>Stop</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" colspan="2">
-         <widget class="QLabel" name="m_soundIDLabel">
-          <property name="font">
-           <font>
-            <pointsize>14</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Sound ID:</string>
+           <string>Next</string>
           </property>
          </widget>
         </item>
@@ -751,6 +739,16 @@
           </property>
          </spacer>
         </item>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="m_soundStopButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Stop</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="1">
          <widget class="QPushButton" name="m_soundPrevButton">
           <property name="enabled">
@@ -761,18 +759,33 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="4" rowspan="4">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+        <item row="0" column="4">
+         <widget class="QLabel" name="m_soundStateLabel">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
           </property>
-         </spacer>
+          <property name="text">
+           <string>Stopped</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="3">
+         <widget class="QLabel" name="m_soundIDLabel">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Sound ID:</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
