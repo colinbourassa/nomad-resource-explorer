@@ -14,6 +14,7 @@
 #include <QBuffer>
 #include <QTime>
 #include "enums.h"
+#include "tablenumberitem.h"
 
 MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   QMainWindow(parent),
@@ -167,6 +168,10 @@ void MainWindow::populateObjectWidgets()
     ui->m_objTable->insertRow(rowcount);
     ui->m_objTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(obj.id)));
     ui->m_objTable->setItem(rowcount, 1, new QTableWidgetItem(obj.name));
+    for (int r = 0; r < AlienRace_NumRaces; r++)
+    {
+      ui->m_objTable->setItem(rowcount, 2 + r, new TableNumberItem(QString("%1").arg(obj.valueByRace[r])));
+    }
   }
   ui->m_objTable->resizeColumnsToContents();
 }

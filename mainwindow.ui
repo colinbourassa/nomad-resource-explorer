@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="m_tabInventory">
       <property name="currentIndex">
-       <number>6</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
@@ -318,35 +318,11 @@
        <attribute name="title">
         <string>Objects</string>
        </attribute>
-       <layout class="QGridLayout" name="m_objectTabLayout" columnstretch="1,2">
-        <item row="0" column="1">
-         <widget class="QGraphicsView" name="m_objectImageView"/>
-        </item>
-        <item row="1" column="1">
-         <widget class="Line" name="m_objectHLine">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
+       <layout class="QGridLayout" name="m_objectTabLayout" columnstretch="2,1">
         <item row="2" column="1">
          <widget class="QLabel" name="m_objectTypeLabel">
           <property name="text">
            <string>Type:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="m_objectUniqueLabel">
-          <property name="text">
-           <string>Unique:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QLabel" name="m_objectValueLabel">
-          <property name="text">
-           <string>Value by race:</string>
           </property>
          </widget>
         </item>
@@ -358,8 +334,14 @@
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
+          <property name="horizontalScrollMode">
+           <enum>QAbstractItemView::ScrollPerPixel</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
           <property name="columnCount">
-           <number>2</number>
+           <number>14</number>
           </property>
           <attribute name="horizontalHeaderHighlightSections">
            <bool>false</bool>
@@ -377,6 +359,83 @@
             <string>Name</string>
            </property>
           </column>
+          <column>
+           <property name="text">
+            <string>Altec Hocker</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Arden</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Bellicosian</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Chanticleer</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Human</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Kenelm</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Korok</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Musin</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Pahrump</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Phelonese</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Shaasa</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Ursor</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QGraphicsView" name="m_objectImageView"/>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="m_objectUniqueLabel">
+          <property name="text">
+           <string>Unique:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="Line" name="m_objectHLine">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
          </widget>
         </item>
        </layout>
@@ -418,7 +477,7 @@
          </widget>
         </item>
         <item row="4" column="1">
-         <layout class="QGridLayout" name="gridLayout_4">
+         <layout class="QGridLayout" name="m_factBarGrid">
           <item row="4" column="1">
            <widget class="QProgressBar" name="m_factBarHuman">
             <property name="value">

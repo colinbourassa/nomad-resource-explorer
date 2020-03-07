@@ -85,7 +85,7 @@ typedef struct __attribute__((packed)) ObjectTableEntry
   uint8_t subtype;
   uint8_t flags;
   uint8_t valueByRace[AlienRace_NumRaces];
-  uint8_t unusued;
+  uint8_t unknown_d;
 } ObjectTableEntry;
 
 class InvObject : public DatTable<ObjectTableEntry>

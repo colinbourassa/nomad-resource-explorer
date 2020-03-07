@@ -38,7 +38,8 @@ SOURCES += \
     ships.cpp \
     shipinventory.cpp \
     shipclasses.cpp \
-    facts.cpp
+    facts.cpp \
+    tablenumberitem.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -55,7 +56,8 @@ HEADERS += \
     shipinventory.h \
     shipclasses.h \
     dattable.h \
-    facts.h
+    facts.h \
+    tablenumberitem.h
 
 FORMS += \
         mainwindow.ui
