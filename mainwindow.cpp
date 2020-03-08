@@ -106,6 +106,7 @@ void MainWindow::setAudioStateLabel(QAudio::State state)
     break;
   case QAudio::IdleState:
     ui->m_soundStateLabel->setText("Idle");
+    // TODO: stopping output here seems to cut off the sound before it's actually finished playing
     m_audioOutput->stop();
     break;
   case QAudio::InterruptedState:
@@ -361,9 +362,6 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
       ui->m_placeRepData->setText("");
     }
   }
-
-  ui->m_placeLaborBotData->setText("");
-  ui->m_placeKnownData->setText("");
 }
 
 void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
@@ -515,7 +513,7 @@ void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
 {
   if (soundId >= 0)
   {
-    int dotPosition = nnvName.indexOf('.');
+    const int dotPosition = nnvName.indexOf('.');
     const QString baseFilename = (dotPosition > 0) ? nnvName.mid(0, dotPosition) : nnvName;
 
     ui->m_soundIDLabel->setText(QString("Sound ID: %1/%2").arg(baseFilename).arg(soundId));

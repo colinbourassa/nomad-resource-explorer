@@ -122,87 +122,10 @@
         </item>
         <item row="1" column="1">
          <layout class="QGridLayout" name="m_placeLabelGrid">
-          <item row="1" column="1">
-           <widget class="QLabel" name="m_placeClassData">
-            <property name="text">
-             <string>&lt;class&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLabel" name="m_placeRaceData">
-            <property name="text">
-             <string>&lt;race&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="m_placeClassLabel">
-            <property name="text">
-             <string>Class:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="m_placeTemperatureLabel">
-            <property name="text">
-             <string>Temperature:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="m_placeTemperatureData">
-            <property name="text">
-             <string>&lt;temp&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="m_placeKnownData">
-            <property name="text">
-             <string>&lt;known&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="m_placeLaborBotLabel">
-            <property name="text">
-             <string>Labor robot site:</string>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="0">
-           <widget class="QLabel" name="m_placeKnownLabel">
-            <property name="text">
-             <string>Known by player:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="m_placeLaborBotData">
-            <property name="text">
-             <string>&lt;botsite&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
            <widget class="QLabel" name="m_placeRepLabel">
             <property name="text">
              <string>Planet representative:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="m_placeRepData">
-            <property name="text">
-             <string>&lt;rep&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="m_placeRaceLabel">
-            <property name="text">
-             <string>Alien race:</string>
             </property>
            </widget>
           </item>
@@ -217,6 +140,55 @@
            <widget class="QLabel" name="m_placeTypeData">
             <property name="text">
              <string>&lt;type&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="m_placeRepData">
+            <property name="text">
+             <string>&lt;rep&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="m_placeClassData">
+            <property name="text">
+             <string>&lt;class&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="m_placeTemperatureLabel">
+            <property name="text">
+             <string>Temperature:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="m_placeRaceData">
+            <property name="text">
+             <string>&lt;race&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="m_placeRaceLabel">
+            <property name="text">
+             <string>Alien race:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="m_placeClassLabel">
+            <property name="text">
+             <string>Class:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="m_placeTemperatureData">
+            <property name="text">
+             <string>&lt;temp&gt;</string>
             </property>
            </widget>
           </item>
@@ -332,14 +304,31 @@
         <string>Objects</string>
        </attribute>
        <layout class="QGridLayout" name="m_objectTabLayout" columnstretch="2,1">
-        <item row="2" column="1">
+        <item row="3" column="1">
          <widget class="QLabel" name="m_objectTypeLabel">
           <property name="text">
            <string>Type:</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="0" rowspan="5">
+        <item row="1" column="1">
+         <widget class="QGraphicsView" name="m_objectImageView"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="Line" name="m_objectHLine">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLabel" name="m_objectUniqueLabel">
+          <property name="text">
+           <string>Unique:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" rowspan="5">
          <widget class="QTableWidget" name="m_objTable">
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
@@ -434,20 +423,10 @@
           </column>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QGraphicsView" name="m_objectImageView"/>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="m_objectUniqueLabel">
+        <item row="0" column="0">
+         <widget class="QLabel" name="m_objDescriptionLabel">
           <property name="text">
-           <string>Unique:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="Line" name="m_objectHLine">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <string>Inventory objects with relative values to each alien race:</string>
           </property>
          </widget>
         </item>
