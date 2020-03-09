@@ -231,13 +231,16 @@ void MainWindow::populateAudioWidgets()
       foreach (QString nnvFilename, nnvList[dat])
       {
         QTreeWidgetItem* nnvChild = new QTreeWidgetItem();
+        const int numSounds = m_audio.getNumberOfSoundsInNNV(dat, nnvFilename);
         nnvChild->setText(0, nnvFilename);
+        nnvChild->setText(1, QString("%1").arg(numSounds));
         datTreeParent->addChild(nnvChild);
       }
     }
   }
 
   ui->m_soundTree->expandAll();
+  ui->m_soundTree->resizeColumnToContents(0);
 }
 
 void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
