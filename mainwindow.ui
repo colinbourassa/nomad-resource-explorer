@@ -436,225 +436,99 @@
        <attribute name="title">
         <string>Facts</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5" columnstretch="0,1">
-        <item row="0" column="0">
-         <widget class="QLabel" name="m_factIdsLabel">
-          <property name="text">
-           <string>Fact IDs:</string>
-          </property>
-         </widget>
+       <layout class="QGridLayout" name="gridLayout_5" rowstretch="2,1">
+        <item row="1" column="0">
+         <widget class="QPlainTextEdit" name="m_factText"/>
         </item>
-        <item row="1" column="0" rowspan="4">
-         <widget class="QListWidget" name="m_factList">
+        <item row="0" column="0">
+         <widget class="QTableWidget" name="m_factTable">
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QPlainTextEdit" name="m_factText"/>
-        </item>
-        <item row="2" column="1">
-         <widget class="Line" name="line">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+          <property name="sortingEnabled">
+           <bool>true</bool>
           </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="m_factReceptivityLabel">
-          <property name="text">
-           <string>Receptivity of each race to this fact:</string>
+          <property name="columnCount">
+           <number>13</number>
           </property>
+          <attribute name="horizontalHeaderHighlightSections">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Altec Hocker</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Arden</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Bellicosian</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Chanticleer</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Human</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Kenelm</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Korok</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Musin</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Pahrump</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Phelonese</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Shaasa</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Ursor</string>
+           </property>
+          </column>
          </widget>
-        </item>
-        <item row="4" column="1">
-         <layout class="QGridLayout" name="m_factBarGrid">
-          <item row="4" column="1">
-           <widget class="QProgressBar" name="m_factBarHuman">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="m_factLabelKenelm">
-            <property name="text">
-             <string>Kenelm:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLabel" name="m_factLabelMusin">
-            <property name="text">
-             <string>Musin:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="3">
-           <widget class="QLabel" name="m_factLabelUrsor">
-            <property name="text">
-             <string>Ursor:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="4">
-           <widget class="QProgressBar" name="m_factBarShaasa">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="m_factLabelHuman">
-            <property name="text">
-             <string>Human:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="4">
-           <widget class="QProgressBar" name="m_factBarKorok">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QProgressBar" name="m_factBarArden">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QProgressBar" name="m_factBarKenelm">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QLabel" name="m_factLabelPhelonese">
-            <property name="text">
-             <string>Phelonese:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="m_factLabelArden">
-            <property name="text">
-             <string>Arden:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <widget class="QProgressBar" name="m_factBarMusin">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QProgressBar" name="m_factBarChanticleer">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="4">
-           <widget class="QProgressBar" name="m_factBarUrsor">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QProgressBar" name="m_factBarBellicosian">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLabel" name="m_factLabelKorok">
-            <property name="text">
-             <string>Korok:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
-           <widget class="QLabel" name="m_factLabelPahrump">
-            <property name="text">
-             <string>Pahrump:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="4">
-           <widget class="QProgressBar" name="m_factBarPhelonese">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="m_factLabelAltec">
-            <property name="text">
-             <string>Altec Hocker:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QProgressBar" name="m_factBarAltec">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="m_factLabelChanticleer">
-            <property name="text">
-             <string>Chanticleer:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="m_factLabelBellicosian">
-            <property name="text">
-             <string>Bellicosian:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="4">
-           <widget class="QProgressBar" name="m_factBarPahrump">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="3">
-           <widget class="QLabel" name="m_factLabelShaasa">
-            <property name="text">
-             <string>Shaasa:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <spacer name="m_factHSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Minimum</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
         </item>
        </layout>
       </widget>

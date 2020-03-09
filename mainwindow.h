@@ -52,10 +52,8 @@ private slots:
   void on_m_soundPlayButton_clicked();
   void on_m_soundNextButton_clicked();
   void on_m_soundStopButton_clicked();
-
   void on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
-
-  void on_m_factList_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+  void on_m_factTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
 
 private:
   Ui::MainWindow *ui;
@@ -103,8 +101,6 @@ private:
   void setSoundButtonStates();
   void setSoundIDLabel(QString nnvName, int soundId);
   void setAudioStateLabel(QAudio::State state);
-
-  void putFactReceptivityBarsInArray();
 };
 
 #endif // MAINWINDOW_H

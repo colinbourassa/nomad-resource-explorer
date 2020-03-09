@@ -48,29 +48,12 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   populateShipWidgets();
   populateAudioWidgets();
   populateFactWidgets();
-  putFactReceptivityBarsInArray();
 }
 
 MainWindow::~MainWindow()
 {
   delete m_audioOutput;
   delete ui;
-}
-
-void MainWindow::putFactReceptivityBarsInArray()
-{
-  m_factProgressBars[AlienRace_Altec]       = ui->m_factBarAltec;
-  m_factProgressBars[AlienRace_Arden]       = ui->m_factBarArden;
-  m_factProgressBars[AlienRace_Bellicosian] = ui->m_factBarBellicosian;
-  m_factProgressBars[AlienRace_Chanticleer] = ui->m_factBarChanticleer;
-  m_factProgressBars[AlienRace_Human]       = ui->m_factBarHuman;
-  m_factProgressBars[AlienRace_Kenelm]      = ui->m_factBarKenelm;
-  m_factProgressBars[AlienRace_Korok]       = ui->m_factBarKorok;
-  m_factProgressBars[AlienRace_Musin]       = ui->m_factBarMusin;
-  m_factProgressBars[AlienRace_Pahrump]     = ui->m_factBarPahrump;
-  m_factProgressBars[AlienRace_Phelonese]   = ui->m_factBarPhelonese;
-  m_factProgressBars[AlienRace_Shaasa]      = ui->m_factBarShaasa;
-  m_factProgressBars[AlienRace_Ursor]       = ui->m_factBarUrsor;
 }
 
 void MainWindow::setupAudio()
@@ -216,12 +199,20 @@ void MainWindow::populateShipWidgets()
 void MainWindow::populateFactWidgets()
 {
   QMap<int,Fact> facts = m_facts.getList();
-  ui->m_factList->clear();
+  ui->m_factTable->clearContents();
 
-  foreach (int key, facts.keys())
+  foreach (Fact f, facts.values())
   {
-    ui->m_factList->addItem(QString("%1").arg(key));
+    const int rowcount = ui->m_factTable->rowCount();
+    ui->m_factTable->insertRow(rowcount);
+    ui->m_factTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(f.id)));
+    for (int raceId = 0; raceId < AlienRace_NumRaces; raceId++)
+    {
+      AlienRace race = static_cast<AlienRace>(raceId);
+      ui->m_factTable->setItem(rowcount, 1 + raceId, new TableNumberItem(QString("%1").arg(f.receptivity[race])));
+    }
   }
+  ui->m_factTable->resizeColumnsToContents();
 }
 
 void MainWindow::populateAudioWidgets()
@@ -292,28 +283,15 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
 }
 
-void MainWindow::on_m_factList_currentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
+void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
-  Q_UNUSED(previous)
+  Q_UNUSED(currentColumn)
+  Q_UNUSED(previousRow)
+  Q_UNUSED(previousColumn)
 
-  const int id = current->text().toInt();
+  const int id = ui->m_factTable->item(currentRow, 0)->text().toInt();
   const Fact f = m_facts.getFact(id);
-  if (f.text.isEmpty())
-  {
-    foreach (AlienRace race, f.receptivity.keys())
-    {
-      m_factProgressBars[race]->setValue(0);
-    }
-  }
-  else
-  {
-    ui->m_factText->setPlainText(f.text);
-
-    foreach (AlienRace race, f.receptivity.keys())
-    {
-      m_factProgressBars[race]->setValue(f.receptivity[race]);
-    }
-  }
+  ui->m_factText->setPlainText(f.text);
 }
 
 void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
