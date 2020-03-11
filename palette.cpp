@@ -49,7 +49,7 @@ void Palette::clear()
   m_gamePal.clear();
 }
 
-bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb> &palette)
+bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette)
 {
   bool status = false;
   QByteArray paldata;

@@ -190,7 +190,7 @@ bool Aliens::buildFrame(QVector<int> delIdList, QString delFilenamePrefix, const
 
     if (status && m_lib->getFileByName(DatFileType_ANIM, delFilename, delFileData))
     {
-      if (!ImageConverter::delToPixmap(delFileData, pal, frame))
+      if (!ImageConverter::delToImage(delFileData, pal, frame))
       {
         status = false;
       }

@@ -29,6 +29,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_inventory(m_lib),
   m_facts(m_lib),
   m_audio(m_lib),
+  m_fullscreenImages(m_lib, m_palette),
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
   m_currentNNVFilename(""),
@@ -40,6 +41,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   ui->m_objectImageView->scale(3, 3);
   ui->m_planetView->scale(2, 2);
   ui->m_alienView->scale(3, 3);
+  ui->m_fullscreenView->scale(2, 2);
 
   setupAudio();
 
@@ -82,6 +84,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateShipWidgets();
   populateAudioWidgets();
   populateFactWidgets();
+  populateFullscreenLbmWidgets();
 }
 
 /*
@@ -289,6 +292,31 @@ void MainWindow::populateAudioWidgets()
   ui->m_soundTree->resizeColumnToContents(0);
 }
 
+void MainWindow::populateFullscreenLbmWidgets()
+{
+  ui->m_fullscreenTree->clear();
+  const QMap<DatFileType,QStringList> lbmList = m_fullscreenImages.getAllLbmList();
+  foreach (DatFileType dat, lbmList.keys())
+  {
+    if (lbmList[dat].size() > 0)
+    {
+      const QString datFilename = m_lib.s_datFileNames[dat];
+      QTreeWidgetItem* datTreeParent = new QTreeWidgetItem(ui->m_fullscreenTree);
+      datTreeParent->setText(0, datFilename);
+
+      foreach (QString lbmFilename, lbmList[dat])
+      {
+        QTreeWidgetItem* lbmChild = new QTreeWidgetItem();
+        lbmChild->setText(0, lbmFilename);
+        datTreeParent->addChild(lbmChild);
+      }
+    }
+  }
+
+  ui->m_fullscreenTree->expandAll();
+  ui->m_fullscreenTree->resizeColumnToContents(0);
+}
+
 /*
  * Responds to a ship being selected in the ship table by populating
  * the neighboring table to show that ship's inventory.
@@ -452,6 +480,9 @@ void MainWindow::loadAlienFrame(int frameId)
   }
 }
 
+/*
+ * Responds to the selection in the sound .NNV tree widget being changed.
+ */
 void MainWindow::on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
   Q_UNUSED(previous)
@@ -477,6 +508,9 @@ void MainWindow::on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTr
   setSoundButtonStates();
 }
 
+/*
+ * Decrements the currently selected sound ID.
+ */
 void MainWindow::on_m_soundPrevButton_clicked()
 {
   if (m_currentNNVSoundId > 0)
@@ -487,6 +521,9 @@ void MainWindow::on_m_soundPrevButton_clicked()
   }
 }
 
+/*
+ * Loads the currently selected sound into a buffer, and start playing it.
+ */
 void MainWindow::on_m_soundPlayButton_clicked()
 {
   if (m_currentNNVSoundId >= 0)
@@ -505,11 +542,19 @@ void MainWindow::on_m_soundPlayButton_clicked()
   }
 }
 
+/*
+ * Stops the audio output.
+ * The enable/disable state of the sound related widgets will be updated by the stateChanged()
+ * handler for the QAudioOutput object, which will be triggered by stopping the playback.
+ */
 void MainWindow::on_m_soundStopButton_clicked()
 {
   m_audioOutput->stop();
 }
 
+/*
+ * Increments the currently selected sound ID.
+ */
 void MainWindow::on_m_soundNextButton_clicked()
 {
   if (m_currentNNVSoundId < (m_currentNNVSoundCount - 1))
@@ -520,6 +565,10 @@ void MainWindow::on_m_soundNextButton_clicked()
   }
 }
 
+/*
+ * Set the enable state of each of the sound-playing buttons, depending
+ * on the currently selected sound ID and the audio output state.
+ */
 void MainWindow::setSoundButtonStates()
 {
   if ((m_audioOutput->state() == QAudio::StoppedState) && (m_currentNNVSoundId >= 0))
@@ -553,6 +602,9 @@ void MainWindow::setSoundButtonStates()
   }
 }
 
+/*
+ * Sets the text of the label that displays the currently selected sound ID.
+ */
 void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
 {
   if (soundId >= 0)
@@ -569,3 +621,25 @@ void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
   }
 }
 
+/*
+ * Loads and displays one of the fullscreen LBM images.
+ */
+void MainWindow::on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+{
+  Q_UNUSED(previous)
+  m_fullscreenScene.clear();
+
+  const QString lbmFilename = current->text(0);
+  if (current->parent())
+  {
+    const QString datFilename = current->parent()->text(0);
+    const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
+
+    QImage fsLbm;
+    if (m_fullscreenImages.getImage(dat, lbmFilename, fsLbm))
+    {
+      m_fullscreenScene.addPixmap(QPixmap::fromImage(fsLbm));
+    }
+  }
+  ui->m_fullscreenView->setScene(&m_fullscreenScene);
+}

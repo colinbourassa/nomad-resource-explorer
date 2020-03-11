@@ -40,7 +40,8 @@ SOURCES += \
     shipclasses.cpp \
     facts.cpp \
     tablenumberitem.cpp \
-    gametext.cpp
+    gametext.cpp \
+    fullscreenimages.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -59,7 +60,8 @@ HEADERS += \
     dattable.h \
     facts.h \
     tablenumberitem.h \
-    gametext.h
+    gametext.h \
+    fullscreenimages.h
 
 FORMS += \
         mainwindow.ui

@@ -23,6 +23,7 @@
 #include "shipinventory.h"
 #include "facts.h"
 #include "audio.h"
+#include "fullscreenimages.h"
 
 namespace Ui {
 class MainWindow;
@@ -54,6 +55,7 @@ private slots:
   void on_m_soundStopButton_clicked();
   void on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_factTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+  void on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
   Ui::MainWindow *ui;
@@ -71,12 +73,14 @@ private:
   ShipInventory m_inventory;
   Facts m_facts;
   Audio m_audio;
+  FullscreenImages m_fullscreenImages;
 
   QMap<int,QImage> m_alienFrames;
 
   QGraphicsScene m_objScene;
   QGraphicsScene m_planetSurfaceScene;
   QGraphicsScene m_alienScene;
+  QGraphicsScene m_fullscreenScene;
 
   int m_currentNNVSoundCount;
   int m_currentNNVSoundId;
@@ -97,6 +101,7 @@ private:
   void populateAlienWidgets();
   void populateShipWidgets();
   void populateAudioWidgets();
+  void populateFullscreenLbmWidgets();
   void populateFactWidgets();
   void loadAlienFrame(int frameId);
 

@@ -25,34 +25,34 @@ QPoint ImageConverter::getPixelLocation(int imgWidth, int pixelNum)
  * width and height, respectively, in two 16-bit little-endian words) to
  * a QPixmap, using the provided palette.
  */
-QPixmap ImageConverter::lbmToPixmap(QByteArray &lbmData, QVector<QRgb> palette, bool &status)
+bool ImageConverter::lbmToImage(const QByteArray& lbmData, QVector<QRgb> palette, QImage& img)
 {
-  status = true;
-  QPixmap pmap;
+  bool status = false;
 
   if (lbmData.size() >= 5) // 5 bytes is the minimum theoretical size of a raw image of this format
   {
+    status = true;
     const uint16_t width = qFromLittleEndian<quint16>(lbmData.data() + 0);
     const uint16_t height = qFromLittleEndian<quint16>(lbmData.data() + 2);
 
-    QImage img(width, height, QImage::Format_Indexed8);
+    img = QImage(width, height, QImage::Format_Indexed8);
     img.setColorTable(palette);
 
     int inputpos = 4; // pixel data starts at byte offset 4
     int outputpos = 0;
 
+    const uint8_t* const lbmDataUnsigned = reinterpret_cast<const uint8_t* const>(lbmData.data());
+
     while (inputpos < lbmData.size())
     {
-      const unsigned int palIndex = static_cast<unsigned int>(lbmData.at(inputpos));
+      const unsigned int palIndex = static_cast<unsigned int>(lbmDataUnsigned[inputpos]);
       inputpos++;
       img.setPixel(getPixelLocation(width, outputpos), palIndex);
       outputpos++;
     }
-
-    pmap = QPixmap::fromImage(img);
   }
 
-  return pmap;
+  return status;
 }
 
 QPixmap ImageConverter::plnToPixmap(QByteArray &plnData, QVector<QRgb> palette, bool &status)
@@ -160,7 +160,7 @@ QPixmap ImageConverter::stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, 
   return QPixmap::fromImage(img);
 }
 
-bool ImageConverter::delToPixmap(const QByteArray& delData, QVector<QRgb> palette, QImage& image)
+bool ImageConverter::delToImage(const QByteArray& delData, QVector<QRgb> palette, QImage& image)
 {
   const uint16_t width = qFromLittleEndian<quint16>(delData.data() + 0);
   const uint16_t height = qFromLittleEndian<quint16>(delData.data() + 2);
