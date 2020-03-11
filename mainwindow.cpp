@@ -38,6 +38,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
 {
   ui->setupUi(this);
 
+  putResourceLabelsInArray();
   ui->m_objectImageView->scale(3, 3);
   ui->m_planetView->scale(2, 2);
   ui->m_alienView->scale(3, 3);
@@ -55,6 +56,40 @@ MainWindow::~MainWindow()
 {
   delete m_audioOutput;
   delete ui;
+}
+
+void MainWindow::putResourceLabelsInArray()
+{
+  m_resourceLabels[PlanetResourceType_Animal] = { { 0, ui->m_pAnimals0 },
+                                                  { 1, ui->m_pAnimals1 },
+                                                  { 2, ui->m_pAnimals2 } };
+  m_resourceLabels[PlanetResourceType_ArchaeologicalArtifact] = { { 0, ui->m_pArchArtifacts0 },
+                                                                  { 1, ui->m_pArchArtifacts1 },
+                                                                  { 2, ui->m_pArchArtifacts2 } };
+  m_resourceLabels[PlanetResourceType_EspionageItem] = { { 0, ui->m_pSpyArtifacts0 },
+                                                         { 1, ui->m_pSpyArtifacts1 },
+                                                         { 2, ui->m_pSpyArtifacts2 } };
+  m_resourceLabels[PlanetResourceType_Food] = { { 0, ui->m_pFoods0 },
+                                                { 1, ui->m_pFoods1 },
+                                                { 2, ui->m_pFoods2 } };
+  m_resourceLabels[PlanetResourceType_Gas] = { { 0, ui->m_pGasses0 },
+                                               { 1, ui->m_pGasses1 },
+                                               { 2, ui->m_pGasses2 } };
+  m_resourceLabels[PlanetResourceType_Mineral] = { { 0, ui->m_pMinerals0 },
+                                                   { 1, ui->m_pMinerals1 },
+                                                   { 2, ui->m_pMinerals2 } };
+}
+
+void MainWindow::clearAllResourceLabels()
+{
+  for (int rtypeIdx = 0; rtypeIdx < PlanetResourceType_NumTypes; rtypeIdx++)
+  {
+    const PlanetResourceType prType = static_cast<PlanetResourceType>(rtypeIdx);
+    foreach (QLabel* l, m_resourceLabels[prType])
+    {
+      l->clear();
+    }
+  }
 }
 
 void MainWindow::clearData()
@@ -397,6 +432,7 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
   bool status = true;
   const int id = ui->m_placeTable->item(currentRow, 0)->text().toInt();
   m_planetSurfaceScene.clear();
+  clearAllResourceLabels();
 
   Place p;
   if (m_places.getPlace(id, p))
@@ -423,6 +459,21 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
         ui->m_placeTemperatureData->setText(tempString);
         ui->m_placeRaceData->setText(s_raceNames.contains(p.race) ? s_raceNames[p.race] : "(none)");
         ui->m_placeRepData->setText(m_aliens.getName(p.representativeId));
+
+        foreach (PlanetResourceType resource, pclassData.resources.keys())
+        {
+          int resourceSlot = 0;
+          const QMap<int,int> resourcesOfType = pclassData.resources[resource];
+          while ((resourceSlot < 3) &&
+                 (resourceSlot < resourcesOfType.count()) &&
+                 (resourceSlot < m_resourceLabels[resource].count()))
+          {
+            const int resourceItemId = resourcesOfType.keys().at(resourceSlot);
+            const QString resourceName = m_invObject.getName(resourceItemId);
+            m_resourceLabels[resource][resourceSlot]->setText(QString("   ") + resourceName);
+            resourceSlot++;
+          }
+        }
       }
     }
     else // place is a star

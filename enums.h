@@ -38,5 +38,16 @@ static const QMap<AlienRace,QString> s_raceNames =
   {AlienRace_Ursor, "Ursor"}
 };
 
+enum PlanetResourceType
+{
+  PlanetResourceType_Animal,
+  PlanetResourceType_ArchaeologicalArtifact,
+  PlanetResourceType_EspionageItem,
+  PlanetResourceType_Food,
+  PlanetResourceType_Gas,
+  PlanetResourceType_Mineral,
+  PlanetResourceType_NumTypes
+};
+
 #endif // ENUMS_H
 

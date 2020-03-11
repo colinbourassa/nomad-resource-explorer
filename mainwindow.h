@@ -11,7 +11,7 @@
 #include <QAudioFormat>
 #include <QAudioOutput>
 #include <QListWidgetItem>
-#include <QProgressBar>
+#include <QLabel>
 #include "datlibrary.h"
 #include "invobject.h"
 #include "palette.h"
@@ -91,7 +91,7 @@ private:
   QAudioOutput* m_audioOutput;
   QBuffer m_audioBuffer;
 
-  QMap<AlienRace,QProgressBar*> m_factProgressBars;
+  QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
 
   void clearData();
   void openNewData(const QString gameDir);
@@ -104,6 +104,9 @@ private:
   void populateFullscreenLbmWidgets();
   void populateFactWidgets();
   void loadAlienFrame(int frameId);
+
+  void putResourceLabelsInArray();
+  void clearAllResourceLabels();
 
   void setSoundButtonStates();
   void setSoundIDLabel(QString nnvName, int soundId);

@@ -46,19 +46,36 @@ void PlaceClasses::populatePlaceClassList()
 
         for (int rIdx = 0; rIdx< 3; rIdx++)
         {
-          pclass.foods.insert(currentEntry->foods[rIdx],
-                              currentEntry->foodsAgriculture[rIdx]);
-          pclass.ores.insert(currentEntry->ores[rIdx],
-                             currentEntry->oresConcentration[rIdx]);
-          pclass.ancientArtifacts.insert(currentEntry->ancientArtifacts[rIdx],
-                                         currentEntry->ancientArtifactsConcentration[rIdx]);
-          pclass.gasses.insert(currentEntry->gasses[rIdx],
-                               currentEntry->gassesConcentration[rIdx]);
-          pclass.animals.insert(currentEntry->animals[rIdx],
-                                currentEntry->animalsConcentration[rIdx]);
-          pclass.intelligenceArtifacts.insert(currentEntry->intelligenceItems[rIdx],
-                                              currentEntry->intelligenceItemsConcentration[rIdx]);
-
+          if (currentEntry->foods[rIdx])
+          {
+            pclass.resources[PlanetResourceType_Food].insert(currentEntry->foods[rIdx],
+                                                             currentEntry->foodsAgriculture[rIdx]);
+          }
+          if (currentEntry->ores[rIdx])
+          {
+            pclass.resources[PlanetResourceType_Mineral].insert(currentEntry->ores[rIdx],
+                                                                currentEntry->oresConcentration[rIdx]);
+          }
+          if (currentEntry->ancientArtifacts[rIdx])
+          {
+            pclass.resources[PlanetResourceType_ArchaeologicalArtifact].insert(currentEntry->ancientArtifacts[rIdx],
+                                                                               currentEntry->ancientArtifactsConcentration[rIdx]);
+          }
+          if (currentEntry->gasses[rIdx])
+          {
+            pclass.resources[PlanetResourceType_Gas].insert(currentEntry->gasses[rIdx],
+                                                            currentEntry->gassesConcentration[rIdx]);
+          }
+          if (currentEntry->animals[rIdx])
+          {
+            pclass.resources[PlanetResourceType_Animal].insert(currentEntry->animals[rIdx],
+                                                               currentEntry->animalsConcentration[rIdx]);
+          }
+          if (currentEntry->intelligenceItems[rIdx])
+          {
+            pclass.resources[PlanetResourceType_EspionageItem].insert(currentEntry->intelligenceItems[rIdx],
+                                                                      currentEntry->intelligenceItemsConcentration[rIdx]);
+          }
         }
 
         int tempRangeIdx = 0;

@@ -5,18 +5,14 @@
 #include <QVector>
 #include <stdint.h>
 #include "datlibrary.h"
+#include "enums.h"
 
 struct PlanetClass
 {
   QString name;
   int temperature;
   QString temperatureRange;
-  QMap<int,int> foods;
-  QMap<int,int> ores;
-  QMap<int,int> ancientArtifacts;
-  QMap<int,int> gasses;
-  QMap<int,int> animals;
-  QMap<int,int> intelligenceArtifacts;
+  QMap<PlanetResourceType, QMap<int,int> > resources;
 };
 
 struct StarClass

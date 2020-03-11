@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1019</width>
-    <height>546</height>
+    <height>648</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -122,73 +122,241 @@
         </item>
         <item row="1" column="1">
          <layout class="QGridLayout" name="m_placeLabelGrid">
-          <item row="4" column="0">
-           <widget class="QLabel" name="m_placeRepLabel">
-            <property name="text">
-             <string>Planet representative:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="m_placeTypeLabel">
-            <property name="text">
-             <string>Type:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="m_placeTypeData">
-            <property name="text">
-             <string>&lt;type&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="m_placeRepData">
-            <property name="text">
-             <string>&lt;rep&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
+          <item row="1" column="2">
            <widget class="QLabel" name="m_placeClassData">
             <property name="text">
              <string>&lt;class&gt;</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="12" column="2">
+           <widget class="QLabel" name="m_pAnimals2">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="3">
+           <widget class="QLabel" name="m_pArchArtifacts1">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="2">
+           <widget class="QLabel" name="m_pAnimals">
+            <property name="text">
+             <string>&lt;b&gt;Animals:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="3">
+           <widget class="QLabel" name="m_pSpyArtifacts">
+            <property name="text">
+             <string>&lt;b&gt;Espionage/intelligence items:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="2">
+           <widget class="QLabel" name="m_pMinerals1">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="m_placeTemperatureData">
+            <property name="text">
+             <string>&lt;temp&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QLabel" name="m_pGasses2">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
            <widget class="QLabel" name="m_placeTemperatureLabel">
             <property name="text">
-             <string>Temperature:</string>
+             <string>&lt;b&gt;Temperature:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="m_placeRepData">
+            <property name="text">
+             <string>&lt;rep&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QLabel" name="m_pMinerals0">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="m_placeTypeLabel">
+            <property name="text">
+             <string>&lt;b&gt;Type:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="QLabel" name="m_pGasses1">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QLabel" name="m_pFoods2">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="3">
+           <widget class="QLabel" name="m_pSpyArtifacts2">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="3">
+           <widget class="QLabel" name="m_pArchArtifacts">
+            <property name="text">
+             <string>&lt;b&gt;Archaeological artifacts:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="m_placeRepLabel">
+            <property name="text">
+             <string>&lt;b&gt;Planet representative:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3">
+           <widget class="QLabel" name="m_pArchArtifacts0">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="3">
+           <widget class="QLabel" name="m_pArchArtifacts2">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLabel" name="m_pFoods">
+            <property name="text">
+             <string>&lt;b&gt;Foods:&lt;/b&gt;</string>
             </property>
            </widget>
           </item>
           <item row="3" column="1">
+           <widget class="QLabel" name="m_placeRaceLabel">
+            <property name="text">
+             <string>&lt;b&gt;Alien race:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="3">
+           <widget class="QLabel" name="m_pSpyArtifacts0">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QLabel" name="m_pGasses0">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="2">
+           <widget class="QLabel" name="m_pMinerals2">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLabel" name="m_pFoods1">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="2">
+           <widget class="QLabel" name="m_pAnimals1">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="m_pFoods0">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLabel" name="m_pMinerals">
+            <property name="text">
+             <string>&lt;b&gt;Minerals/ores:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="m_placeTypeData">
+            <property name="text">
+             <string>&lt;type&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="m_placeClassLabel">
+            <property name="text">
+             <string>&lt;b&gt;Class:&lt;/b&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
            <widget class="QLabel" name="m_placeRaceData">
             <property name="text">
              <string>&lt;race&gt;</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="m_placeRaceLabel">
+          <item row="11" column="3">
+           <widget class="QLabel" name="m_pSpyArtifacts1">
             <property name="text">
-             <string>Alien race:</string>
+             <string/>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="m_placeClassLabel">
+          <item row="10" column="2">
+           <widget class="QLabel" name="m_pAnimals0">
             <property name="text">
-             <string>Class:</string>
+             <string/>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="m_placeTemperatureData">
+          <item row="9" column="1">
+           <widget class="QLabel" name="m_pGasses">
             <property name="text">
-             <string>&lt;temp&gt;</string>
+             <string>&lt;b&gt;Atmospheric gasses:&lt;/b&gt;</string>
             </property>
            </widget>
           </item>
