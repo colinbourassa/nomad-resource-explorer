@@ -36,11 +36,45 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_audioOutput(nullptr)
 {
   ui->setupUi(this);
+
   ui->m_objectImageView->scale(3, 3);
   ui->m_planetView->scale(2, 2);
   ui->m_alienView->scale(3, 3);
 
   setupAudio();
+
+  if (!gameDir.isEmpty())
+  {
+    openNewData(gameDir);
+  }
+}
+
+MainWindow::~MainWindow()
+{
+  delete m_audioOutput;
+  delete ui;
+}
+
+void MainWindow::clearData()
+{
+  m_lib.closeData();
+  m_invObject.clear();
+  m_places.clear();
+  m_palette.clear();
+  m_pclasses.clear();
+  m_aliens.clear();
+  m_ships.clear();
+  m_shipClasses.clear();
+  m_inventory.clear();
+  m_facts.clear();
+
+  m_alienFrames.clear();
+}
+
+void MainWindow::openNewData(const QString gameDir)
+{
+  clearData();
+
   m_lib.openData(gameDir);
   populatePlaceWidgets();
   populateObjectWidgets();
@@ -50,12 +84,9 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   populateFactWidgets();
 }
 
-MainWindow::~MainWindow()
-{
-  delete m_audioOutput;
-  delete ui;
-}
-
+/*
+ * Sets up audio output to match the PCM sound format used by the game.
+ */
 void MainWindow::setupAudio()
 {
   m_audioFormat.setSampleRate(7042);
@@ -89,7 +120,7 @@ void MainWindow::setAudioStateLabel(QAudio::State state)
     break;
   case QAudio::IdleState:
     ui->m_soundStateLabel->setText("Idle");
-    // TODO: stopping output here seems to cut off the sound before it's actually finished playing
+    // TODO: on some systems, stopping output here seems to cut off the sound before it's actually finished playing
     m_audioOutput->stop();
     break;
   case QAudio::InterruptedState:
@@ -113,18 +144,18 @@ void MainWindow::on_actionOpen_game_data_dir_triggered()
 
 void MainWindow::onExit()
 {
+  m_lib.closeData();
   this->close();
 }
 
 void MainWindow::onCloseDataFiles()
 {
-  m_lib.closeData();
-  m_aliens.clear();
-  m_places.clear();
-  m_pclasses.clear();
-  m_invObject.clear();
+  clearData();
 }
 
+/*
+ * Populates the table of places.
+ */
 void MainWindow::populatePlaceWidgets()
 {
   QMap<int,Place> places = m_places.getPlaceList();
@@ -140,6 +171,9 @@ void MainWindow::populatePlaceWidgets()
   ui->m_placeTable->resizeColumnsToContents();
 }
 
+/*
+ * Populates the table of inventory objects.
+ */
 void MainWindow::populateObjectWidgets()
 {
   QMap<int,InventoryObj> objs = m_invObject.getList();
@@ -160,6 +194,9 @@ void MainWindow::populateObjectWidgets()
   ui->m_objTable->resizeColumnsToContents();
 }
 
+/*
+ * Populates the table of aliens.
+ */
 void MainWindow::populateAlienWidgets()
 {
   QMap<int,Alien> aliens = m_aliens.getList();
@@ -178,6 +215,9 @@ void MainWindow::populateAlienWidgets()
   ui->m_alienTable->resizeColumnsToContents();
 }
 
+/*
+ * Populates the table of ships.
+ */
 void MainWindow::populateShipWidgets()
 {
   QMap<int,Ship> ships = m_ships.getList();
@@ -196,6 +236,9 @@ void MainWindow::populateShipWidgets()
   ui->m_shipTable->resizeColumnsToContents();
 }
 
+/*
+ * Populates the table of facts.
+ */
 void MainWindow::populateFactWidgets()
 {
   QMap<int,Fact> facts = m_facts.getList();
@@ -215,6 +258,9 @@ void MainWindow::populateFactWidgets()
   ui->m_factTable->resizeColumnsToContents();
 }
 
+/*
+ * Populates the tree of audio containers and audio file names.
+ */
 void MainWindow::populateAudioWidgets()
 {
   ui->m_soundTree->clear();
@@ -243,6 +289,10 @@ void MainWindow::populateAudioWidgets()
   ui->m_soundTree->resizeColumnToContents(0);
 }
 
+/*
+ * Responds to a ship being selected in the ship table by populating
+ * the neighboring table to show that ship's inventory.
+ */
 void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentColumn)
@@ -265,6 +315,10 @@ void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentCo
   ui->m_shipInventoryTable->resizeColumnsToContents();
 }
 
+/*
+ * Responds to an object being selected in the object table by loading and
+ * display its .STP image, and associated object text, and other parameters.
+ */
 void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentColumn)
@@ -284,6 +338,15 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   }
 
   ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
+  if (m_invObject.isUnique(id))
+  {
+    ui->m_objectUniqueLabel->setText("Unique: Yes");
+  }
+  else
+  {
+    ui->m_objectUniqueLabel->setText("Unique: No");
+  }
+  ui->m_objectText->setPlainText(m_invObject.getObjectText(id));
 }
 
 void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)

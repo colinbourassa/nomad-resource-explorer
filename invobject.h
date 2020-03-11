@@ -96,7 +96,9 @@ public:
   QPixmap getImage(int id, bool& status);
   QMap<int,InventoryObj> getList();
   InventoryObjType getObjectType(int id);
+  QString getObjectText(int id);
   QString getName(int id);
+  bool isUnique(const int id);
   void clear();
 
 protected:

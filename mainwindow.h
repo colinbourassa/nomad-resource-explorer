@@ -89,6 +89,8 @@ private:
 
   QMap<AlienRace,QProgressBar*> m_factProgressBars;
 
+  void clearData();
+  void openNewData(const QString gameDir);
   void setupAudio();
   void populatePlaceWidgets();
   void populateObjectWidgets();

@@ -1,5 +1,7 @@
+#include <QtEndian>
 #include "invobject.h"
 #include "imageconverter.h"
+#include "gametext.h"
 
 InvObject::InvObject(DatLibrary& lib, Palette& pal) :
   DatTable<ObjectTableEntry> (lib),
@@ -41,6 +43,7 @@ bool InvObject::populateList()
           obj.tradeable = currentEntry->isTradeable;
           obj.unique = (currentEntry->type & 0x80);
           obj.type = static_cast<InventoryObjType>(currentEntry->type & 0x7F);
+          obj.subtype = currentEntry->subtype;
           obj.knownByPlayer = (currentEntry->flags & 0x04);
           for (int raceid = 0; raceid < AlienRace_NumRaces; ++raceid)
           {
@@ -65,6 +68,35 @@ QMap<int,InventoryObj> InvObject::getList()
     populateList();
   }
   return m_objList;
+}
+
+QString InvObject::getObjectText(int id)
+{
+  QByteArray objTextIdxData;
+  QByteArray objTextStrData;
+  QString txt;
+
+  if (m_objList.contains(id) && (m_objList[id].type == InventoryObjType_NormalWithText))
+  {
+
+    if (m_lib->getFileByName(DatFileType_CONVERSE, "OBJTEXT.IDX", objTextIdxData) &&
+        m_lib->getFileByName(DatFileType_CONVERSE, "OBJTEXT.TXT", objTextStrData))
+    {
+      const int idxOffset = m_objList[id].subtype * 4;
+      int32_t txtOffset = 0;
+
+      memcpy(&txtOffset, objTextIdxData.data() + idxOffset, 4);
+      txtOffset = qFromLittleEndian<qint32>(txtOffset);
+
+      if (txtOffset < objTextStrData.size())
+      {
+        const char* rawdata = objTextStrData.data();
+        txt = GameText::readString(rawdata + txtOffset);
+      }
+    }
+  }
+
+  return txt;
 }
 
 QPixmap InvObject::getImage(int id, bool& status)
@@ -118,4 +150,14 @@ QString InvObject::getName(int id)
   }
 
   return name;
+}
+
+bool InvObject::isUnique(const int id)
+{
+  if (m_objList.contains(id))
+  {
+    return m_objList[id].unique;
+  }
+
+  return false;
 }

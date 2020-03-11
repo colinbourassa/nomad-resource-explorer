@@ -39,7 +39,8 @@ SOURCES += \
     shipinventory.cpp \
     shipclasses.cpp \
     facts.cpp \
-    tablenumberitem.cpp
+    tablenumberitem.cpp \
+    gametext.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -57,7 +58,8 @@ HEADERS += \
     shipclasses.h \
     dattable.h \
     facts.h \
-    tablenumberitem.h
+    tablenumberitem.h \
+    gametext.h
 
 FORMS += \
         mainwindow.ui
