@@ -35,6 +35,7 @@ public:
   void clear();
   QMap<int,Alien> getList();
   QString getName(int id);
+  AlienRace getRace(int id);
   bool getAlien(int id, Alien& alien);
   bool getAnimationFrames(int id, QMap<int,QImage>& frames);
 

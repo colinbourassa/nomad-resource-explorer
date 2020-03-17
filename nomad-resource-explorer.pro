@@ -41,7 +41,8 @@ SOURCES += \
     facts.cpp \
     tablenumberitem.cpp \
     gametext.cpp \
-    fullscreenimages.cpp
+    fullscreenimages.cpp \
+    conversationtext.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -61,7 +62,8 @@ HEADERS += \
     facts.h \
     tablenumberitem.h \
     gametext.h \
-    fullscreenimages.h
+    fullscreenimages.h \
+    conversationtext.h
 
 FORMS += \
         mainwindow.ui

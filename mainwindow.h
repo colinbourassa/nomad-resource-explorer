@@ -24,6 +24,7 @@
 #include "facts.h"
 #include "audio.h"
 #include "fullscreenimages.h"
+#include "conversationtext.h"
 
 namespace Ui {
 class MainWindow;
@@ -56,6 +57,15 @@ private slots:
   void on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_factTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+  void on_m_convAlienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+  void on_m_convTopicButtonPerson_clicked();
+  void on_m_convTopicButtonPlace_clicked();
+  void on_m_convTopicButtonObject_clicked();
+  void on_m_convTopicButtonRace_clicked();
+
+  void on_m_convTopicTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+
+  void on_m_convLineList_currentRowChanged(int currentRow);
 
 private:
   Ui::MainWindow *ui;
@@ -74,6 +84,7 @@ private:
   Facts m_facts;
   Audio m_audio;
   FullscreenImages m_fullscreenImages;
+  ConversationText m_convText;
 
   QMap<int,QImage> m_alienFrames;
 
@@ -91,6 +102,9 @@ private:
   QAudioOutput* m_audioOutput;
   QBuffer m_audioBuffer;
 
+  ConvTopic m_currentConvTopic;
+  QStringList m_currentConvLines;
+
   QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
 
   void clearData();
@@ -103,7 +117,11 @@ private:
   void populateAudioWidgets();
   void populateFullscreenLbmWidgets();
   void populateFactWidgets();
+  void populateConversationWidgets();
   void loadAlienFrame(int frameId);
+
+  void populateConversationTopicTable();
+  void populateConvLineList();
 
   void putResourceLabelsInArray();
   void clearAllResourceLabels();

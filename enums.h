@@ -18,7 +18,8 @@ enum AlienRace
   AlienRace_Phelonese,
   AlienRace_Shaasa,
   AlienRace_Ursor,
-  AlienRace_NumRaces
+  AlienRace_NumRaces,
+  AlienRace_Invalid
 };
 
 static const QMap<AlienRace,QString> s_raceNames =

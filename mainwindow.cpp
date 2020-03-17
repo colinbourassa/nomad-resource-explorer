@@ -30,11 +30,13 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_facts(m_lib),
   m_audio(m_lib),
   m_fullscreenImages(m_lib, m_palette),
+  m_convText(m_lib, m_aliens),
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
   m_currentNNVFilename(""),
   m_currentSoundDat(DatFileType_INVALID),
-  m_audioOutput(nullptr)
+  m_audioOutput(nullptr),
+  m_currentConvTopic(ConvTopic_Person)
 {
   ui->setupUi(this);
 
@@ -120,6 +122,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateAudioWidgets();
   populateFactWidgets();
   populateFullscreenLbmWidgets();
+  populateConversationWidgets();
 }
 
 /*
@@ -350,6 +353,31 @@ void MainWindow::populateFullscreenLbmWidgets()
 
   ui->m_fullscreenTree->expandAll();
   ui->m_fullscreenTree->resizeColumnToContents(0);
+}
+
+void MainWindow::populateConversationWidgets()
+{
+  QMap<int,Alien> aliens = m_aliens.getList();
+  ui->m_convAlienTable->clearContents();
+  ui->m_convTopicTable->clearContents();
+
+  foreach (Alien a, aliens.values())
+  {
+    const int rowcount = ui->m_convAlienTable->rowCount();
+    ui->m_convAlienTable->insertRow(rowcount);
+    ui->m_convAlienTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(a.id)));
+    ui->m_convAlienTable->setItem(rowcount, 1, new QTableWidgetItem(a.name));
+
+    // the 'Person' topic category is selected on startup,
+    // so populate the topic list with alien names to start
+    const int topicrowcount = ui->m_convTopicTable->rowCount();
+    ui->m_convTopicTable->insertRow(topicrowcount);
+    ui->m_convTopicTable->setItem(topicrowcount, 0, new TableNumberItem(QString("%1").arg(a.id)));
+    ui->m_convTopicTable->setItem(topicrowcount, 1, new QTableWidgetItem(a.name));
+  }
+
+  ui->m_convAlienTable->resizeColumnsToContents();
+  ui->m_convTopicTable->resizeColumnsToContents();
 }
 
 /*
@@ -693,4 +721,141 @@ void MainWindow::on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem* current
     }
   }
   ui->m_fullscreenView->setScene(&m_fullscreenScene);
+}
+
+void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
+{
+  Q_UNUSED(currentRow)
+  Q_UNUSED(currentColumn)
+  Q_UNUSED(previousRow)
+  Q_UNUSED(previousColumn)
+
+  ui->m_convLineList->clearSelection();
+  ui->m_convDialogueLine->clear();
+  populateConvLineList();
+}
+
+void MainWindow::on_m_convTopicButtonPerson_clicked()
+{
+  m_currentConvTopic = ConvTopic_Person;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonPlace_clicked()
+{
+  m_currentConvTopic = ConvTopic_Location;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonObject_clicked()
+{
+  m_currentConvTopic = ConvTopic_Object;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonRace_clicked()
+{
+  m_currentConvTopic = ConvTopic_Race;
+  populateConversationTopicTable();
+}
+
+void MainWindow::populateConversationTopicTable()
+{
+  ui->m_convTopicTable->setRowCount(0);
+
+  if (m_currentConvTopic == ConvTopic_Person)
+  {
+    const QMap<int,Alien> aliens = m_aliens.getList();
+
+    foreach (Alien a, aliens.values())
+    {
+      const int rowcount = ui->m_convTopicTable->rowCount();
+      ui->m_convTopicTable->insertRow(rowcount);
+      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(a.id)));
+      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(a.name));
+    }
+    ui->m_convTopicTable->resizeColumnsToContents();
+  }
+  else if (m_currentConvTopic == ConvTopic_Location)
+  {
+    const QMap<int,Place> places = m_places.getPlaceList();
+
+    foreach (Place p, places.values())
+    {
+      const int rowcount = ui->m_convTopicTable->rowCount();
+      ui->m_convTopicTable->insertRow(rowcount);
+      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(p.id)));
+      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(p.name));
+    }
+    ui->m_placeTable->resizeColumnsToContents();
+  }
+  else if (m_currentConvTopic == ConvTopic_Object)
+  {
+    const QMap<int,InventoryObj> objs = m_invObject.getList();
+
+    foreach (InventoryObj obj, objs.values())
+    {
+      const int rowcount = ui->m_convTopicTable->rowCount();
+      ui->m_convTopicTable->insertRow(rowcount);
+      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(obj.id)));
+      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(obj.name));
+    }
+    ui->m_objTable->resizeColumnsToContents();
+  }
+  else if (m_currentConvTopic == ConvTopic_Race)
+  {
+    for (int raceId = 0; raceId < AlienRace_NumRaces; raceId++)
+    {
+      const int rowcount = ui->m_convTopicTable->rowCount();
+      const AlienRace race = static_cast<AlienRace>(raceId);
+      ui->m_convTopicTable->insertRow(rowcount);
+      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(raceId)));
+      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(s_raceNames[race]));
+    }
+    ui->m_convTopicTable->resizeColumnsToContents();
+  }
+}
+
+void MainWindow::on_m_convTopicTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
+{
+  Q_UNUSED(currentColumn)
+  Q_UNUSED(previousRow)
+  Q_UNUSED(previousColumn)
+
+  if (currentRow >= 0)
+  {
+    populateConvLineList();
+  }
+}
+
+void MainWindow::populateConvLineList()
+{
+  const int currentAlienRow = ui->m_convAlienTable->currentRow();
+  const int currentTopicRow = ui->m_convTopicTable->currentRow();
+
+  if ((currentAlienRow >= 0) && (currentTopicRow >=0 ))
+  {
+    const int alienId = ui->m_convAlienTable->item(currentAlienRow, 0)->text().toInt();
+    const int thingId = ui->m_convTopicTable->item(currentTopicRow, 0)->text().toInt();
+    m_currentConvLines = m_convText.getConversationText(alienId, m_currentConvTopic, thingId);
+
+    ui->m_convLineList->clear();
+    ui->m_convLineList->clearSelection();
+    for (int i = 0; i < m_currentConvLines.size(); i++)
+    {
+      ui->m_convLineList->addItem(QString("%1").arg(i));
+    }
+  }
+}
+
+void MainWindow::on_m_convLineList_currentRowChanged(int currentRow)
+{
+  QString currentDialogLine;
+
+  if ((currentRow >= 0) && (m_currentConvLines.size() > currentRow))
+  {
+    currentDialogLine = m_currentConvLines[currentRow];
+  }
+
+  ui->m_convDialogueLine->setPlainText(currentDialogLine);
 }

@@ -100,6 +100,23 @@ QString Aliens::getName(int id)
   return name;
 }
 
+AlienRace Aliens::getRace(int id)
+{
+  AlienRace race = AlienRace_Invalid;
+
+  if (m_alienList.isEmpty())
+  {
+    populateList();
+  }
+
+  if (m_alienList.contains(id))
+  {
+    race = m_alienList[id].race;
+  }
+
+  return race;
+}
+
 bool Aliens::populateList()
 {
   bool status = false;
