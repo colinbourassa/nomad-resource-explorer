@@ -36,7 +36,8 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_currentNNVFilename(""),
   m_currentSoundDat(DatFileType_INVALID),
   m_audioOutput(nullptr),
-  m_currentConvTopic(ConvTopic_Person)
+  m_currentConvTopic(ConvTopic_GreetingInitial),
+  m_currentConvLinesPos(-1)
 {
   ui->setupUi(this);
 
@@ -359,7 +360,6 @@ void MainWindow::populateConversationWidgets()
 {
   QMap<int,Alien> aliens = m_aliens.getList();
   ui->m_convAlienTable->clearContents();
-  ui->m_convTopicTable->clearContents();
 
   foreach (Alien a, aliens.values())
   {
@@ -368,16 +368,10 @@ void MainWindow::populateConversationWidgets()
     ui->m_convAlienTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(a.id)));
     ui->m_convAlienTable->setItem(rowcount, 1, new QTableWidgetItem(a.name));
 
-    // the 'Person' topic category is selected on startup,
-    // so populate the topic list with alien names to start
-    const int topicrowcount = ui->m_convTopicTable->rowCount();
-    ui->m_convTopicTable->insertRow(topicrowcount);
-    ui->m_convTopicTable->setItem(topicrowcount, 0, new TableNumberItem(QString("%1").arg(a.id)));
-    ui->m_convTopicTable->setItem(topicrowcount, 1, new QTableWidgetItem(a.name));
+    getConversationLinesForCurrentTopic();
   }
 
   ui->m_convAlienTable->resizeColumnsToContents();
-  ui->m_convTopicTable->resizeColumnsToContents();
 }
 
 /*
@@ -730,32 +724,66 @@ void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int curr
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  ui->m_convLineList->clearSelection();
-  ui->m_convDialogueLine->clear();
-  populateConvLineList();
+  getConversationLinesForCurrentTopic();
+}
+
+void MainWindow::on_m_convTopicButtonGreeting0_clicked()
+{
+  m_currentConvTopic = ConvTopic_GreetingInitial;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonGreeting1_clicked()
+{
+  m_currentConvTopic = ConvTopic_GreetingSubsequent;
+  populateConversationTopicTable();
 }
 
 void MainWindow::on_m_convTopicButtonPerson_clicked()
 {
-  m_currentConvTopic = ConvTopic_Person;
+  m_currentConvTopic = ConvTopic_AskAboutPerson;
   populateConversationTopicTable();
 }
 
 void MainWindow::on_m_convTopicButtonPlace_clicked()
 {
-  m_currentConvTopic = ConvTopic_Location;
+  m_currentConvTopic = ConvTopic_AskAboutLocation;
   populateConversationTopicTable();
 }
 
 void MainWindow::on_m_convTopicButtonObject_clicked()
 {
-  m_currentConvTopic = ConvTopic_Object;
+  m_currentConvTopic = ConvTopic_AskAboutObject;
   populateConversationTopicTable();
 }
 
 void MainWindow::on_m_convTopicButtonRace_clicked()
 {
-  m_currentConvTopic = ConvTopic_Race;
+  m_currentConvTopic = ConvTopic_AskAboutRace;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonDispObj_clicked()
+{
+  m_currentConvTopic = ConvTopic_DisplayObject;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonGiveObj_clicked()
+{
+  m_currentConvTopic = ConvTopic_GiveObject;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonGiveFact_clicked()
+{
+  m_currentConvTopic = ConvTopic_GiveFact;
+  populateConversationTopicTable();
+}
+
+void MainWindow::on_m_convTopicButtonSeesItem_clicked()
+{
+  m_currentConvTopic = ConvTopic_SeesObject;
   populateConversationTopicTable();
 }
 
@@ -763,7 +791,7 @@ void MainWindow::populateConversationTopicTable()
 {
   ui->m_convTopicTable->setRowCount(0);
 
-  if (m_currentConvTopic == ConvTopic_Person)
+  if (m_currentConvTopic == ConvTopic_AskAboutPerson)
   {
     const QMap<int,Alien> aliens = m_aliens.getList();
 
@@ -775,8 +803,9 @@ void MainWindow::populateConversationTopicTable()
       ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(a.name));
     }
     ui->m_convTopicTable->resizeColumnsToContents();
+    ui->m_convDialogueLine->clear();
   }
-  else if (m_currentConvTopic == ConvTopic_Location)
+  else if (m_currentConvTopic == ConvTopic_AskAboutLocation)
   {
     const QMap<int,Place> places = m_places.getPlaceList();
 
@@ -787,9 +816,13 @@ void MainWindow::populateConversationTopicTable()
       ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(p.id)));
       ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(p.name));
     }
-    ui->m_placeTable->resizeColumnsToContents();
+    ui->m_convTopicTable->resizeColumnsToContents();
+    ui->m_convDialogueLine->clear();
   }
-  else if (m_currentConvTopic == ConvTopic_Object)
+  else if ((m_currentConvTopic == ConvTopic_AskAboutObject) ||
+           (m_currentConvTopic == ConvTopic_GiveObject)     ||
+           (m_currentConvTopic == ConvTopic_DisplayObject)  ||
+           (m_currentConvTopic == ConvTopic_SeesObject))
   {
     const QMap<int,InventoryObj> objs = m_invObject.getList();
 
@@ -800,9 +833,10 @@ void MainWindow::populateConversationTopicTable()
       ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(obj.id)));
       ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(obj.name));
     }
-    ui->m_objTable->resizeColumnsToContents();
+    ui->m_convTopicTable->resizeColumnsToContents();
+    ui->m_convDialogueLine->clear();
   }
-  else if (m_currentConvTopic == ConvTopic_Race)
+  else if (m_currentConvTopic == ConvTopic_AskAboutRace)
   {
     for (int raceId = 0; raceId < AlienRace_NumRaces; raceId++)
     {
@@ -813,6 +847,25 @@ void MainWindow::populateConversationTopicTable()
       ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(s_raceNames[race]));
     }
     ui->m_convTopicTable->resizeColumnsToContents();
+    ui->m_convDialogueLine->clear();
+  }
+  else if (m_currentConvTopic == ConvTopic_GiveFact)
+  {
+    const QMap<int,Fact> facts = m_facts.getList();
+    foreach (int factId, facts.keys())
+    {
+      const int rowcount = ui->m_convTopicTable->rowCount();
+      ui->m_convTopicTable->insertRow(rowcount);
+      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(factId)));
+      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(QString(facts[factId].text)));
+    }
+    ui->m_convTopicTable->resizeColumnsToContents();
+    ui->m_convDialogueLine->clear();
+  }
+  else if ((m_currentConvTopic == ConvTopic_GreetingInitial) ||
+           (m_currentConvTopic == ConvTopic_GreetingSubsequent))
+  {
+    getConversationLinesForCurrentTopic();
   }
 }
 
@@ -824,38 +877,74 @@ void MainWindow::on_m_convTopicTable_currentCellChanged(int currentRow, int curr
 
   if (currentRow >= 0)
   {
-    populateConvLineList();
+    getConversationLinesForCurrentTopic();
   }
 }
 
-void MainWindow::populateConvLineList()
+void MainWindow::getConversationLinesForCurrentTopic()
 {
   const int currentAlienRow = ui->m_convAlienTable->currentRow();
   const int currentTopicRow = ui->m_convTopicTable->currentRow();
 
-  if ((currentAlienRow >= 0) && (currentTopicRow >=0 ))
-  {
-    const int alienId = ui->m_convAlienTable->item(currentAlienRow, 0)->text().toInt();
-    const int thingId = ui->m_convTopicTable->item(currentTopicRow, 0)->text().toInt();
-    m_currentConvLines = m_convText.getConversationText(alienId, m_currentConvTopic, thingId);
+  const int alienId = (currentAlienRow >= 0) ? (ui->m_convAlienTable->item(currentAlienRow, 0)->text().toInt()) : 0;
+  const int thingId = (currentTopicRow >= 0) ? (ui->m_convTopicTable->item(currentTopicRow, 0)->text().toInt()) : 0;
 
-    ui->m_convLineList->clear();
-    ui->m_convLineList->clearSelection();
-    for (int i = 0; i < m_currentConvLines.size(); i++)
-    {
-      ui->m_convLineList->addItem(QString("%1").arg(i));
-    }
+  // certain conversation topic categories do not require a topic ID greater than zero
+  const bool thingIdOfZeroAllowed = (m_currentConvTopic == ConvTopic_AskAboutRace) ||
+                                    (m_currentConvTopic == ConvTopic_GreetingInitial) ||
+                                    (m_currentConvTopic == ConvTopic_GreetingSubsequent);
+
+  if ((alienId > 0) && ((thingId > 0) || thingIdOfZeroAllowed))
+  {
+    m_currentConvLines = m_convText.getConversationText(alienId, m_currentConvTopic, thingId);
+    m_currentConvLinesPos = (m_currentConvLines.size() > 0) ? 0 : -1;
+
+    setConvNextPrevButtonState();
+    displayCurrentConversationLine();
   }
 }
 
-void MainWindow::on_m_convLineList_currentRowChanged(int currentRow)
+void MainWindow::on_m_convNextButton_clicked()
 {
-  QString currentDialogLine;
-
-  if ((currentRow >= 0) && (m_currentConvLines.size() > currentRow))
+  if (m_currentConvLinesPos > 0)
   {
-    currentDialogLine = m_currentConvLines[currentRow];
+    m_currentConvLinesPos--;
   }
 
-  ui->m_convDialogueLine->setPlainText(currentDialogLine);
+  setConvNextPrevButtonState();
+  displayCurrentConversationLine();
+}
+
+void MainWindow::on_m_convPrevButton_clicked()
+{
+  if (m_currentConvLinesPos > 0)
+  {
+    m_currentConvLinesPos--;
+  }
+
+  setConvNextPrevButtonState();
+  displayCurrentConversationLine();
+}
+
+void MainWindow::setConvNextPrevButtonState()
+{
+  if (m_currentConvLinesPos >= 0)
+  {
+    ui->m_convNextButton->setEnabled(m_currentConvLines.size() > (m_currentConvLinesPos + 1));
+    ui->m_convPrevButton->setEnabled(m_currentConvLinesPos > 0);
+  }
+  else
+  {
+    ui->m_convNextButton->setEnabled(false);
+    ui->m_convPrevButton->setEnabled(false);
+  }
+}
+
+void MainWindow::displayCurrentConversationLine()
+{
+  ui->m_convDialogueLine->clear();
+  if ((m_currentConvLinesPos >= 0) && (m_currentConvLines.size() > m_currentConvLinesPos))
+  {
+    ui->m_convDialogueLine->setPlainText(m_currentConvLines[m_currentConvLinesPos]);
+  }
 }

@@ -62,10 +62,16 @@ private slots:
   void on_m_convTopicButtonPlace_clicked();
   void on_m_convTopicButtonObject_clicked();
   void on_m_convTopicButtonRace_clicked();
-
   void on_m_convTopicTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+  void on_m_convTopicButtonGreeting0_clicked();
+  void on_m_convTopicButtonGreeting1_clicked();
+  void on_m_convTopicButtonDispObj_clicked();
+  void on_m_convTopicButtonGiveObj_clicked();
+  void on_m_convTopicButtonGiveFact_clicked();
+  void on_m_convNextButton_clicked();
+  void on_m_convPrevButton_clicked();
 
-  void on_m_convLineList_currentRowChanged(int currentRow);
+  void on_m_convTopicButtonSeesItem_clicked();
 
 private:
   Ui::MainWindow *ui;
@@ -104,6 +110,7 @@ private:
 
   ConvTopic m_currentConvTopic;
   QStringList m_currentConvLines;
+  int m_currentConvLinesPos;
 
   QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
 
@@ -121,7 +128,9 @@ private:
   void loadAlienFrame(int frameId);
 
   void populateConversationTopicTable();
-  void populateConvLineList();
+  void getConversationLinesForCurrentTopic();
+  void displayCurrentConversationLine();
+  void setConvNextPrevButtonState();
 
   void putResourceLabelsInArray();
   void clearAllResourceLabels();

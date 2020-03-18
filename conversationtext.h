@@ -11,14 +11,27 @@
 #define TLKN_RECORDSIZE 0x06
 #define TLKX_RECORDSIZE 0x04
 
+#define TLKN_CMD_ASKABOUT     0x00
+#define TLKN_CMD_SEESOBJ      0x02
+#define TLKN_CMD_TRADEFOROBJ  0x03
+#define TLKN_CMD_DISPOBJECT   0x04
+#define TLKN_CMD_GREETFIRST   0x05
+#define TLKN_CMD_GREETNEXT    0x06
+#define TLKN_CMD_ASKABOUTRACE 0x07
+#define TLKN_CMD_GIVEOBJECT   0x08
+
 enum ConvTopic
 {
-  ConvTopic_GreetingFirstMeeting,
-  ConvTopic_GreetingPreviouslyMet,
-  ConvTopic_Person,
-  ConvTopic_Location,
-  ConvTopic_Object,
-  ConvTopic_Race
+  ConvTopic_GreetingInitial,
+  ConvTopic_GreetingSubsequent,
+  ConvTopic_AskAboutPerson,
+  ConvTopic_AskAboutLocation,
+  ConvTopic_AskAboutObject,
+  ConvTopic_AskAboutRace,
+  ConvTopic_DisplayObject,
+  ConvTopic_GiveObject,
+  ConvTopic_GiveFact,
+  ConvTopic_SeesObject,
 };
 
 enum ConvTableType

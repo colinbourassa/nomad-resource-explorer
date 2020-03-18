@@ -196,22 +196,46 @@ QList<int> ConversationText::getTLKNIndexes(ConvTopic topic, int requestedId, co
     const int alienId   = data[offset + 3];
     const int placeId   = data[offset + 4] + (0x100 * data[offset + 5]);
     const int objectId  = data[offset + 6];
-    const int raceId    = data[offset + 7];
+    const int miscId    = data[offset + 7];
     const int tlknIndex = data[offset + 8] + (0x100 * data[offset + 9]);
 
-    if ((topic == ConvTopic_Race) && (firstByte == 7) && (raceId == requestedId))
+    if ((topic == ConvTopic_GreetingInitial) && (firstByte == TLKN_CMD_GREETFIRST))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_Person) && (alienId == requestedId))
+    else if ((topic == ConvTopic_GreetingSubsequent) && (firstByte == TLKN_CMD_GREETNEXT))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_Object) && (objectId == requestedId))
+    else if ((topic == ConvTopic_DisplayObject) && (firstByte == TLKN_CMD_DISPOBJECT) && (objectId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_Location) && (placeId == requestedId))
+    else if ((topic == ConvTopic_GiveObject) && (firstByte == TLKN_CMD_GIVEOBJECT) && (objectId == requestedId))
+    {
+      indexes.append(tlknIndex);
+    }
+    else if ((topic == ConvTopic_SeesObject) && (firstByte == TLKN_CMD_SEESOBJ) && (objectId == requestedId))
+    {
+      indexes.append(tlknIndex);
+    }
+    else if ((topic == ConvTopic_AskAboutRace) && (firstByte == TLKN_CMD_ASKABOUTRACE) && (miscId == requestedId))
+    {
+      indexes.append(tlknIndex);
+    }
+    else if ((topic == ConvTopic_AskAboutPerson) && (firstByte == TLKN_CMD_ASKABOUT) && (alienId == requestedId))
+    {
+      indexes.append(tlknIndex);
+    }
+    else if ((topic == ConvTopic_AskAboutObject) && (firstByte == TLKN_CMD_ASKABOUT) && (objectId == requestedId))
+    {
+      indexes.append(tlknIndex);
+    }
+    else if ((topic == ConvTopic_AskAboutLocation) && (firstByte == TLKN_CMD_ASKABOUT) && (placeId == requestedId))
+    {
+      indexes.append(tlknIndex);
+    }
+    else if ((topic == ConvTopic_GiveFact) && (firstByte == TLKN_CMD_ASKABOUT) && (miscId == requestedId))
     {
       indexes.append(tlknIndex);
     }
