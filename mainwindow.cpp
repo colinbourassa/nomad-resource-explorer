@@ -48,6 +48,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   ui->m_fullscreenView->scale(2, 2);
 
   setupAudio();
+  clearAllResourceLabels();
 
   if (!gameDir.isEmpty())
   {
@@ -90,7 +91,7 @@ void MainWindow::clearAllResourceLabels()
     const PlanetResourceType prType = static_cast<PlanetResourceType>(rtypeIdx);
     foreach (QLabel* l, m_resourceLabels[prType])
     {
-      l->clear();
+      l->setText(QString::fromUtf8(" \u2022"));
     }
   }
 }
@@ -492,7 +493,7 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
           {
             const int resourceItemId = resourcesOfType.keys().at(resourceSlot);
             const QString resourceName = m_invObject.getName(resourceItemId);
-            m_resourceLabels[resource][resourceSlot]->setText(QString("   ") + resourceName);
+            m_resourceLabels[resource][resourceSlot]->setText(QString::fromUtf8(" \u2022  ") + resourceName);
             resourceSlot++;
           }
         }
