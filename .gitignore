@@ -1,4 +1,5 @@
 build-*
 datafiles/
 *.pro.user
+standalone_utils/dat_extractor
 
