@@ -3,9 +3,10 @@
 #include "imageconverter.h"
 #include "gametext.h"
 
-InvObject::InvObject(DatLibrary& lib, Palette& pal) :
+InvObject::InvObject(DatLibrary& lib, Palette& pal, GameText& gtext) :
   DatTable<ObjectTableEntry> (lib),
-  m_pal(&pal)
+  m_pal(&pal),
+  m_gtext(&gtext)
 {
 
 }
@@ -91,7 +92,7 @@ QString InvObject::getObjectText(int id)
       if (txtOffset < objTextStrData.size())
       {
         const char* rawdata = objTextStrData.data();
-        txt = GameText::readString(rawdata + txtOffset);
+        txt = m_gtext->readString(rawdata + txtOffset);
       }
     }
   }

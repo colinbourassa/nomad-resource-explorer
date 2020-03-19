@@ -5,6 +5,7 @@
 #include <QPixmap>
 #include <stdint.h>
 #include "dattable.h"
+#include "gametext.h"
 #include "enums.h"
 #include "palette.h"
 
@@ -91,7 +92,7 @@ typedef struct __attribute__((packed)) ObjectTableEntry
 class InvObject : public DatTable<ObjectTableEntry>
 {
 public:
-  InvObject(DatLibrary& lib, Palette& pal);
+  InvObject(DatLibrary& lib, Palette& pal, GameText& gtext);
   virtual ~InvObject();
   QPixmap getImage(int id, bool& status);
   QMap<int,InventoryObj> getList();
@@ -106,6 +107,7 @@ protected:
 
 private:
   Palette* m_pal;
+  GameText* m_gtext;
   QMap<int,InventoryObj> m_objList;
 };
 

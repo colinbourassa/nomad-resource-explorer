@@ -5,6 +5,7 @@
 #include <QByteArray>
 #include <QList>
 #include "datlibrary.h"
+#include "gametext.h"
 #include "aliens.h"
 
 #define TLKT_RECORDSIZE 0x0A
@@ -44,12 +45,13 @@ enum ConvTableType
 class ConversationText
 {
 public:
-  ConversationText(DatLibrary& lib, Aliens& aliens);
+  ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gtext);
   QStringList getConversationText(int alienId, ConvTopic topic, int thingId);
 
 private:
   DatLibrary* m_lib;
   Aliens* m_aliens;
+  GameText* m_gtext;
 
   bool getTLKTData(ConvTableType tableType, int id, QByteArray& data);
   bool getTLKNData(ConvTableType tableType, int id, QByteArray& data);

@@ -13,6 +13,7 @@
 #include <QListWidgetItem>
 #include <QLabel>
 #include "datlibrary.h"
+#include "gametext.h"
 #include "invobject.h"
 #include "palette.h"
 #include "places.h"
@@ -79,6 +80,7 @@ private:
   QString m_gamedir;
 
   DatLibrary m_lib;
+  GameText m_gametext;
   InvObject m_invObject;
   Places m_places;
   Palette m_palette;

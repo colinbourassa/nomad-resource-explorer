@@ -4,9 +4,10 @@
 #include <string.h>
 #include <QtEndian>
 
-ConversationText::ConversationText(DatLibrary& lib, Aliens& aliens) :
+ConversationText::ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gtext) :
   m_lib(&lib),
-  m_aliens(&aliens)
+  m_aliens(&aliens),
+  m_gtext(&gtext)
 {
 
 }
@@ -88,7 +89,7 @@ QStringList ConversationText::getTLKXStrings(const QList<int>& tlkxIndexes,
     memcpy(&tlkxStrOffset, &idxData[tlkxIndexOffset], TLKX_RECORDSIZE);
     tlkxStrOffset = qFromLittleEndian<quint32>(tlkxStrOffset);
 
-    const QString line = GameText::readString(tlkxStrData.data() + tlkxStrOffset);
+    const QString line = m_gtext->readString(tlkxStrData.data() + tlkxStrOffset);
     strings.append(line);
   }
 

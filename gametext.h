@@ -3,6 +3,14 @@
 
 #include <QString>
 #include <QMap>
+#include <QByteArray>
+#include "datlibrary.h"
+
+#define METATAB_RECORDSIZE_BYTES   4
+#define METATAB_TYPE_SYNONYM       0
+#define METATAB_TYPE_TRANSLATION   1
+#define METATAB_TYPE_LOSTENGATEWAY 2
+#define METATEXT_RECORDSIZE_BYTES  2
 
 enum GTxtCmd
 {
@@ -52,7 +60,7 @@ static const QMap<GTxtCmd,int> g_gameTextParamCount =
   { GTxtCmd_ModifyMissionTable,     1 }
 };
 
-/*
+/**
  * Reads mission, conversation, and object text from a data file. This text
  * may have embedded command sequences that control the game environment, and
  * this class will process them appropriately.
@@ -60,10 +68,18 @@ static const QMap<GTxtCmd,int> g_gameTextParamCount =
 class GameText
 {
 public:
-  GameText();
+  GameText(DatLibrary& lib);
+  void clear();
 
   //! Produces a regular string from string data with embedded commands
-  static QString readString(const char* data, int maxlen = 0x400);
+  QString readString(const char* data, int maxlen = 0x400);
+
+private:
+  DatLibrary* m_lib;
+  QByteArray m_metaTab;
+  QByteArray m_metaTextTab;
+
+  QString getMetaString(int metaTabIndex);
 };
 
 #endif // GAMETEXT_H

@@ -19,7 +19,8 @@
 MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  m_invObject(m_lib, m_palette),
+  m_gametext(m_lib),
+  m_invObject(m_lib, m_palette, m_gametext),
   m_places(m_lib, m_palette, m_pclasses),
   m_palette(m_lib),
   m_pclasses(m_lib),
@@ -30,7 +31,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_facts(m_lib),
   m_audio(m_lib),
   m_fullscreenImages(m_lib, m_palette),
-  m_convText(m_lib, m_aliens),
+  m_convText(m_lib, m_aliens, m_gametext),
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
   m_currentNNVFilename(""),
