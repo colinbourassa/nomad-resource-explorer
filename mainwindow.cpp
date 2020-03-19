@@ -40,8 +40,8 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_currentConvLinesPos(-1)
 {
   ui->setupUi(this);
-
   putResourceLabelsInArray();
+
   ui->m_objectImageView->scale(3, 3);
   ui->m_planetView->scale(2, 2);
   ui->m_alienView->scale(3, 3);
@@ -62,6 +62,9 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
+/**
+ * Create a convenience array of the QLabels used to display the natural resources of a planet.
+ */
 void MainWindow::putResourceLabelsInArray()
 {
   m_resourceLabels[PlanetResourceType_Animal] = { { 0, ui->m_pAnimals0 },
@@ -84,6 +87,9 @@ void MainWindow::putResourceLabelsInArray()
                                                    { 2, ui->m_pMinerals2 } };
 }
 
+/**
+ * Set all of the planet resource labels to a string that contains a bullet but no further text.
+ */
 void MainWindow::clearAllResourceLabels()
 {
   for (int rtypeIdx = 0; rtypeIdx < PlanetResourceType_NumTypes; rtypeIdx++)
@@ -96,6 +102,9 @@ void MainWindow::clearAllResourceLabels()
   }
 }
 
+/**
+ * Clears the cached data in each of the data handling class instances.
+ */
 void MainWindow::clearData()
 {
   m_lib.closeData();
@@ -112,6 +121,9 @@ void MainWindow::clearData()
   m_alienFrames.clear();
 }
 
+/**
+ * Opens a new game data directory and sets up the form widgets the display the new data.
+ */
 void MainWindow::openNewData(const QString gameDir)
 {
   clearData();
@@ -127,7 +139,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateConversationWidgets();
 }
 
-/*
+/**
  * Sets up audio output to match the PCM sound format used by the game.
  */
 void MainWindow::setupAudio()
@@ -148,6 +160,11 @@ void MainWindow::setupAudio()
   }
 }
 
+/**
+ * Sets the audio playback state QLabel to display the current playback state.
+ * This routine also calls stop() on the QAudioOutput when playback of the data
+ * has finished and the output device is idle.
+ */
 void MainWindow::setAudioStateLabel(QAudio::State state)
 {
   switch (state)
@@ -174,29 +191,43 @@ void MainWindow::setAudioStateLabel(QAudio::State state)
   setSoundButtonStates();
 }
 
+/**
+ * Responds to the audio playback state changing by calling a routine
+ * that updates labels and button states.
+ */
 void MainWindow::onAudioStateChanged(QAudio::State state)
 {
   setAudioStateLabel(state);
 }
 
+/**
+ * Responds to the "open game directory" menu action being triggered by
+ * calling a routine that will causes the form to be updated with new data.
+ */
 void MainWindow::on_actionOpen_game_data_dir_triggered()
 {
   m_gamedir = QFileDialog::getExistingDirectory(this, "Select directory containing Nomad .DAT files", "/home", QFileDialog::ShowDirsOnly);
   openNewData(m_gamedir);
 }
 
+/**
+ * Closes files and exits the application.
+ */
 void MainWindow::onExit()
 {
   m_lib.closeData();
   this->close();
 }
 
+/**
+ * Closes files and clears the forms.
+ */
 void MainWindow::onCloseDataFiles()
 {
   clearData();
 }
 
-/*
+/**
  * Populates the table of places.
  */
 void MainWindow::populatePlaceWidgets()
@@ -332,6 +363,9 @@ void MainWindow::populateAudioWidgets()
   ui->m_soundTree->resizeColumnToContents(0);
 }
 
+/**
+ * Populates the tree of fullscreen image files.
+ */
 void MainWindow::populateFullscreenLbmWidgets()
 {
   ui->m_fullscreenTree->clear();
@@ -357,6 +391,10 @@ void MainWindow::populateFullscreenLbmWidgets()
   ui->m_fullscreenTree->resizeColumnToContents(0);
 }
 
+/**
+ * Populates the only conversation text widget that must always contains some data,
+ * which is the primary list of aliens.
+ */
 void MainWindow::populateConversationWidgets()
 {
   QMap<int,Alien> aliens = m_aliens.getList();
@@ -375,7 +413,7 @@ void MainWindow::populateConversationWidgets()
   ui->m_convAlienTable->resizeColumnsToContents();
 }
 
-/*
+/**
  * Responds to a ship being selected in the ship table by populating
  * the neighboring table to show that ship's inventory.
  */
@@ -398,7 +436,11 @@ void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentCo
     ui->m_shipInventoryTable->setItem(rowcount, 1, new QTableWidgetItem(m_invObject.getName(obj)));
     ui->m_shipInventoryTable->setItem(rowcount, 2, new QTableWidgetItem(QString("%1").arg(count)));
   }
-  ui->m_shipInventoryTable->resizeColumnsToContents();
+
+  // resize the columns individually, but skip the last column so that
+  // the stretchLastSection property is not ignored (QTBUG-52307)
+  ui->m_shipInventoryTable->resizeColumnToContents(0);
+  ui->m_shipInventoryTable->resizeColumnToContents(1);
 }
 
 /*
@@ -435,6 +477,9 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   ui->m_objectText->setPlainText(m_invObject.getObjectText(id));
 }
 
+/**
+ * Responds to a row being selected in the fact table by loading and displaying the text for that fact.
+ */
 void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentColumn)
@@ -446,6 +491,10 @@ void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentCo
   ui->m_factText->setPlainText(f.text);
 }
 
+/**
+ * Responds to a row being selected in the place table by loading and displaying all of its parameters,
+ * including class name, temperature, and resources.
+ */
 void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentColumn)
@@ -510,6 +559,9 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
   }
 }
 
+/**
+ * Responds to a row being selected in the alien table by loading its animation frames.
+ */
 void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentColumn)
@@ -539,11 +591,17 @@ void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentC
   }
 }
 
+/**
+ * Responds to a change in the alien animation frame slider position by displaying the appropriate frame.
+ */
 void MainWindow::on_m_alienFrameSlider_valueChanged(int value)
 {
   loadAlienFrame(value);
 }
 
+/**
+ * Loads and displays a single alien animation frame.
+ */
 void MainWindow::loadAlienFrame(int frameId)
 {
   m_alienScene.clear();
@@ -554,7 +612,7 @@ void MainWindow::loadAlienFrame(int frameId)
   }
 }
 
-/*
+/**
  * Responds to the selection in the sound .NNV tree widget being changed.
  */
 void MainWindow::on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
@@ -582,7 +640,7 @@ void MainWindow::on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTr
   setSoundButtonStates();
 }
 
-/*
+/**
  * Decrements the currently selected sound ID.
  */
 void MainWindow::on_m_soundPrevButton_clicked()
@@ -595,7 +653,7 @@ void MainWindow::on_m_soundPrevButton_clicked()
   }
 }
 
-/*
+/**
  * Loads the currently selected sound into a buffer, and start playing it.
  */
 void MainWindow::on_m_soundPlayButton_clicked()
@@ -616,7 +674,7 @@ void MainWindow::on_m_soundPlayButton_clicked()
   }
 }
 
-/*
+/**
  * Stops the audio output.
  * The enable/disable state of the sound related widgets will be updated by the stateChanged()
  * handler for the QAudioOutput object, which will be triggered by stopping the playback.
@@ -626,7 +684,7 @@ void MainWindow::on_m_soundStopButton_clicked()
   m_audioOutput->stop();
 }
 
-/*
+/**
  * Increments the currently selected sound ID.
  */
 void MainWindow::on_m_soundNextButton_clicked()
@@ -639,7 +697,7 @@ void MainWindow::on_m_soundNextButton_clicked()
   }
 }
 
-/*
+/**
  * Set the enable state of each of the sound-playing buttons, depending
  * on the currently selected sound ID and the audio output state.
  */
@@ -676,7 +734,7 @@ void MainWindow::setSoundButtonStates()
   }
 }
 
-/*
+/**
  * Sets the text of the label that displays the currently selected sound ID.
  */
 void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
@@ -695,7 +753,7 @@ void MainWindow::setSoundIDLabel(QString nnvName, int soundId)
   }
 }
 
-/*
+/**
  * Loads and displays one of the fullscreen LBM images.
  */
 void MainWindow::on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
@@ -718,6 +776,9 @@ void MainWindow::on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem* current
   ui->m_fullscreenView->setScene(&m_fullscreenScene);
 }
 
+/**
+ * Responds to a row being selected in the alien table of the conversation text tab.
+ */
 void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentRow)
@@ -728,66 +789,101 @@ void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int curr
   getConversationLinesForCurrentTopic();
 }
 
+/**
+ * Switches the current conversation topic to "initial greeting".
+ */
 void MainWindow::on_m_convTopicButtonGreeting0_clicked()
 {
   m_currentConvTopic = ConvTopic_GreetingInitial;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "subsequent greeting".
+ */
 void MainWindow::on_m_convTopicButtonGreeting1_clicked()
 {
   m_currentConvTopic = ConvTopic_GreetingSubsequent;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "ask about person".
+ */
 void MainWindow::on_m_convTopicButtonPerson_clicked()
 {
   m_currentConvTopic = ConvTopic_AskAboutPerson;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "ask about location".
+ */
 void MainWindow::on_m_convTopicButtonPlace_clicked()
 {
   m_currentConvTopic = ConvTopic_AskAboutLocation;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "ask about object".
+ */
 void MainWindow::on_m_convTopicButtonObject_clicked()
 {
   m_currentConvTopic = ConvTopic_AskAboutObject;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "ask about race".
+ */
 void MainWindow::on_m_convTopicButtonRace_clicked()
 {
   m_currentConvTopic = ConvTopic_AskAboutRace;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "display object".
+ */
 void MainWindow::on_m_convTopicButtonDispObj_clicked()
 {
   m_currentConvTopic = ConvTopic_DisplayObject;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "give object".
+ */
 void MainWindow::on_m_convTopicButtonGiveObj_clicked()
 {
   m_currentConvTopic = ConvTopic_GiveObject;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "give fact".
+ */
 void MainWindow::on_m_convTopicButtonGiveFact_clicked()
 {
   m_currentConvTopic = ConvTopic_GiveFact;
   populateConversationTopicTable();
 }
 
+/**
+ * Switches the current conversation topic to "sees item".
+ */
 void MainWindow::on_m_convTopicButtonSeesItem_clicked()
 {
   m_currentConvTopic = ConvTopic_SeesObject;
   populateConversationTopicTable();
 }
 
+/**
+ * Populates the table of specific conversation topics, given the currently selected topic category.
+ * Note that two categories -- Greeting/Initial and Greeting/Subsequent -- do not require the selection
+ * of a specific topic, and they will not trigger the population of the table.
+ */
 void MainWindow::populateConversationTopicTable()
 {
   ui->m_convTopicTable->setRowCount(0);
@@ -870,6 +966,9 @@ void MainWindow::populateConversationTopicTable()
   }
 }
 
+/**
+ * Responds to the selection of a row in the conversation topic table.
+ */
 void MainWindow::on_m_convTopicTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
   Q_UNUSED(currentColumn)
@@ -882,6 +981,9 @@ void MainWindow::on_m_convTopicTable_currentCellChanged(int currentRow, int curr
   }
 }
 
+/**
+ * Loads any conversation text that is applicable to the currently selected alien and conversation topic.
+ */
 void MainWindow::getConversationLinesForCurrentTopic()
 {
   const int currentAlienRow = ui->m_convAlienTable->currentRow();
@@ -905,6 +1007,10 @@ void MainWindow::getConversationLinesForCurrentTopic()
   }
 }
 
+/**
+ * Responds to the activation of the button that advances to the next line of dialogue
+ * that is applicable to the currently selected alien and conversation topic.
+ */
 void MainWindow::on_m_convNextButton_clicked()
 {
   if (m_currentConvLinesPos > 0)
@@ -916,6 +1022,10 @@ void MainWindow::on_m_convNextButton_clicked()
   displayCurrentConversationLine();
 }
 
+/**
+ * Responds to the activation of the button that advances to the next line of dialogue
+ * that is applicable to the currently selected alien and conversation topic.
+ */
 void MainWindow::on_m_convPrevButton_clicked()
 {
   if (m_currentConvLinesPos > 0)
@@ -927,6 +1037,10 @@ void MainWindow::on_m_convPrevButton_clicked()
   displayCurrentConversationLine();
 }
 
+/**
+ * Sets the enable/disable state of the conversation next/prev buttons, depending on the
+ * availability of additional dialogue lines.
+ */
 void MainWindow::setConvNextPrevButtonState()
 {
   if (m_currentConvLinesPos >= 0)
@@ -941,6 +1055,9 @@ void MainWindow::setConvNextPrevButtonState()
   }
 }
 
+/**
+ * Displays the currently selected line of conversation text.
+ */
 void MainWindow::displayCurrentConversationLine()
 {
   ui->m_convDialogueLine->clear();
