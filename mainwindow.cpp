@@ -182,7 +182,7 @@ void MainWindow::onAudioStateChanged(QAudio::State state)
 void MainWindow::on_actionOpen_game_data_dir_triggered()
 {
   m_gamedir = QFileDialog::getExistingDirectory(this, "Select directory containing Nomad .DAT files", "/home", QFileDialog::ShowDirsOnly);
-  m_lib.openData(m_gamedir);
+  openNewData(m_gamedir);
 }
 
 void MainWindow::onExit()
