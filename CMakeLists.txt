@@ -8,8 +8,7 @@ set (NRE_VER_PATCH 0)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 set (CMAKE_AUTOMOC ON)
 
-find_package (Qt5Widgets)
-find_package (Qt5Multimedia)
+find_package (Qt5 COMPONENTS Core Widgets Multimedia REQUIRED)
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} -s")
@@ -78,6 +77,13 @@ if (MINGW)
   set (CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
   message (STATUS "Limiting find_library() suffixes to ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 
+  find_library (LIBZSTD libzstd)
+  if (LIBZSTD)
+    message (STATUS "Found libzstd at ${LIBZSTD}")
+  else ()
+    message (SEND_ERROR "Could not find libzstd!")
+  endif ()
+
   find_library (LIBGCC NAMES libgcc_s_sjlj-1 libgcc_s_seh-1 libgcc_s_dw2-1)
   if (LIBGCC)
     message (STATUS "Found libgcc at ${LIBGCC}")
@@ -103,10 +109,8 @@ if (MINGW)
   if (ZLIB_FOUND)
     message ("ZLIB location is ${ZLIB_LIBRARIES}")
   else ()
-    message (SEND_ERROR "Could not find zlib1!")
+    message (SEND_ERROR "Could not find zlib!")
   endif ()
-
-  find_package (Qt5 COMPONENTS Core Widgets REQUIRED)
 
   get_target_property (QT5CORE_LIB Qt5::Core LOCATION)
   if (QT5CORE_LIB)
@@ -130,10 +134,17 @@ if (MINGW)
   endif ()
 
   get_target_property (QT5MULTIMEDIA_LIB Qt5::Multimedia LOCATION)
-  if (QT5GUI_LIB)
+  if (QT5MULTIMEDIA_LIB)
     message (STATUS "Qt5::Multimedia location is ${QT5MULTIMEDIA_LIB}")
   else ()
     message (SEND_ERROR "Could not find Qt5Multimedia library!")
+  endif ()
+
+  get_target_property (QT5NETWORK_LIB Qt5::Network LOCATION)
+  if (QT5NETWORK_LIB)
+    message (STATUS "Qt5::Network location is ${QT5NETWORK_LIB}")
+  else ()
+    message (SEND_ERROR "Could not find Qt5Network library!")
   endif ()
 
   get_target_property (QT5WINDOWS_LIB Qt5::QWindowsIntegrationPlugin LOCATION)
@@ -156,11 +167,13 @@ if (MINGW)
                   ${LIBGCC}
                   ${LIBSTDCPP}
                   ${LIBWINPTHREAD}
+                  ${LIBZSTD}
+                  ${ZLIB_LIBRARIES}
                   ${QT5CORE_LIB}
                   ${QT5WIDGETS_LIB}
                   ${QT5MULTIMEDIA_LIB}
+                  ${QT5NETWORK_LIB}
                   ${QT5GUI_LIB}
-                  ${ZLIB_LIBRARIES}
            DESTINATION ".")
   install (FILES ${QT5WINDOWS_LIB}      DESTINATION "platforms")
   if (QT5WINDOWSVISTA_LIB)
@@ -204,8 +217,8 @@ else()
   set (CPACK_PACKAGE_VERSION_PATCH ${NRE_VER_PATCH})
   set (CPACK_DEBIAN_PACKAGE_MAINTAINER "Colin Bourassa <colin.bourassa@gmail.com>")
   set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "Graphical data file explorer for the game resources from the 1993 space trading adventure 'Nomad'")
-  set (CPACK_DEBIAN_PACKAGE_SECTION "Science")
-  set (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.13), libstdc++6 (>= 4.6.3), libcomm14cux (>= 2.1.0), libqt5core5 (>= 5.8.0) | libqt5core5a (>= 5.8.0), libqt5gui5 (>= 5.8.0), libqt5widgets5 (>= 5.8.0)")
+  set (CPACK_DEBIAN_PACKAGE_SECTION "Miscellaneous")
+  set (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.13), libstdc++6 (>= 4.6.3), libqt5core5 (>= 5.12.4) | libqt5core5a (>= 5.12.4), libqt5gui5 (>= 5.12.4), libqt5widgets5 (>= 5.12.4), libqt5network5 (>= 5.12.4), libqt5multimedia5 (>= 5.12.4)")
   set (CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${NRE_VER_MAJOR}.${NRE_VER_MINOR}.${NRE_VER_PATCH}-${CMAKE_SYSTEM_NAME}-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
   set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 
