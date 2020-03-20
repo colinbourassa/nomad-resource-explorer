@@ -8,6 +8,10 @@ set (NRE_VER_PATCH 0)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 set (CMAKE_AUTOMOC ON)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  message (FATAL_ERROR "Error: This project does not currently support MSVC compilers due to the handling of struct packing attributes. Windows builds are supported via MXE or MinGW.")
+endif ()
+
 find_package (Qt5 COMPONENTS Core Widgets Multimedia REQUIRED)
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
@@ -65,10 +69,11 @@ add_executable (nomad-resource-explorer
 message (STATUS "Build type is: ${CMAKE_BUILD_TYPE}")
 
 if (MINGW)
-  message (STATUS "Found Windows/MinGW platform.")
+  message (STATUS "Found Windows/MinGW/MXE platform.")
 
-  # prevent the final executable from launching a terminal window in parallel with the main GUI
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
+  # prevent the final executable from launching a terminal window in parallel with the main GUI,
+  # and force gcc to follow the struct packing attribute in the intended manner
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows -mno-ms-bitfields")
 
   # -fPIC appears to be redundant when building win32 binaries, so disable that flag
   string (REGEX REPLACE "-fPIC" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
