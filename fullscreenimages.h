@@ -19,6 +19,8 @@ private:
   DatLibrary* m_lib;
   Palette* m_pal;
   static const QMap<QString,QString> s_lbmToPal;
+  static const QString s_lbmExtension;
+  static const QString s_palExtension;
 };
 
 #endif // FULLSCREENIMAGES_H

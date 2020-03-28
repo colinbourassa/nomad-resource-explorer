@@ -19,6 +19,8 @@
 #define DAT_FILENAME_SAMPLES  "SAMPLES.DAT"
 #define DAT_FILENAME_TEST     "TEST.DAT"
 
+#define INDEX_FILENAME_LEN    14
+
 enum DatFileType
 {
   DatFileType_ANIM,
@@ -37,7 +39,7 @@ typedef struct __attribute__((packed)) DatFileIndex
   uint8_t flags_b;
   int32_t uncompressed_size;
   int32_t compressed_size;
-  char    filename[14]; // includes null terminator
+  char    filename[INDEX_FILENAME_LEN]; // includes null terminator
   uint32_t offset;
 } DatFileIndex;
 

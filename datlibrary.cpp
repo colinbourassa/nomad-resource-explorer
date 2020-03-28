@@ -109,7 +109,7 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& fi
     // point to the index struct at the current location
     index = reinterpret_cast<const DatFileIndex*>(rawdat + currentIndexOffset);
 
-    if (strncmp(filename.toStdString().c_str(), index->filename, 14) == 0)
+    if (strncmp(filename.toStdString().c_str(), index->filename, INDEX_FILENAME_LEN) == 0)
     {
       found = true;
     }
