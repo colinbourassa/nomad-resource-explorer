@@ -136,6 +136,7 @@ private:
 
   void putResourceLabelsInArray();
   void clearAllResourceLabels();
+  void clearPlaceLabels();
 
   void setSoundButtonStates();
   void setSoundIDLabel(QString nnvName, int soundId);

@@ -103,6 +103,15 @@ void MainWindow::clearAllResourceLabels()
   }
 }
 
+void MainWindow::clearPlaceLabels()
+{
+  ui->m_placeTypeData->clear();
+  ui->m_placeClassData->clear();
+  ui->m_placeRaceData->clear();
+  ui->m_placeTemperatureData->clear();
+  ui->m_placeRepData->clear();
+}
+
 /**
  * Clears the cached data in each of the data handling class instances.
  */
@@ -234,7 +243,7 @@ void MainWindow::onCloseDataFiles()
 void MainWindow::populatePlaceWidgets()
 {
   QMap<int,Place> places = m_places.getPlaceList();
-  ui->m_placeTable->clearContents();
+  ui->m_placeTable->setRowCount(0);
 
   foreach (Place p, places.values())
   {
@@ -252,7 +261,7 @@ void MainWindow::populatePlaceWidgets()
 void MainWindow::populateObjectWidgets()
 {
   QMap<int,InventoryObj> objs = m_invObject.getList();
-  ui->m_objTable->clearContents();
+  ui->m_objTable->setRowCount(0);
 
   foreach (InventoryObj obj, objs.values())
   {
@@ -275,7 +284,7 @@ void MainWindow::populateObjectWidgets()
 void MainWindow::populateAlienWidgets()
 {
   QMap<int,Alien> aliens = m_aliens.getList();
-  ui->m_alienTable->clearContents();
+  ui->m_alienTable->setRowCount(0);
 
   foreach (Alien a, aliens.values())
   {
@@ -296,7 +305,7 @@ void MainWindow::populateAlienWidgets()
 void MainWindow::populateShipWidgets()
 {
   QMap<int,Ship> ships = m_ships.getList();
-  ui->m_shipTable->clearContents();
+  ui->m_shipTable->setRowCount(0);
 
   foreach (Ship s, ships.values())
   {
@@ -317,7 +326,7 @@ void MainWindow::populateShipWidgets()
 void MainWindow::populateFactWidgets()
 {
   QMap<int,Fact> facts = m_facts.getList();
-  ui->m_factTable->clearContents();
+  ui->m_factTable->setRowCount(0);
 
   foreach (Fact f, facts.values())
   {
@@ -399,7 +408,7 @@ void MainWindow::populateFullscreenLbmWidgets()
 void MainWindow::populateConversationWidgets()
 {
   QMap<int,Alien> aliens = m_aliens.getList();
-  ui->m_convAlienTable->clearContents();
+  ui->m_convAlienTable->setRowCount(0);
 
   foreach (Alien a, aliens.values())
   {
@@ -425,23 +434,28 @@ void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentCo
   Q_UNUSED(previousColumn)
 
   ui->m_shipInventoryTable->setRowCount(0);
-  const int shipid = ui->m_shipTable->item(currentRow, 0)->text().toInt();
-  QMap<int,int> inventory = m_inventory.getInventory(shipid);
+  const QTableWidgetItem* const selectedItem = ui->m_shipTable->item(currentRow, 0);
 
-  foreach(int obj, inventory.keys())
+  if (selectedItem)
   {
-    const int count = inventory[obj];
-    const int rowcount = ui->m_shipInventoryTable->rowCount();
-    ui->m_shipInventoryTable->insertRow(rowcount);
-    ui->m_shipInventoryTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(obj)));
-    ui->m_shipInventoryTable->setItem(rowcount, 1, new QTableWidgetItem(m_invObject.getName(obj)));
-    ui->m_shipInventoryTable->setItem(rowcount, 2, new QTableWidgetItem(QString("%1").arg(count)));
-  }
+    const int shipid = selectedItem->text().toInt();
+    QMap<int,int> inventory = m_inventory.getInventory(shipid);
 
-  // resize the columns individually, but skip the last column so that
-  // the stretchLastSection property is not ignored (QTBUG-52307)
-  ui->m_shipInventoryTable->resizeColumnToContents(0);
-  ui->m_shipInventoryTable->resizeColumnToContents(1);
+    foreach(int obj, inventory.keys())
+    {
+      const int count = inventory[obj];
+      const int rowcount = ui->m_shipInventoryTable->rowCount();
+      ui->m_shipInventoryTable->insertRow(rowcount);
+      ui->m_shipInventoryTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(obj)));
+      ui->m_shipInventoryTable->setItem(rowcount, 1, new QTableWidgetItem(m_invObject.getName(obj)));
+      ui->m_shipInventoryTable->setItem(rowcount, 2, new QTableWidgetItem(QString("%1").arg(count)));
+    }
+
+    // resize the columns individually, but skip the last column so that
+    // the stretchLastSection property is not ignored (QTBUG-52307)
+    ui->m_shipInventoryTable->resizeColumnToContents(0);
+    ui->m_shipInventoryTable->resizeColumnToContents(1);
+  }
 }
 
 /*
@@ -454,28 +468,35 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  const int id = ui->m_objTable->item(currentRow, 0)->text().toInt();
   m_objScene.clear();
+  ui->m_objectText->setPlainText("");
 
-  bool pixmapStatus = false;
-  QPixmap pm = m_invObject.getImage(id, pixmapStatus);
+  const QTableWidgetItem* const selectedItem = ui->m_objTable->item(currentRow, 0);
 
-  if (pixmapStatus)
+  if (selectedItem)
   {
-    m_objScene.addPixmap(pm);
-    ui->m_objectImageView->setScene(&m_objScene);
-  }
+    const int id = selectedItem->text().toInt();
 
-  ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
-  if (m_invObject.isUnique(id))
-  {
-    ui->m_objectUniqueLabel->setText("Unique: Yes");
+    bool pixmapStatus = false;
+    QPixmap pm = m_invObject.getImage(id, pixmapStatus);
+
+    if (pixmapStatus)
+    {
+      m_objScene.addPixmap(pm);
+      ui->m_objectImageView->setScene(&m_objScene);
+    }
+
+    ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
+    if (m_invObject.isUnique(id))
+    {
+      ui->m_objectUniqueLabel->setText("Unique: Yes");
+    }
+    else
+    {
+      ui->m_objectUniqueLabel->setText("Unique: No");
+    }
+    ui->m_objectText->setPlainText(m_invObject.getObjectText(id));
   }
-  else
-  {
-    ui->m_objectUniqueLabel->setText("Unique: No");
-  }
-  ui->m_objectText->setPlainText(m_invObject.getObjectText(id));
 }
 
 /**
@@ -487,9 +508,15 @@ void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentCo
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  const int id = ui->m_factTable->item(currentRow, 0)->text().toInt();
-  const Fact f = m_facts.getFact(id);
-  ui->m_factText->setPlainText(f.text);
+  ui->m_factText->clear();
+
+  const QTableWidgetItem* const selectedItem = ui->m_factTable->item(currentRow, 0);
+  if (selectedItem)
+  {
+    const int id = selectedItem->text().toInt();
+    const Fact f = m_facts.getFact(id);
+    ui->m_factText->setPlainText(f.text);
+  }
 }
 
 /**
@@ -502,60 +529,67 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  bool status = true;
-  const int id = ui->m_placeTable->item(currentRow, 0)->text().toInt();
-  m_planetSurfaceScene.clear();
   clearAllResourceLabels();
+  clearPlaceLabels();
+  m_planetSurfaceScene.clear();
 
-  Place p;
-  if (m_places.getPlace(id, p))
+  const QTableWidgetItem* const selectedItem = ui->m_placeTable->item(currentRow, 0);
+
+  if (selectedItem)
   {
-    if (p.isPlanet)
+    bool status = true;
+    const int id = selectedItem->text().toInt();
+
+    Place p;
+    if (m_places.getPlace(id, p))
     {
-      ui->m_placeTypeData->setText("Planet");
-
-      if (id != 0x132) // special check for Second Harmony space station, which uses a 3D model
+      if (p.isPlanet)
       {
-        QPixmap pm = m_places.getPlaceSurfaceImage(id, status);
-        if (status)
-        {
-          m_planetSurfaceScene.addPixmap(pm);
-          ui->m_planetView->setScene(&m_planetSurfaceScene);
-        }
-      }
+        ui->m_placeTypeData->setText("Planet");
 
-      PlanetClass pclassData;
-      if (m_pclasses.pclassData(p.classId, pclassData))
-      {
-        ui->m_placeClassData->setText(pclassData.name);
-        const QString tempString = QString("%1 (%2)").arg(pclassData.temperature).arg(pclassData.temperatureRange);
-        ui->m_placeTemperatureData->setText(tempString);
-        ui->m_placeRaceData->setText(s_raceNames.contains(p.race) ? s_raceNames[p.race] : "(none)");
-        ui->m_placeRepData->setText(m_aliens.getName(p.representativeId));
-
-        foreach (PlanetResourceType resource, pclassData.resources.keys())
+        if (id != 0x132) // special check for Second Harmony space station, which uses a 3D model
         {
-          int resourceSlot = 0;
-          const QMap<int,int> resourcesOfType = pclassData.resources[resource];
-          while ((resourceSlot < 3) &&
-                 (resourceSlot < resourcesOfType.count()) &&
-                 (resourceSlot < m_resourceLabels[resource].count()))
+          QPixmap pm = m_places.getPlaceSurfaceImage(id, status);
+          if (status)
           {
-            const int resourceItemId = resourcesOfType.keys().at(resourceSlot);
-            const QString resourceName = m_invObject.getName(resourceItemId);
-            m_resourceLabels[resource][resourceSlot]->setText(QString::fromUtf8(" \u2022  ") + resourceName);
-            resourceSlot++;
+            m_planetSurfaceScene.addPixmap(pm);
+            ui->m_planetView->setScene(&m_planetSurfaceScene);
+          }
+        }
+
+        PlanetClass pclassData;
+        if (m_pclasses.pclassData(p.classId, pclassData))
+        {
+          ui->m_placeClassData->setText(pclassData.name);
+          const QString tempString = QString("%1 (%2)").arg(pclassData.temperature).arg(pclassData.temperatureRange);
+          ui->m_placeTemperatureData->setText(tempString);
+          ui->m_placeRaceData->setText(s_raceNames.contains(p.race) ? s_raceNames[p.race] : "(none)");
+          ui->m_placeRepData->setText(m_aliens.getName(p.representativeId));
+
+          foreach (PlanetResourceType resource, pclassData.resources.keys())
+          {
+            int resourceSlot = 0;
+            const QMap<int,int> resourcesOfType = pclassData.resources[resource];
+            while ((resourceSlot < 3) &&
+                   (resourceSlot < resourcesOfType.count()) &&
+                   (resourceSlot < m_resourceLabels[resource].count()))
+            {
+              const int resourceItemId = resourcesOfType.keys().at(resourceSlot);
+              const QString resourceName = m_invObject.getName(resourceItemId);
+              m_resourceLabels[resource][resourceSlot]->setText(QString::fromUtf8(" \u2022  ") + resourceName);
+              resourceSlot++;
+            }
           }
         }
       }
-    }
-    else // place is a star
-    {
-      ui->m_placeTypeData->setText("Star");
-      ui->m_placeClassData->setText(m_pclasses.getStarClassName(p.classId));
-      ui->m_placeRaceData->setText("");
-      ui->m_placeTemperatureData->setText("");
-      ui->m_placeRepData->setText("");
+      else // place is a star
+      {
+        ui->m_placeTypeData->setText("Star");
+        ui->m_placeClassData->setText(m_pclasses.getStarClassName(p.classId));
+        ui->m_placeRaceData->setText("");
+        ui->m_placeTemperatureData->setText("");
+        ui->m_placeRepData->setText("");
+      }
     }
   }
 }
@@ -569,25 +603,31 @@ void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentC
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  const int id = ui->m_alienTable->item(currentRow, 0)->text().toInt();
   m_alienFrames.clear();
+  m_aliens.clear();
+  const QTableWidgetItem* const selectedItem = ui->m_alienTable->item(currentRow, 0);
 
-  Alien a;
-  if (m_aliens.getAlien(id, a))
+  if (selectedItem)
   {
-    if (m_aliens.getAnimationFrames(id, m_alienFrames) && (m_alienFrames.count() > 0))
+    const int id = selectedItem->text().toInt();
+
+    Alien a;
+    if (m_aliens.getAlien(id, a))
     {
-      ui->m_alienFrameSlider->setEnabled(true);
-      ui->m_alienFrameSlider->setMaximum(m_alienFrames.count() - 1);
-      ui->m_alienFrameSlider->setSliderPosition(0);
-      loadAlienFrame(0);
-    }
-    else
-    {
-      ui->m_alienFrameSlider->setMaximum(63);
-      ui->m_alienFrameSlider->setEnabled(false);
-      m_alienScene.clear();
-      ui->m_alienView->setScene(&m_alienScene);
+      if (m_aliens.getAnimationFrames(id, m_alienFrames) && (m_alienFrames.count() > 0))
+      {
+        ui->m_alienFrameSlider->setEnabled(true);
+        ui->m_alienFrameSlider->setMaximum(m_alienFrames.count() - 1);
+        ui->m_alienFrameSlider->setSliderPosition(0);
+        loadAlienFrame(0);
+      }
+      else
+      {
+        ui->m_alienFrameSlider->setMaximum(63);
+        ui->m_alienFrameSlider->setEnabled(false);
+        m_alienScene.clear();
+        ui->m_alienView->setScene(&m_alienScene);
+      }
     }
   }
 }
@@ -620,24 +660,35 @@ void MainWindow::on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTr
 {
   Q_UNUSED(previous)
 
-  m_currentNNVFilename = current->text(0);
-  if (current->parent())
+  if (current)
   {
-    const QString datFilename = current->parent()->text(0);
-    m_currentSoundDat = DatLibrary::s_datFileNames.key(datFilename);
-    m_currentNNVSoundCount = m_audio.getNumberOfSoundsInNNV(m_currentSoundDat, m_currentNNVFilename);
-
-    if (m_currentNNVSoundCount > 0)
+    m_currentNNVFilename = current->text(0);
+    if (current->parent())
     {
-      m_currentNNVSoundId = 0;
+      const QString datFilename = current->parent()->text(0);
+      m_currentSoundDat = DatLibrary::s_datFileNames.key(datFilename);
+      m_currentNNVSoundCount = m_audio.getNumberOfSoundsInNNV(m_currentSoundDat, m_currentNNVFilename);
+
+      if (m_currentNNVSoundCount > 0)
+      {
+        m_currentNNVSoundId = 0;
+        setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
+      }
+    }
+    else
+    {
+      m_currentNNVSoundId = -1;
       setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
     }
   }
   else
   {
+    m_currentNNVSoundCount = 0;
     m_currentNNVSoundId = -1;
-    setSoundIDLabel(m_currentNNVFilename, m_currentNNVSoundId);
+    m_currentNNVFilename = "";
+    m_currentSoundDat = DatFileType_INVALID;
   }
+
   setSoundButtonStates();
 }
 
@@ -762,19 +813,22 @@ void MainWindow::on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem* current
   Q_UNUSED(previous)
   m_fullscreenScene.clear();
 
-  const QString lbmFilename = current->text(0);
-  if (current->parent())
+  if (current)
   {
-    const QString datFilename = current->parent()->text(0);
-    const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
-
-    QImage fsLbm;
-    if (m_fullscreenImages.getImage(dat, lbmFilename, fsLbm))
+    const QString lbmFilename = current->text(0);
+    if (current->parent())
     {
-      m_fullscreenScene.addPixmap(QPixmap::fromImage(fsLbm));
+      const QString datFilename = current->parent()->text(0);
+      const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
+
+      QImage fsLbm;
+      if (m_fullscreenImages.getImage(dat, lbmFilename, fsLbm))
+      {
+        m_fullscreenScene.addPixmap(QPixmap::fromImage(fsLbm));
+      }
     }
+    ui->m_fullscreenView->setScene(&m_fullscreenScene);
   }
-  ui->m_fullscreenView->setScene(&m_fullscreenScene);
 }
 
 /**
@@ -787,6 +841,7 @@ void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int curr
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
+  ui->m_convDialogueLine->clear();
   getConversationLinesForCurrentTopic();
 }
 
@@ -990,8 +1045,11 @@ void MainWindow::getConversationLinesForCurrentTopic()
   const int currentAlienRow = ui->m_convAlienTable->currentRow();
   const int currentTopicRow = ui->m_convTopicTable->currentRow();
 
-  const int alienId = (currentAlienRow >= 0) ? (ui->m_convAlienTable->item(currentAlienRow, 0)->text().toInt()) : 0;
-  const int thingId = (currentTopicRow >= 0) ? (ui->m_convTopicTable->item(currentTopicRow, 0)->text().toInt()) : 0;
+  const QTableWidgetItem* const selectedAlienItem = ui->m_convAlienTable->item(currentAlienRow, 0);
+  const QTableWidgetItem* const selectedTopicItem = ui->m_convTopicTable->item(currentTopicRow, 0);
+
+  const int alienId = (selectedAlienItem) ? (selectedAlienItem->text().toInt()) : 0;
+  const int thingId = (selectedTopicItem) ? (selectedTopicItem->text().toInt()) : 0;
 
   // certain conversation topic categories do not require a topic ID greater than zero
   const bool thingIdOfZeroAllowed = (m_currentConvTopic == ConvTopic_AskAboutRace) ||
