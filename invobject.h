@@ -2,7 +2,7 @@
 #define INVENTORY_H
 
 #include <QMap>
-#include <QPixmap>
+#include <QImage>
 #include <stdint.h>
 #include "dattable.h"
 #include "gametext.h"
@@ -94,7 +94,7 @@ class InvObject : public DatTable<ObjectTableEntry>
 public:
   InvObject(DatLibrary& lib, Palette& pal, GameText& gtext);
   virtual ~InvObject();
-  QPixmap getImage(int id, bool& status);
+  bool getImage(int id, QImage& img);
   QMap<int,InventoryObj> getList();
   InventoryObjType getObjectType(int id);
   QString getObjectText(int id);

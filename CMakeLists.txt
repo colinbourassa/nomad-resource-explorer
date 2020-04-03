@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.13.4)
 project (nomad-resource-explorer)
 
 set (NRE_VER_MAJOR 1)
-set (NRE_VER_MINOR 1)
+set (NRE_VER_MINOR 2)
 set (NRE_VER_PATCH 0)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -64,6 +64,8 @@ add_executable (nomad-resource-explorer
     fullscreenimages.h
     conversationtext.cpp
     conversationtext.h
+    stampimages.cpp
+    stampimages.h
     ${UI_SOURCE})
 
 message (STATUS "Build type is: ${CMAKE_BUILD_TYPE}")

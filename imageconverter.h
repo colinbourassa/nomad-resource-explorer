@@ -13,7 +13,7 @@ class ImageConverter
 {
 public:
   ImageConverter();
-  static QPixmap stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, bool& status);
+  static bool stpToImage(QByteArray& stpData, QVector<QRgb> palette, QImage& image);
   static bool delToImage(const QByteArray& delData, QVector<QRgb> palette, QImage& image);
   static bool lbmToImage(const QByteArray& rawData, QVector<QRgb> palette, QImage& image);
   static QPixmap plnToPixmap(QByteArray& plnData, QVector<QRgb> palette, bool& status);

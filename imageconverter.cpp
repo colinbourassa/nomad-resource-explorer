@@ -85,14 +85,17 @@ QPixmap ImageConverter::plnToPixmap(QByteArray &plnData, QVector<QRgb> palette, 
   return pmap;
 }
 
-QPixmap ImageConverter::stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, bool &status)
+/**
+ * Converts "stamp" image (.STP) data (which uses a form of RLE) to a QImage.
+ */
+bool ImageConverter::stpToImage(QByteArray& stpData, QVector<QRgb> palette, QImage& image)
 {
-  status = true;
+  bool status = true;
   const uint16_t width = qFromLittleEndian<quint16>(stpData.data() + 0);
   const uint16_t height = qFromLittleEndian<quint16>(stpData.data() + 2);
 
-  QImage img(width, height, QImage::Format_Indexed8);
-  img.setColorTable(palette);
+  image = QImage(width, height, QImage::Format_Indexed8);
+  image.setColorTable(palette);
 
   uint8_t* const stpDataUnsigned = reinterpret_cast<uint8_t*>(stpData.data());
 
@@ -113,7 +116,7 @@ QPixmap ImageConverter::stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, 
       endptr = outputpos + (rlebyte & 0x7F);
       while ((outputpos < endptr) && (outputpos < pixelcount))
       {
-        img.setPixel(getPixelLocation(width, outputpos), 0x00);
+        image.setPixel(getPixelLocation(width, outputpos), 0x00);
         outputpos++;
       }
     }
@@ -129,7 +132,7 @@ QPixmap ImageConverter::stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, 
         unsigned int palindex = stpDataUnsigned[inputpos];
         while ((outputpos < endptr) && (outputpos < pixelcount))
         {
-          img.setPixel(getPixelLocation(width, outputpos), palindex);
+          image.setPixel(getPixelLocation(width, outputpos), palindex);
           outputpos++;
         }
       }
@@ -144,7 +147,7 @@ QPixmap ImageConverter::stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, 
       while ((outputpos < endptr) && (outputpos < pixelcount) && (inputpos < stpData.size()))
       {
         unsigned int palindex = stpDataUnsigned[inputpos];
-        img.setPixel(getPixelLocation(width, outputpos), palindex);
+        image.setPixel(getPixelLocation(width, outputpos), palindex);
         inputpos++;
         outputpos++;
       }
@@ -157,9 +160,14 @@ QPixmap ImageConverter::stpToPixmap(QByteArray& stpData, QVector<QRgb> palette, 
     status = false;
   }
 
-  return QPixmap::fromImage(img);
+  return status;
 }
 
+/**
+ * Converts some delta-encoded image data to a QImage. If the QImage provided as a parameter
+ * is non-null, then the decoded image data will be overlayed on the existing image (provided
+ * that the width/height of the existing and new images match.)
+ */
 bool ImageConverter::delToImage(const QByteArray& delData, QVector<QRgb> palette, QImage& image)
 {
   const uint16_t width = qFromLittleEndian<quint16>(delData.data() + 0);

@@ -14,6 +14,7 @@ public:
   FullscreenImages(DatLibrary& lib, Palette& pal);
   QMap<DatFileType, QStringList> getAllLbmList();
   bool getImage(DatFileType dat, QString lbmFilename, QImage& img);
+  QString getPalette(DatFileType dat, QString lbmFilename, QVector<QRgb>& palData) const;
 
 private:
   DatLibrary* m_lib;

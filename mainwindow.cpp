@@ -31,6 +31,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_facts(m_lib),
   m_audio(m_lib),
   m_fullscreenImages(m_lib, m_palette),
+  m_stamps(m_lib, m_palette),
   m_convText(m_lib, m_aliens, m_gametext),
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
@@ -47,6 +48,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   ui->m_planetView->scale(2, 2);
   ui->m_alienView->scale(3, 3);
   ui->m_fullscreenView->scale(2, 2);
+  ui->m_stampView->scale(2, 2);
 
   setupAudio();
   clearAllResourceLabels();
@@ -146,6 +148,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateAudioWidgets();
   populateFactWidgets();
   populateFullscreenLbmWidgets();
+  populateStampWidgets();
   populateConversationWidgets();
 }
 
@@ -402,6 +405,35 @@ void MainWindow::populateFullscreenLbmWidgets()
 }
 
 /**
+ * Populates the tree of stamp (STP and ROL) image files.
+ */
+void MainWindow::populateStampWidgets()
+{
+  ui->m_stampTree->clear();
+  const QMap<DatFileType,QStringList> stampList = m_stamps.getAllStampsList();
+
+  foreach (DatFileType dat, stampList.keys())
+  {
+    if (stampList[dat].size() > 0)
+    {
+      const QString datFilename = m_lib.s_datFileNames[dat];
+      QTreeWidgetItem* datTreeParent = new QTreeWidgetItem(ui->m_stampTree);
+      datTreeParent->setText(0, datFilename);
+
+      foreach (QString stampFilename, stampList[dat])
+      {
+        QTreeWidgetItem* stampChild = new QTreeWidgetItem();
+        stampChild->setText(0, stampFilename);
+        datTreeParent->addChild(stampChild);
+      }
+    }
+  }
+
+  ui->m_stampTree->expandAll();
+  ui->m_stampTree->resizeColumnToContents(0);
+}
+
+/**
  * Populates the only conversation text widget that must always contains some data,
  * which is the primary list of aliens.
  */
@@ -476,13 +508,11 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
   if (selectedItem)
   {
     const int id = selectedItem->text().toInt();
+    QImage img;
 
-    bool pixmapStatus = false;
-    QPixmap pm = m_invObject.getImage(id, pixmapStatus);
-
-    if (pixmapStatus)
+    if (m_invObject.getImage(id, img))
     {
-      m_objScene.addPixmap(pm);
+      m_objScene.addPixmap(QPixmap::fromImage(img));
       ui->m_objectImageView->setScene(&m_objScene);
     }
 
@@ -821,6 +851,10 @@ void MainWindow::on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem* current
       const QString datFilename = current->parent()->text(0);
       const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
 
+      QVector<QRgb> tempPal;
+      const QString paletteFilename = m_fullscreenImages.getPalette(dat, lbmFilename, tempPal);
+      ui->m_fullscreenPaletteName->setText(QString("Displaying with palette: ") + paletteFilename);
+
       QImage fsLbm;
       if (m_fullscreenImages.getImage(dat, lbmFilename, fsLbm))
       {
@@ -828,6 +862,41 @@ void MainWindow::on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem* current
       }
     }
     ui->m_fullscreenView->setScene(&m_fullscreenScene);
+  }
+}
+
+/**
+ * Responds to an item being selected in the tree of stamp/roll images.
+ */
+void MainWindow::on_m_stampTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+{
+  Q_UNUSED(previous)
+  m_stampScene.clear();
+  m_stampImages.clear();
+
+  if (current)
+  {
+    const QString stampFilename = current->text(0);
+    if (current->parent())
+    {
+      const QString datFilename = current->parent()->text(0);
+      const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
+
+      if (m_stamps.getStamp(dat, stampFilename, m_stampImages))
+      {
+        ui->m_stampRollSlider->setEnabled(m_stampImages.count() > 0);
+        ui->m_stampRollSlider->setValue(0);
+        if (m_stampImages.count() > 0)
+        {
+          ui->m_stampRollSlider->setMaximum(m_stampImages.count() - 1);
+          displayStamp(0);
+        }
+        else
+        {
+          ui->m_stampRollSlider->setMaximum(0);
+        }
+      }
+    }
   }
 }
 
@@ -1123,5 +1192,19 @@ void MainWindow::displayCurrentConversationLine()
   if ((m_currentConvLinesPos >= 0) && (m_currentConvLines.size() > m_currentConvLinesPos))
   {
     ui->m_convDialogueLine->setPlainText(m_currentConvLines[m_currentConvLinesPos]);
+  }
+}
+
+void MainWindow::on_m_stampRollSlider_sliderMoved(int position)
+{
+  displayStamp(position);
+}
+
+void MainWindow::displayStamp(int rollIndex)
+{
+  if (m_stampImages.count() > rollIndex)
+  {
+    m_stampScene.addPixmap(QPixmap::fromImage(m_stampImages[rollIndex]));
+    ui->m_stampView->setScene(&m_stampScene);
   }
 }

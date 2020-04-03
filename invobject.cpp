@@ -100,23 +100,22 @@ QString InvObject::getObjectText(int id)
   return txt;
 }
 
-QPixmap InvObject::getImage(int id, bool& status)
+bool InvObject::getImage(int id, QImage& img)
 {
-  status = false;
+  bool status = false;
   QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
   QByteArray stpData;
-  QPixmap objImage;
 
   if (m_lib->getFileByName(DatFileType_INVENT, invStpFilename, stpData))
   {
     QVector<QRgb> pal;
     if (m_pal->gamePalette(pal))
     {
-      objImage = ImageConverter::stpToPixmap(stpData, pal, status);
+      status = ImageConverter::stpToImage(stpData, pal, img);
     }
   }
 
-  return objImage;
+  return status;
 }
 
 InventoryObjType InvObject::getObjectType(int id)

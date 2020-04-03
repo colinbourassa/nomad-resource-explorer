@@ -25,6 +25,7 @@
 #include "facts.h"
 #include "audio.h"
 #include "fullscreenimages.h"
+#include "stampimages.h"
 #include "conversationtext.h"
 
 namespace Ui {
@@ -71,8 +72,9 @@ private slots:
   void on_m_convTopicButtonGiveFact_clicked();
   void on_m_convNextButton_clicked();
   void on_m_convPrevButton_clicked();
-
   void on_m_convTopicButtonSeesItem_clicked();
+  void on_m_stampTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+  void on_m_stampRollSlider_sliderMoved(int position);
 
 private:
   Ui::MainWindow *ui;
@@ -92,14 +94,17 @@ private:
   Facts m_facts;
   Audio m_audio;
   FullscreenImages m_fullscreenImages;
+  StampImages m_stamps;
   ConversationText m_convText;
 
   QMap<int,QImage> m_alienFrames;
+  QList<QImage> m_stampImages;
 
   QGraphicsScene m_objScene;
   QGraphicsScene m_planetSurfaceScene;
   QGraphicsScene m_alienScene;
   QGraphicsScene m_fullscreenScene;
+  QGraphicsScene m_stampScene;
 
   int m_currentNNVSoundCount;
   int m_currentNNVSoundId;
@@ -125,6 +130,7 @@ private:
   void populateShipWidgets();
   void populateAudioWidgets();
   void populateFullscreenLbmWidgets();
+  void populateStampWidgets();
   void populateFactWidgets();
   void populateConversationWidgets();
   void loadAlienFrame(int frameId);
@@ -141,6 +147,8 @@ private:
   void setSoundButtonStates();
   void setSoundIDLabel(QString nnvName, int soundId);
   void setAudioStateLabel(QAudio::State state);
+
+  void displayStamp(int rollIndex);
 };
 
 #endif // MAINWINDOW_H
