@@ -131,6 +131,13 @@ void MainWindow::clearData()
   m_facts.clear();
 
   m_alienFrames.clear();
+  m_stampImages.clear();
+
+  m_fullscreenScene.clear();
+  m_objScene.clear();
+  m_stampScene.clear();
+  m_alienScene.clear();
+  m_planetSurfaceScene.clear();
 }
 
 /**
@@ -1202,6 +1209,7 @@ void MainWindow::on_m_stampRollSlider_sliderMoved(int position)
 
 void MainWindow::displayStamp(int rollIndex)
 {
+  m_stampScene.clear();
   if (m_stampImages.count() > rollIndex)
   {
     m_stampScene.addPixmap(QPixmap::fromImage(m_stampImages[rollIndex]));
