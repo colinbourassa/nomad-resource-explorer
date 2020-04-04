@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="m_tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
@@ -1202,7 +1202,14 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen_game_data_dir">
@@ -1218,8 +1225,53 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About...</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>m_tabs</tabstop>
+  <tabstop>m_shipTable</tabstop>
+  <tabstop>m_shipInventoryTable</tabstop>
+  <tabstop>m_placeTable</tabstop>
+  <tabstop>m_planetView</tabstop>
+  <tabstop>m_alienTable</tabstop>
+  <tabstop>m_alienView</tabstop>
+  <tabstop>m_objTable</tabstop>
+  <tabstop>m_objectImageView</tabstop>
+  <tabstop>m_objectText</tabstop>
+  <tabstop>m_factTable</tabstop>
+  <tabstop>m_factText</tabstop>
+  <tabstop>m_soundTree</tabstop>
+  <tabstop>m_soundPrevButton</tabstop>
+  <tabstop>m_soundPlayButton</tabstop>
+  <tabstop>m_soundNextButton</tabstop>
+  <tabstop>m_soundStopButton</tabstop>
+  <tabstop>m_fullscreenTree</tabstop>
+  <tabstop>m_fullscreenView</tabstop>
+  <tabstop>m_stampTree</tabstop>
+  <tabstop>m_stampView</tabstop>
+  <tabstop>m_convAlienTable</tabstop>
+  <tabstop>m_convTopicButtonGreeting0</tabstop>
+  <tabstop>m_convTopicButtonGreeting1</tabstop>
+  <tabstop>m_convTopicButtonPerson</tabstop>
+  <tabstop>m_convTopicButtonPlace</tabstop>
+  <tabstop>m_convTopicButtonObject</tabstop>
+  <tabstop>m_convTopicButtonRace</tabstop>
+  <tabstop>m_convTopicButtonDispObj</tabstop>
+  <tabstop>m_convTopicButtonGiveObj</tabstop>
+  <tabstop>m_convTopicButtonGiveFact</tabstop>
+  <tabstop>m_convTopicButtonSeesItem</tabstop>
+  <tabstop>m_convTopicTable</tabstop>
+  <tabstop>m_convDialogueLine</tabstop>
+  <tabstop>m_convNextButton</tabstop>
+  <tabstop>m_convPrevButton</tabstop>
+  <tabstop>m_stampRollSlider</tabstop>
+  <tabstop>m_alienFrameSlider</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

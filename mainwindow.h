@@ -12,6 +12,7 @@
 #include <QAudioOutput>
 #include <QListWidgetItem>
 #include <QLabel>
+#include "aboutbox.h"
 #include "datlibrary.h"
 #include "gametext.h"
 #include "invobject.h"
@@ -76,8 +77,11 @@ private slots:
   void on_m_stampTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
   void on_m_stampRollSlider_sliderMoved(int position);
 
+  void on_actionAbout_triggered();
+
 private:
   Ui::MainWindow *ui;
+  AboutBox* m_aboutBox;
 
   QString m_gamedir;
 

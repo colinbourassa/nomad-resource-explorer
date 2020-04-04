@@ -19,6 +19,7 @@
 MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
+  m_aboutBox(nullptr),
   m_gametext(m_lib),
   m_invObject(m_lib, m_palette, m_gametext),
   m_places(m_lib, m_palette, m_pclasses),
@@ -62,7 +63,17 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
 MainWindow::~MainWindow()
 {
   delete m_audioOutput;
+  delete m_aboutBox;
   delete ui;
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+  if (!m_aboutBox)
+  {
+    m_aboutBox = new AboutBox(this);
+  }
+  m_aboutBox->show();
 }
 
 /**

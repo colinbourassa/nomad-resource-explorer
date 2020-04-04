@@ -22,6 +22,7 @@ include_directories ("${CMAKE_SOURCE_DIR}"
                      "${Qt5Widgets_INCLUDE_DIRS}")
 
 qt5_wrap_ui (UI_SOURCE mainwindow.ui)
+qt5_wrap_ui (UI_SOURCE aboutbox.ui)
 
 add_definitions ("-DNRE_VER_MAJOR=${NRE_VER_MAJOR}"
                  "-DNRE_VER_MINOR=${NRE_VER_MINOR}"
@@ -29,6 +30,8 @@ add_definitions ("-DNRE_VER_MAJOR=${NRE_VER_MAJOR}"
 
 add_executable (nomad-resource-explorer
     main.cpp
+    aboutbox.cpp
+    aboutbox.h
     dattable.h
     mainwindow.cpp
     mainwindow.h
