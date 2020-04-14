@@ -39,7 +39,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_currentNNVFilename(""),
   m_currentSoundDat(DatFileType_INVALID),
   m_audioOutput(nullptr),
-  m_currentConvTopic(ConvTopic_GreetingInitial),
+  m_currentConvTopic(ConvTopicCategory_GreetingInitial),
   m_currentConvLinesPos(-1)
 {
   ui->setupUi(this);
@@ -929,7 +929,15 @@ void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int curr
   Q_UNUSED(previousColumn)
 
   ui->m_convDialogueLine->clear();
-  getConversationLinesForCurrentTopic();
+
+  // We're going to repopulate the list of conversation topics for the currently selected alien and topic
+  // category. Before we do, save the ID of the last topic selected by the user so that we can auto-select
+  // it in the newly repopulated table *if* that topic is one of interest for the newly selected alien.
+  const int currentTopicRow = ui->m_convTopicTable->currentRow();
+  const QTableWidgetItem* const selectedTopicItem = ui->m_convTopicTable->item(currentTopicRow, 0);
+  const int lastSelectedTopicId = (selectedTopicItem) ? (selectedTopicItem->text().toInt()) : -1;
+
+  populateConversationTopicTable(lastSelectedTopicId);
 }
 
 /**
@@ -937,7 +945,7 @@ void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int curr
  */
 void MainWindow::on_m_convTopicButtonGreeting0_clicked()
 {
-  m_currentConvTopic = ConvTopic_GreetingInitial;
+  m_currentConvTopic = ConvTopicCategory_GreetingInitial;
   populateConversationTopicTable();
 }
 
@@ -946,7 +954,7 @@ void MainWindow::on_m_convTopicButtonGreeting0_clicked()
  */
 void MainWindow::on_m_convTopicButtonGreeting1_clicked()
 {
-  m_currentConvTopic = ConvTopic_GreetingSubsequent;
+  m_currentConvTopic = ConvTopicCategory_GreetingSubsequent;
   populateConversationTopicTable();
 }
 
@@ -955,7 +963,7 @@ void MainWindow::on_m_convTopicButtonGreeting1_clicked()
  */
 void MainWindow::on_m_convTopicButtonPerson_clicked()
 {
-  m_currentConvTopic = ConvTopic_AskAboutPerson;
+  m_currentConvTopic = ConvTopicCategory_AskAboutPerson;
   populateConversationTopicTable();
 }
 
@@ -964,7 +972,7 @@ void MainWindow::on_m_convTopicButtonPerson_clicked()
  */
 void MainWindow::on_m_convTopicButtonPlace_clicked()
 {
-  m_currentConvTopic = ConvTopic_AskAboutLocation;
+  m_currentConvTopic = ConvTopicCategory_AskAboutLocation;
   populateConversationTopicTable();
 }
 
@@ -973,7 +981,7 @@ void MainWindow::on_m_convTopicButtonPlace_clicked()
  */
 void MainWindow::on_m_convTopicButtonObject_clicked()
 {
-  m_currentConvTopic = ConvTopic_AskAboutObject;
+  m_currentConvTopic = ConvTopicCategory_AskAboutObject;
   populateConversationTopicTable();
 }
 
@@ -982,7 +990,7 @@ void MainWindow::on_m_convTopicButtonObject_clicked()
  */
 void MainWindow::on_m_convTopicButtonRace_clicked()
 {
-  m_currentConvTopic = ConvTopic_AskAboutRace;
+  m_currentConvTopic = ConvTopicCategory_AskAboutRace;
   populateConversationTopicTable();
 }
 
@@ -991,7 +999,7 @@ void MainWindow::on_m_convTopicButtonRace_clicked()
  */
 void MainWindow::on_m_convTopicButtonDispObj_clicked()
 {
-  m_currentConvTopic = ConvTopic_DisplayObject;
+  m_currentConvTopic = ConvTopicCategory_DisplayObject;
   populateConversationTopicTable();
 }
 
@@ -1000,7 +1008,7 @@ void MainWindow::on_m_convTopicButtonDispObj_clicked()
  */
 void MainWindow::on_m_convTopicButtonGiveObj_clicked()
 {
-  m_currentConvTopic = ConvTopic_GiveObject;
+  m_currentConvTopic = ConvTopicCategory_GiveObject;
   populateConversationTopicTable();
 }
 
@@ -1009,7 +1017,7 @@ void MainWindow::on_m_convTopicButtonGiveObj_clicked()
  */
 void MainWindow::on_m_convTopicButtonGiveFact_clicked()
 {
-  m_currentConvTopic = ConvTopic_GiveFact;
+  m_currentConvTopic = ConvTopicCategory_GiveFact;
   populateConversationTopicTable();
 }
 
@@ -1018,92 +1026,139 @@ void MainWindow::on_m_convTopicButtonGiveFact_clicked()
  */
 void MainWindow::on_m_convTopicButtonSeesItem_clicked()
 {
-  m_currentConvTopic = ConvTopic_SeesObject;
+  m_currentConvTopic = ConvTopicCategory_SeesObject;
   populateConversationTopicTable();
+}
+
+/**
+ * Responds to the "show only interesting topics" checkbox being checked or unchecked
+ * by applying or removing a filter on the conversation topic list box.
+ */
+void MainWindow::on_m_convFilterTopicsCheckbox_stateChanged(int arg1)
+{
+  Q_UNUSED(arg1)
+  populateConversationTopicTable();
+}
+
+/**
+ * Populates the list widget with the topics for the provided category. The topicList parameter provides
+ * a comprehensive list of all possible topics in the category, but only a subset may actually be added
+ * to the list, depending on whether an alien is selected or the show-only-interesting-dialogue checkbox
+ * is checked.
+ */
+void MainWindow::populateTopicTableForCategory(ConvTopicCategory category, QMap<int, QString> topicList, int lastSelectedTopicId)
+{
+  const int currentAlienRow = ui->m_convAlienTable->currentRow();
+  const QTableWidgetItem* const selectedAlienItem = ui->m_convAlienTable->item(currentAlienRow, 0);
+  const int alienId = (selectedAlienItem) ? (selectedAlienItem->text().toInt()) : 0;
+
+  // we will show all topics for the selected topic category if either:
+  // (a) no alien is selected in the first list box, or
+  // (b) the user has deselected the checkbox that filters the list down to the interesting topics
+  const bool alwaysAddAllTopics = ((alienId == 0) || (ui->m_convFilterTopicsCheckbox->checkState() == Qt::Unchecked));
+
+  foreach (int topicId, topicList.keys())
+  {
+    if (alwaysAddAllTopics || m_convText.doesInterestingDialogExist(alienId, category, topicId))
+    {
+      const int rowcount = ui->m_convTopicTable->rowCount();
+
+      ui->m_convTopicTable->insertRow(rowcount);
+      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(topicId)));
+      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(topicList[topicId]));
+    }
+  }
+  ui->m_convTopicTable->resizeColumnToContents(0);
+  ui->m_convDialogueLine->clear();
+
+  // search through the rows to find one with the topic ID matching the previously selected topic ID;
+  // if such a row is found, select it
+  if (lastSelectedTopicId >= 0)
+  {
+    bool foundMatchingRow = false;
+    int rowId = 0;
+    const int rowCount = ui->m_convTopicTable->rowCount();
+
+    while (!foundMatchingRow && (rowId < rowCount))
+    {
+      const QTableWidgetItem* const currentIdItem = ui->m_convTopicTable->item(rowId, 0);
+      if (currentIdItem && (currentIdItem->text().toInt() == lastSelectedTopicId))
+      {
+        foundMatchingRow = true;
+        ui->m_convTopicTable->selectRow(rowId);
+      }
+      rowId++;
+    }
+  }
 }
 
 /**
  * Populates the table of specific conversation topics, given the currently selected topic category.
  * Note that two categories -- Greeting/Initial and Greeting/Subsequent -- do not require the selection
  * of a specific topic, and they will not trigger the population of the table.
+ *
+ * If the parameter (the previously selected topic ID) is not negative, then automatically
+ * select the row in the repopulated table with the same ID, if one exists.
  */
-void MainWindow::populateConversationTopicTable()
+void MainWindow::populateConversationTopicTable(int lastSelectedTopicId)
 {
   ui->m_convTopicTable->setRowCount(0);
 
-  if (m_currentConvTopic == ConvTopic_AskAboutPerson)
+  if (m_currentConvTopic == ConvTopicCategory_AskAboutPerson)
   {
     const QMap<int,Alien> aliens = m_aliens.getList();
-
+    QMap<int,QString> alienNames;
     foreach (Alien a, aliens.values())
     {
-      const int rowcount = ui->m_convTopicTable->rowCount();
-      ui->m_convTopicTable->insertRow(rowcount);
-      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(a.id)));
-      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(a.name));
+      alienNames.insert(a.id, a.name);
     }
-    ui->m_convTopicTable->resizeColumnsToContents();
-    ui->m_convDialogueLine->clear();
+    populateTopicTableForCategory(m_currentConvTopic, alienNames, lastSelectedTopicId);
   }
-  else if (m_currentConvTopic == ConvTopic_AskAboutLocation)
+  else if (m_currentConvTopic == ConvTopicCategory_AskAboutLocation)
   {
     const QMap<int,Place> places = m_places.getPlaceList();
-
+    QMap<int,QString> placeNames;
     foreach (Place p, places.values())
     {
-      const int rowcount = ui->m_convTopicTable->rowCount();
-      ui->m_convTopicTable->insertRow(rowcount);
-      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(p.id)));
-      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(p.name));
+      placeNames.insert(p.id, p.name);
     }
-    ui->m_convTopicTable->resizeColumnsToContents();
-    ui->m_convDialogueLine->clear();
+    populateTopicTableForCategory(m_currentConvTopic, placeNames, lastSelectedTopicId);
   }
-  else if ((m_currentConvTopic == ConvTopic_AskAboutObject) ||
-           (m_currentConvTopic == ConvTopic_GiveObject)     ||
-           (m_currentConvTopic == ConvTopic_DisplayObject)  ||
-           (m_currentConvTopic == ConvTopic_SeesObject))
+  else if ((m_currentConvTopic == ConvTopicCategory_AskAboutObject) ||
+           (m_currentConvTopic == ConvTopicCategory_GiveObject)     ||
+           (m_currentConvTopic == ConvTopicCategory_DisplayObject)  ||
+           (m_currentConvTopic == ConvTopicCategory_SeesObject))
   {
     const QMap<int,InventoryObj> objs = m_invObject.getList();
-
+    QMap<int,QString> objectNames;
     foreach (InventoryObj obj, objs.values())
     {
-      const int rowcount = ui->m_convTopicTable->rowCount();
-      ui->m_convTopicTable->insertRow(rowcount);
-      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(obj.id)));
-      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(obj.name));
+      objectNames.insert(obj.id, obj.name);
     }
-    ui->m_convTopicTable->resizeColumnsToContents();
-    ui->m_convDialogueLine->clear();
+    populateTopicTableForCategory(m_currentConvTopic, objectNames, lastSelectedTopicId);
   }
-  else if (m_currentConvTopic == ConvTopic_AskAboutRace)
+  else if (m_currentConvTopic == ConvTopicCategory_AskAboutRace)
   {
+    QMap<int,QString> raceNames;
     for (int raceId = 0; raceId < AlienRace_NumRaces; raceId++)
     {
-      const int rowcount = ui->m_convTopicTable->rowCount();
       const AlienRace race = static_cast<AlienRace>(raceId);
-      ui->m_convTopicTable->insertRow(rowcount);
-      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(raceId)));
-      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(s_raceNames[race]));
+      raceNames.insert(raceId, s_raceNames[race]);
     }
-    ui->m_convTopicTable->resizeColumnsToContents();
-    ui->m_convDialogueLine->clear();
+    populateTopicTableForCategory(m_currentConvTopic, raceNames, lastSelectedTopicId);
   }
-  else if (m_currentConvTopic == ConvTopic_GiveFact)
+  else if (m_currentConvTopic == ConvTopicCategory_GiveFact)
   {
     const QMap<int,Fact> facts = m_facts.getList();
-    foreach (int factId, facts.keys())
+    QMap<int,QString> factText;
+    foreach (Fact f, facts.values())
     {
-      const int rowcount = ui->m_convTopicTable->rowCount();
-      ui->m_convTopicTable->insertRow(rowcount);
-      ui->m_convTopicTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(factId)));
-      ui->m_convTopicTable->setItem(rowcount, 1, new QTableWidgetItem(QString(facts[factId].text)));
+      factText.insert(f.id, f.text);
     }
-    ui->m_convTopicTable->resizeColumnsToContents();
-    ui->m_convDialogueLine->clear();
+    populateTopicTableForCategory(m_currentConvTopic, factText, lastSelectedTopicId);
   }
-  else if ((m_currentConvTopic == ConvTopic_GreetingInitial) ||
-           (m_currentConvTopic == ConvTopic_GreetingSubsequent))
+  else if ((m_currentConvTopic == ConvTopicCategory_GreetingInitial) ||
+           (m_currentConvTopic == ConvTopicCategory_GreetingSubsequent))
   {
     getConversationLinesForCurrentTopic();
   }
@@ -1139,9 +1194,9 @@ void MainWindow::getConversationLinesForCurrentTopic()
   const int thingId = (selectedTopicItem) ? (selectedTopicItem->text().toInt()) : 0;
 
   // certain conversation topic categories do not require a topic ID greater than zero
-  const bool thingIdOfZeroAllowed = (m_currentConvTopic == ConvTopic_AskAboutRace) ||
-                                    (m_currentConvTopic == ConvTopic_GreetingInitial) ||
-                                    (m_currentConvTopic == ConvTopic_GreetingSubsequent);
+  const bool thingIdOfZeroAllowed = (m_currentConvTopic == ConvTopicCategory_AskAboutRace) ||
+                                    (m_currentConvTopic == ConvTopicCategory_GreetingInitial) ||
+                                    (m_currentConvTopic == ConvTopicCategory_GreetingSubsequent);
 
   if ((alienId > 0) && ((thingId > 0) || thingIdOfZeroAllowed))
   {
@@ -1213,11 +1268,17 @@ void MainWindow::displayCurrentConversationLine()
   }
 }
 
+/**
+ * Responds to the stamp roll slider being moved by displaying the stamp at the selected index.
+ */
 void MainWindow::on_m_stampRollSlider_sliderMoved(int position)
 {
   displayStamp(position);
 }
 
+/**
+ * Displays a single static image on the stamp/roll tab, based on the currently selected roll index.
+ */
 void MainWindow::displayStamp(int rollIndex)
 {
   m_stampScene.clear();

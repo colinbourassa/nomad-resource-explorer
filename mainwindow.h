@@ -76,8 +76,8 @@ private slots:
   void on_m_convTopicButtonSeesItem_clicked();
   void on_m_stampTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
   void on_m_stampRollSlider_sliderMoved(int position);
-
   void on_actionAbout_triggered();
+  void on_m_convFilterTopicsCheckbox_stateChanged(int arg1);
 
 private:
   Ui::MainWindow *ui;
@@ -119,7 +119,7 @@ private:
   QAudioOutput* m_audioOutput;
   QBuffer m_audioBuffer;
 
-  ConvTopic m_currentConvTopic;
+  ConvTopicCategory m_currentConvTopic;
   QStringList m_currentConvLines;
   int m_currentConvLinesPos;
 
@@ -139,7 +139,8 @@ private:
   void populateConversationWidgets();
   void loadAlienFrame(int frameId);
 
-  void populateConversationTopicTable();
+  void populateConversationTopicTable(int lastSelectedTopicId = -1);
+  void populateTopicTableForCategory(ConvTopicCategory category, QMap<int,QString> topicList, int lastSelectedTopicId);
   void getConversationLinesForCurrentTopic();
   void displayCurrentConversationLine();
   void setConvNextPrevButtonState();

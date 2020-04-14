@@ -12,7 +12,11 @@ ConversationText::ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gt
 
 }
 
-QStringList ConversationText::getConversationText(int alienId, ConvTopic topic, int thingId)
+/**
+ * Gets a list of dialog lines, each one being a response from the specified alien about the
+ * thing with the provided ID in the specified conversation topic category.
+ */
+QStringList ConversationText::getConversationText(int alienId, ConvTopicCategory topic, int thingId)
 {
   QStringList dialogLines;
   QByteArray tlktData;
@@ -38,7 +42,8 @@ QStringList ConversationText::getConversationText(int alienId, ConvTopic topic, 
     QByteArray tlknData;
     getTLKNData(tableType, alienOrRaceId, tlknData);
 
-    QList<int> tlkxIndexes = getTLKXIndexes(tlknIndexes, tlknData);
+    // get the list of indices in the table of pointers to dialog strings
+    const QList<int> tlkxIndexes = getTLKXIndexes(tlknIndexes, tlknData);
 
     QByteArray tlkxIndexData;
     QByteArray tlkxStrData;
@@ -49,6 +54,11 @@ QStringList ConversationText::getConversationText(int alienId, ConvTopic topic, 
   return dialogLines;
 }
 
+/**
+ * Opens the conversation line files -- one for each of the indices and strings -- for either the
+ * race or individual alien specified by "id". Returns true if both files were opened and the data
+ * stored in the provided QByteArrays; false otherwise.
+ */
 bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& indexData, QByteArray& strData)
 {
   bool status = false;
@@ -75,6 +85,10 @@ bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& 
   return status;
 }
 
+/**
+ * Builds and returns a list of strings, each one having been indexed by the provided list of indices.
+ * The data used is provided in the QByteArrays containing the contents of the relevant TLKX files.
+ */
 QStringList ConversationText::getTLKXStrings(const QList<int>& tlkxIndexes,
                                              const QByteArray& tlkxIndexData,
                                              const QByteArray& tlkxStrData)
@@ -96,6 +110,10 @@ QStringList ConversationText::getTLKXStrings(const QList<int>& tlkxIndexes,
   return strings;
 }
 
+/**
+ * Reads the specified TLKN file (for either race or individual, specified by parameter) and returns
+ * the data in the provided QByteArray. Returns true if reading was successful, false otherwise.
+ */
 bool ConversationText::getTLKNData(ConvTableType tableType, int id, QByteArray& data)
 {
   bool status = false;
@@ -112,6 +130,10 @@ bool ConversationText::getTLKNData(ConvTableType tableType, int id, QByteArray& 
   return status;
 }
 
+/**
+ * Reads the specified TLKT file (for either race or individual, specified by parameter) and returns
+ * the data in the provided QByteArray. Returns true if reading was successful, false otherwise.
+ */
 bool ConversationText::getTLKTData(ConvTableType tableType, int id, QByteArray& data)
 {
   bool status = false;
@@ -168,6 +190,10 @@ const QString ConversationText::getTLKXRStringsFilename(int id)
   return QString("TLKXR%1.TXT").arg(id, 3, 10, QChar('0'));
 }
 
+/**
+ * Returns the list of indices into the TLKX file set, given the provided list of TLKN indices and the
+ * TLKN file data.
+ */
 QList<int> ConversationText::getTLKXIndexes(const QList<int>& tlknIndexes, const QByteArray& tlknData)
 {
   QList<int> tlkxIndexes;
@@ -184,7 +210,11 @@ QList<int> ConversationText::getTLKXIndexes(const QList<int>& tlknIndexes, const
   return tlkxIndexes;
 }
 
-QList<int> ConversationText::getTLKNIndexes(ConvTopic topic, int requestedId, const QByteArray& tlktData)
+/**
+ * Gets the list of indices from the provided TLKT data that match the specified thing ID in the specified
+ * conversation topic category. If none match, an empty list is returned.
+ */
+QList<int> ConversationText::getTLKNIndexes(ConvTopicCategory topic, int requestedId, const QByteArray& tlktData)
 {
   QList<int> indexes;
 
@@ -200,43 +230,43 @@ QList<int> ConversationText::getTLKNIndexes(ConvTopic topic, int requestedId, co
     const int miscId    = data[offset + 7];
     const int tlknIndex = data[offset + 8] + (0x100 * data[offset + 9]);
 
-    if ((topic == ConvTopic_GreetingInitial) && (firstByte == TLKN_CMD_GREETFIRST))
+    if ((topic == ConvTopicCategory_GreetingInitial) && (firstByte == TLKN_CMD_GREETFIRST))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_GreetingSubsequent) && (firstByte == TLKN_CMD_GREETNEXT))
+    else if ((topic == ConvTopicCategory_GreetingSubsequent) && (firstByte == TLKN_CMD_GREETNEXT))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_DisplayObject) && (firstByte == TLKN_CMD_DISPOBJECT) && (objectId == requestedId))
+    else if ((topic == ConvTopicCategory_DisplayObject) && (firstByte == TLKN_CMD_DISPOBJECT) && (objectId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_GiveObject) && (firstByte == TLKN_CMD_GIVEOBJECT) && (objectId == requestedId))
+    else if ((topic == ConvTopicCategory_GiveObject) && (firstByte == TLKN_CMD_GIVEOBJECT) && (objectId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_SeesObject) && (firstByte == TLKN_CMD_SEESOBJ) && (objectId == requestedId))
+    else if ((topic == ConvTopicCategory_SeesObject) && (firstByte == TLKN_CMD_SEESOBJ) && (objectId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_AskAboutRace) && (firstByte == TLKN_CMD_ASKABOUTRACE) && (miscId == requestedId))
+    else if ((topic == ConvTopicCategory_AskAboutRace) && (firstByte == TLKN_CMD_ASKABOUTRACE) && (miscId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_AskAboutPerson) && (firstByte == TLKN_CMD_ASKABOUT) && (alienId == requestedId))
+    else if ((topic == ConvTopicCategory_AskAboutPerson) && (firstByte == TLKN_CMD_ASKABOUT) && (alienId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_AskAboutObject) && (firstByte == TLKN_CMD_ASKABOUT) && (objectId == requestedId))
+    else if ((topic == ConvTopicCategory_AskAboutObject) && (firstByte == TLKN_CMD_ASKABOUT) && (objectId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_AskAboutLocation) && (firstByte == TLKN_CMD_ASKABOUT) && (placeId == requestedId))
+    else if ((topic == ConvTopicCategory_AskAboutLocation) && (firstByte == TLKN_CMD_ASKABOUT) && (placeId == requestedId))
     {
       indexes.append(tlknIndex);
     }
-    else if ((topic == ConvTopic_GiveFact) && (firstByte == TLKN_CMD_ASKABOUT) && (miscId == requestedId))
+    else if ((topic == ConvTopicCategory_GiveFact) && (firstByte == TLKN_CMD_ASKABOUT) && (miscId == requestedId))
     {
       indexes.append(tlknIndex);
     }
@@ -245,4 +275,38 @@ QList<int> ConversationText::getTLKNIndexes(ConvTopic topic, int requestedId, co
   }
 
   return indexes;
+}
+
+/**
+ * Returns true if there are lines of dialogue associated specifically with the given alien ID,
+ * about the provided topic ID in the provided category. Return false if the game will select
+ * a generic fallback dialogue line for the provided combination.
+ */
+bool ConversationText::doesInterestingDialogExist(int alienId, ConvTopicCategory category, int thingId)
+{
+  bool status = false;
+
+  QByteArray tlktData;
+  ConvTableType tableType = ConvTableType_Individual;
+  int alienOrRaceId = alienId;
+
+  getTLKTData(tableType, alienOrRaceId, tlktData);
+
+  QList<int> tlknIndexes = getTLKNIndexes(category, thingId, tlktData);
+
+  if (!tlknIndexes.isEmpty())
+  {
+    status = true;
+  }
+  else
+  {
+    tableType = ConvTableType_Race;
+    alienOrRaceId = m_aliens->getRace(alienId);
+    getTLKTData(tableType, alienOrRaceId, tlktData);
+    tlknIndexes = getTLKNIndexes(category, thingId, tlktData);
+
+    status = !tlknIndexes.isEmpty();
+  }
+
+  return status;
 }

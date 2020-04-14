@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="m_tabs">
       <property name="currentIndex">
-       <number>8</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
@@ -633,7 +633,7 @@
        <attribute name="title">
         <string>Facts</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5" rowstretch="2,1">
+       <layout class="QGridLayout" name="gridLayout_5" rowstretch="3,1">
         <item row="1" column="0">
          <widget class="QPlainTextEdit" name="m_factText"/>
         </item>
@@ -920,7 +920,7 @@
        <attribute name="title">
         <string>Conversation text</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" columnstretch="0,0,1,0,0">
+       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0,0,0,0,0,0,0,2,2,1,1,1,1" columnstretch="0,0,1,0,0">
         <item row="2" column="1">
          <widget class="QRadioButton" name="m_convTopicButtonGreeting1">
           <property name="text">
@@ -1177,6 +1177,16 @@
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
           </attribute>
+         </widget>
+        </item>
+        <item row="0" column="2" colspan="3">
+         <widget class="QCheckBox" name="m_convFilterTopicsCheckbox">
+          <property name="text">
+           <string>Show only topics that have lines of dialog from the selected alien</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
        </layout>

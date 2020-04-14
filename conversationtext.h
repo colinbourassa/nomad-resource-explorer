@@ -21,18 +21,18 @@
 #define TLKN_CMD_ASKABOUTRACE 0x07
 #define TLKN_CMD_GIVEOBJECT   0x08
 
-enum ConvTopic
+enum ConvTopicCategory
 {
-  ConvTopic_GreetingInitial,
-  ConvTopic_GreetingSubsequent,
-  ConvTopic_AskAboutPerson,
-  ConvTopic_AskAboutLocation,
-  ConvTopic_AskAboutObject,
-  ConvTopic_AskAboutRace,
-  ConvTopic_DisplayObject,
-  ConvTopic_GiveObject,
-  ConvTopic_GiveFact,
-  ConvTopic_SeesObject,
+  ConvTopicCategory_GreetingInitial,
+  ConvTopicCategory_GreetingSubsequent,
+  ConvTopicCategory_AskAboutPerson,
+  ConvTopicCategory_AskAboutLocation,
+  ConvTopicCategory_AskAboutObject,
+  ConvTopicCategory_AskAboutRace,
+  ConvTopicCategory_DisplayObject,
+  ConvTopicCategory_GiveObject,
+  ConvTopicCategory_GiveFact,
+  ConvTopicCategory_SeesObject,
 };
 
 enum ConvTableType
@@ -46,7 +46,8 @@ class ConversationText
 {
 public:
   ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gtext);
-  QStringList getConversationText(int alienId, ConvTopic topic, int thingId);
+  QStringList getConversationText(int alienId, ConvTopicCategory topic, int thingId);
+  bool doesInterestingDialogExist(int alienId, ConvTopicCategory category, int thingId);
 
 private:
   DatLibrary* m_lib;
@@ -58,7 +59,7 @@ private:
   bool getTLKXData(ConvTableType tableType, int id, QByteArray& indexData, QByteArray& strData);
 
   //! Searches the provided TLKTR or TLKTC file to get a list of TLKN indices that match the provided criteria
-  QList<int> getTLKNIndexes(ConvTopic topic, int thingId, const QByteArray& tlktData);
+  QList<int> getTLKNIndexes(ConvTopicCategory topic, int thingId, const QByteArray& tlktData);
 
   const QString getTLKNCFilename(int id);
   const QString getTLKNRFilename(int id);
