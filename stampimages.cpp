@@ -9,11 +9,11 @@
 #include "stampimages.h"
 #include "imageconverter.h"
 
-///
-/// Dictionary of .stp/.rol images and their associated palette files.
-/// If a file does not appear in this dictionary, it is assumed to use
-/// the standard GAME.PAL.
-///
+/**
+ * Dictionary of .stp/.rol images and their associated palette files.
+ * If a file does not appear in this dictionary, it is assumed to use
+ * the standard GAME.PAL.
+ */
 const QMap<QString,QString> StampImages::s_stpToPal =
 {
   { "nomad.stp",    "backg.pal" },

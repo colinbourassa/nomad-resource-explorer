@@ -23,6 +23,9 @@ typedef struct __attribute__((packed)) ShipClassTableEntry
   uint16_t startingStrengthB; // and the other is hull strength; needs more research
 } ShipClassTableEntry;
 
+/**
+ * Reads and parses the table containing ship class data.
+ */
 class ShipClasses : public DatTable<ShipClassTableEntry>
 {
 public:

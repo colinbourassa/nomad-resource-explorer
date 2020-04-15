@@ -38,18 +38,31 @@ const QVector<QRgb> Palette::s_defaultVgaPalette =
 
 const QString Palette::s_gamePalFilename = "GAME.PAL";
 
+/**
+ * Loads and interprets Nomad's color palette files, filling in any missing entries
+ * with default VGA palette data.
+ */
 Palette::Palette(DatLibrary& lib) :
   m_lib(&lib)
 {
 
 }
 
+/**
+ * Clears the cached GAME.PAL data so that it will be loaded again from the data file
+ * when it is next requested.
+ */
 void Palette::clear()
 {
   m_gamePal.clear();
 }
 
-bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette)
+/**
+ * Loads a palette file with the specified name (and from the specified DAT container),
+ * overlays it on the default VGA palette, and returns it in the provided vector.
+ * @return True when loading the palette data was successful, false otherwise
+ */
+bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette) const
 {
   bool status = false;
   QByteArray paldata;
@@ -104,11 +117,19 @@ bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector
   return status;
 }
 
+/**
+ * Returns the default VGA palette in the provided vector.
+ */
 void Palette::defaultVgaPalette(QVector<QRgb>& palette)
 {
   palette = s_defaultVgaPalette;
 }
 
+/**
+ * Loads the file "GAME.PAL" from the game's data files, overlays it on the default VGA palette,
+ * and returns it in the provided vector.
+ * @return True when loading the palette data was successful, false otherwise
+ */
 bool Palette::gamePalette(QVector<QRgb>& palette)
 {
   bool status = true;
@@ -120,7 +141,12 @@ bool Palette::gamePalette(QVector<QRgb>& palette)
   return status;
 }
 
-bool Palette::paletteByName(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette)
+/**
+ * Loads a palette file with the specified name (and from the specified DAT container),
+ * overlays it on the default VGA palette, and returns it in the provided vector.
+ * @return True when loading the palette data was successful, false otherwise
+ */
+bool Palette::paletteByName(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette) const
 {
   return loadPalData(datContainer, palFileName, palette);
 }

@@ -3,12 +3,8 @@
 #include <QtEndian>
 #include <QImage>
 
+//! Table of relative pixel-to-pixel delta values used in DEL image encoding
 const int8_t ImageConverter::s_deltas[] = {0,1,2,3,4,5,6,7,-8,-7,-6,-5,-4,-3,-2,-1};
-
-ImageConverter::ImageConverter()
-{
-
-}
 
 /**
  * Uses a zero-based pixel index and an image width to determine the x,y position
@@ -55,18 +51,21 @@ bool ImageConverter::lbmToImage(const QByteArray& lbmData, QVector<QRgb> palette
   return status;
 }
 
-QPixmap ImageConverter::plnToPixmap(QByteArray &plnData, QVector<QRgb> palette, bool &status)
+/**
+ * Converts planet texture map data (.PLN) to a QImage.
+ */
+bool ImageConverter::plnToPixmap(const QByteArray& plnData, QVector<QRgb> palette, QImage& image)
 {
-  status = true;
-  QPixmap pmap;
+  bool status = false;
 
   if (plnData.size() >= 3) // 3 bytes is the minimum theoretical size of a .pln image
   {
+    status = true;
     const uint16_t width = qFromLittleEndian<quint16>(plnData.data() + 0);
     const uint16_t height = static_cast<uint16_t>((plnData.size() - 2) / width);
 
-    QImage img(width, height, QImage::Format_Indexed8);
-    img.setColorTable(palette);
+    image = QImage(width, height, QImage::Format_Indexed8);
+    image.setColorTable(palette);
 
     int inputpos = 2;
     int outputpos = 0;
@@ -75,20 +74,18 @@ QPixmap ImageConverter::plnToPixmap(QByteArray &plnData, QVector<QRgb> palette, 
     {
       const uint8_t palIndex = static_cast<uint8_t>(plnData.at(inputpos));
       inputpos++;
-      img.setPixel(getPixelLocation(width, outputpos), palIndex);
+      image.setPixel(getPixelLocation(width, outputpos), palIndex);
       outputpos++;
     }
-
-    pmap = QPixmap::fromImage(img);
   }
 
-  return pmap;
+  return status;
 }
 
 /**
  * Converts "stamp" image (.STP) data (which uses a form of RLE) to a QImage.
  */
-bool ImageConverter::stpToImage(QByteArray& stpData, QVector<QRgb> palette, QImage& image)
+bool ImageConverter::stpToImage(const QByteArray& stpData, QVector<QRgb> palette, QImage& image)
 {
   bool status = true;
   const uint16_t width = qFromLittleEndian<quint16>(stpData.data() + 0);
@@ -97,7 +94,7 @@ bool ImageConverter::stpToImage(QByteArray& stpData, QVector<QRgb> palette, QIma
   image = QImage(width, height, QImage::Format_Indexed8);
   image.setColorTable(palette);
 
-  uint8_t* const stpDataUnsigned = reinterpret_cast<uint8_t*>(stpData.data());
+  const uint8_t* const stpDataUnsigned = reinterpret_cast<const uint8_t*>(stpData.data());
 
   const int pixelcount = width * height;
   int inputpos = 8; // STP image data begins at byte index 8

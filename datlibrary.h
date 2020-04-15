@@ -53,18 +53,16 @@ public:
 
   static const QMap<DatFileType,QString> s_datFileNames;
 
-  bool getFileByName(DatFileType dat, QString filename, QByteArray& filedata);
+  bool getFileByName(DatFileType dat, QString filename, QByteArray& filedata) const;
   QString getGameText(int offset);
   QStringList getFilenamesByExtension(DatFileType dat, QString extension);
 
 private:
   QByteArray m_datContents[DatFileType_NUM_DAT_FILES];
-  uint8_t m_lzRingBuffer[LZ_RINGBUF_SIZE];
-
   QByteArray m_gameText; // keep a copy of GAMETEXT.TXT since it is referenced frequently
 
-  bool lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes);
-  bool getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile);
+  bool lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes) const;
+  bool getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile) const;
 };
 
 #endif // DATLIBRARY_H

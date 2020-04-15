@@ -15,6 +15,12 @@ struct Ship
   int pilot;
 };
 
+/**
+ * SHIP.TAB record describing ship parameters. Note that many of these fields
+ * are only used during gameplay (i.e. they are not relevant in the context of
+ * initial game state), so they would only contain interesting data when reading
+ * the copy of the ship table that is stored in saved game files.
+ */
 typedef struct __attribute__((packed)) ShipTableEntry
 {
   uint16_t nameOffset;
@@ -44,6 +50,9 @@ typedef struct __attribute__((packed)) ShipTableEntry
   uint8_t jammerType;
 } ShipTableEntry;
 
+/**
+ * Reads and parses the game's ship table (SHIP.TAB).
+ */
 class Ships : public DatTable<ShipTableEntry>
 {
 public:

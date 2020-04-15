@@ -1,7 +1,7 @@
 #ifndef PLACES_H
 #define PLACES_H
 
-#include <QPixmap>
+#include <QImage>
 #include <QMap>
 #include <stdint.h>
 #include "enums.h"
@@ -33,6 +33,11 @@ typedef struct __attribute__((packed)) PlaceTableEntry
   uint8_t unknown_b[6];
 } PlaceTableEntry;
 
+/**
+ * Reads data about places (stars and planets) from data files, and also provides images of the
+ * surface textures used when planets are rendered in game.
+ * TODO: This class should use the DatTable template.
+ */
 class Places
 {
 public:
@@ -41,7 +46,7 @@ public:
   void clear();
   QMap<int,Place> getPlaceList();
   bool getPlace(int id, Place& p);
-  QPixmap getPlaceSurfaceImage(int id, bool& status);
+  QImage getPlaceSurfaceImage(int id, bool& status);
   QString getName(int id);
 
 private:

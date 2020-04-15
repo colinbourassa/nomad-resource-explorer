@@ -1,5 +1,10 @@
 #include "placeclasses.h"
 
+/**
+ * Human readable names for each planet temperature range. The key in this map
+ * is the maximum temperature (in Fahrenheit degrees, apparently) that is
+ * considered part of the range named by the value string.
+ */
 const QMap<int,QString> PlaceClasses::s_tempRanges =
 {
   {-120, "Arctic"},
@@ -16,12 +21,19 @@ PlaceClasses::PlaceClasses(DatLibrary& lib) :
 
 }
 
+/**
+ * Clears locally cached data.
+ */
 void PlaceClasses::clear()
 {
   m_planetClassList.clear();
   m_starClassList.clear();
 }
 
+/**
+ * Iterates through the entries in the PCLASS.TAB data table, parsing out the fields
+ * and storing the data.
+ */
 void PlaceClasses::populatePlaceClassList()
 {
   QByteArray classdata;
@@ -44,6 +56,7 @@ void PlaceClasses::populatePlaceClassList()
         pclass.name = m_lib->getGameText(currentEntry->nameOffset);
         pclass.temperature = currentEntry->temperature;
 
+        // there are three slots available for each of the planet's resources
         for (int rIdx = 0; rIdx< 3; rIdx++)
         {
           if (currentEntry->foods[rIdx])
@@ -126,16 +139,10 @@ void PlaceClasses::populatePlaceClassList()
   }
 }
 
-const QMap<int,PlanetClass>* PlaceClasses::planetClassDataList()
-{
-  if (m_planetClassList.isEmpty())
-  {
-    populatePlaceClassList();
-  }
-
-  return &m_planetClassList;
-}
-
+/**
+ * Retrieves the class data for a planet, and return it in the provided struct.
+ * @return True when the data for the planet ID was found; false otherwise.
+ */
 bool PlaceClasses::pclassData(int id, PlanetClass& pclass)
 {
   bool status = false;
@@ -154,6 +161,11 @@ bool PlaceClasses::pclassData(int id, PlanetClass& pclass)
   return status;
 }
 
+/**
+ * Gets the human readable name for the class of a star.
+ * @return Star class name if the provided ID matches that of a star from the data table.
+ * If a star with the provided ID is not found, empty string is returned.
+ */
 QString PlaceClasses::getStarClassName(int id)
 {
   QString name;

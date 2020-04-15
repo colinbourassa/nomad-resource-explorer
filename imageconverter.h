@@ -12,13 +12,13 @@
 class ImageConverter
 {
 public:
-  ImageConverter();
-  static bool stpToImage(QByteArray& stpData, QVector<QRgb> palette, QImage& image);
+  static bool stpToImage(const QByteArray& stpData, QVector<QRgb> palette, QImage& image);
   static bool delToImage(const QByteArray& delData, QVector<QRgb> palette, QImage& image);
   static bool lbmToImage(const QByteArray& rawData, QVector<QRgb> palette, QImage& image);
-  static QPixmap plnToPixmap(QByteArray& plnData, QVector<QRgb> palette, bool& status);
+  static bool plnToPixmap(const QByteArray& plnData, QVector<QRgb> palette, QImage& image);
 
 private:
+  ImageConverter();
   static QPoint getPixelLocation(int imgWidth, int pixelnum);
   static const int8_t s_deltas[];
 };

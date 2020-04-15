@@ -2,6 +2,10 @@
 #include "aliens.h"
 #include "imageconverter.h"
 
+/**
+ * List of filename prefixes that are used for .ANM files. These strings
+ * are ordered by alien ID.
+ */
 const QVector<QString> Aliens::s_animationMap =
 {
   "00000",
@@ -50,11 +54,20 @@ Aliens::~Aliens()
 
 }
 
+/**
+ * Clears the locally cached data.
+ */
 void Aliens::clear()
 {
   m_alienList.clear();
 }
 
+/**
+ * Gets a container of structs that each contain data for one of the aliens described
+ * in ALIEN.TAB, reading the data from the file if it has not yet been read.
+ * @return Container of alien data structs. If the data table could not be read, this
+ * list will be empty.
+ */
 QMap<int,Alien> Aliens::getList()
 {
   if (m_alienList.isEmpty())
@@ -65,6 +78,11 @@ QMap<int,Alien> Aliens::getList()
   return m_alienList;
 }
 
+/**
+ * Populates the struct supplied by reference with the data for the alien specified by ID.
+ * @return True when the alien with the specified ID was found; false if the ID was not
+ * found or if the alien table data could not be read.
+ */
 bool Aliens::getAlien(int id, Alien& alien)
 {
   bool status = false;
@@ -83,6 +101,11 @@ bool Aliens::getAlien(int id, Alien& alien)
   return status;
 }
 
+/**
+ * Gets the name of the alien specified by the ID.
+ * @return The race of the specified alien. If the table data cannot be read
+ * or does not contain the requested ID, an empty string is returned.
+ */
 QString Aliens::getName(int id)
 {
   QString name("");
@@ -100,6 +123,11 @@ QString Aliens::getName(int id)
   return name;
 }
 
+/**
+ * Gets the race of the alien specified by the ID.
+ * @return The race of the specified alien. If the table data cannot be read
+ * or does not contain the requested ID, AlienRace_Invalid is returned.
+ */
 AlienRace Aliens::getRace(int id)
 {
   AlienRace race = AlienRace_Invalid;
@@ -117,6 +145,10 @@ AlienRace Aliens::getRace(int id)
   return race;
 }
 
+/**
+ * Reads and decodes the entries in the alien table (ALIEN.TAB), storing the data locally.
+ * @return True when ALIEN.TAB was read and decoded successfully; false otherwise.
+ */
 bool Aliens::populateList()
 {
   bool status = false;
@@ -150,6 +182,12 @@ bool Aliens::populateList()
   return status;
 }
 
+/**
+ * Populates the supplied container with a series of QImages, where each one is an
+ * animation frame for the specified alien.
+ * @return True when the animation file and all of the frame data was read and
+ * decoded successfully; false otherwise.
+ */
 bool Aliens::getAnimationFrames(int alienId, QMap<int, QImage>& frames)
 {
   bool status = true;
@@ -196,6 +234,14 @@ bool Aliens::getAnimationFrames(int alienId, QMap<int, QImage>& frames)
   return status;
 }
 
+/**
+ * Reads each of the delta-encoded frame overlay files (*.DEL) specified by the
+ * delIdList parameter, decodes them with the supplied palette data, and overlays
+ * them all in the QImage provided by reference to produce a single complete
+ * animation frame.
+ * @return True when all of the DEL files were read and decoded successfully;
+ * false otherwise.
+ */
 bool Aliens::buildFrame(QVector<int> delIdList, QString delFilenamePrefix, const QVector<QRgb> pal, QImage& frame) const
 {
   bool status = true;
@@ -217,6 +263,11 @@ bool Aliens::buildFrame(QVector<int> delIdList, QString delFilenamePrefix, const
   return status;
 }
 
+/**
+ * Gets a container in which the keys are IDs of complete animation frames,
+ * and the values are themselves containers that list each of the overlay IDs
+ * for that frame.
+ */
 QMap<int, QVector<int> > Aliens::getListOfFrames(const QByteArray& anmData) const
 {
   QMap<int, QVector<int> > frames;

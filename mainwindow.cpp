@@ -597,10 +597,10 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
 
         if (id != 0x132) // special check for Second Harmony space station, which uses a 3D model
         {
-          QPixmap pm = m_places.getPlaceSurfaceImage(id, status);
+          QImage surfaceImg = m_places.getPlaceSurfaceImage(id, status);
           if (status)
           {
-            m_planetSurfaceScene.addPixmap(pm);
+            m_planetSurfaceScene.addPixmap(QPixmap::fromImage(surfaceImg));
             ui->m_planetView->setScene(&m_planetSurfaceScene);
           }
         }

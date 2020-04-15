@@ -16,11 +16,19 @@ InvObject::~InvObject()
 
 }
 
+/**
+ * Clears locally cached data.
+ */
 void InvObject::clear()
 {
   m_objList.clear();
 }
 
+/**
+ * Iterates through all the entries in the object table, saving data about each
+ * object in a local cache.
+ * @return True when the object table was read successfully; false otherwise.
+ */
 bool InvObject::populateList()
 {
   bool status = false;
@@ -62,6 +70,9 @@ bool InvObject::populateList()
   return status;
 }
 
+/**
+ * Gets a map of object IDs to structs containing data about those objects.
+ */
 QMap<int,InventoryObj> InvObject::getList()
 {
   if (m_objList.isEmpty())
@@ -71,6 +82,11 @@ QMap<int,InventoryObj> InvObject::getList()
   return m_objList;
 }
 
+/**
+ * Gets the informational text associated with a particular object ID.
+ * @return Text string associated with the object ID, or an empty string if
+ * no object with the specified ID could be found.
+ */
 QString InvObject::getObjectText(int id)
 {
   QByteArray objTextIdxData;
@@ -100,6 +116,11 @@ QString InvObject::getObjectText(int id)
   return txt;
 }
 
+/**
+ * Returns an image of the object with the specified ID by reference.
+ * @return True if the object ID was valid and its image was successfully
+ * decoded; false otherwise.
+ */
 bool InvObject::getImage(int id, QImage& img)
 {
   bool status = false;
@@ -118,6 +139,11 @@ bool InvObject::getImage(int id, QImage& img)
   return status;
 }
 
+/**
+ * Gets the type of the object with the specified ID.
+ * @return Object type. If no object with the specified ID can be found,
+ * InventoryObjType_Invalid is returned.
+ */
 InventoryObjType InvObject::getObjectType(int id)
 {
   InventoryObjType type = InventoryObjType_Invalid;
@@ -135,6 +161,11 @@ InventoryObjType InvObject::getObjectType(int id)
   return type;
 }
 
+/**
+ * Gets the name of the inventory object with the specified ID.
+ * @return Name of object. If no object with the specified ID can be found,
+ * an empty string is returned.
+ */
 QString InvObject::getName(int id)
 {
   QString name("");
@@ -152,6 +183,11 @@ QString InvObject::getName(int id)
   return name;
 }
 
+/**
+ * Returns the flag indicating whether the specified object
+ * @return True if the "unique" flag is set, false otherwise.
+ * A default value of false is returned if no object with the provided ID is found.
+ */
 bool InvObject::isUnique(const int id)
 {
   if (m_objList.contains(id))

@@ -7,6 +7,9 @@ namespace Ui {
 class AboutBox;
 }
 
+/**
+ * Provides a simple "about" dialog box with links to the project repo.
+ */
 class AboutBox : public QDialog
 {
   Q_OBJECT

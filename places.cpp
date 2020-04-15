@@ -2,6 +2,12 @@
 #include "places.h"
 #include "imageconverter.h"
 
+/**
+ * Array of planet surface textures and palette IDs. The surface texture file
+ * number is found at offset (place_id * 2) in this array, and the lowercase
+ * alpha character that identifies the palette file is in the byte that
+ * immediately follows.
+ */
 const uint8_t Places::s_planetTextureMapping[622] =
 {
   0x00, 0x00, 0x00, 0x00, 0x07, 0x61, 0x0E, 0x61, 0x26, 0x61, 0x00, 0x00,
@@ -66,11 +72,18 @@ Places::Places(DatLibrary& lib, Palette& pal, PlaceClasses& pclasses) :
 
 }
 
+/**
+ * Clears locally cached data.
+ */
 void Places::clear()
 {
   m_placeList.clear();
 }
 
+/**
+ * Gets the name of the place with the specified ID. If no place with the
+ * given ID is found, an empty string is returned.
+ */
 QString Places::getName(int id)
 {
   if (m_placeList.isEmpty())
@@ -85,6 +98,7 @@ QString Places::getName(int id)
 
   return QString();
 }
+
 
 void Places::populatePlaceList()
 {
@@ -134,6 +148,10 @@ void Places::populatePlaceList()
   }
 }
 
+/**
+ * Gets a map of IDs to struct, where each one contains data about one of the
+ * places in the game.
+ */
 QMap<int,Place> Places::getPlaceList()
 {
   if (m_placeList.isEmpty())
@@ -143,6 +161,11 @@ QMap<int,Place> Places::getPlaceList()
   return m_placeList;
 }
 
+/**
+ * Gets data about the place specified by the provided ID, and returns it in
+ * the provided struct reference.
+ * @return True when a place with the ID is found, false otherwise.
+ */
 bool Places::getPlace(int id, Place& place)
 {
   bool status = false;
@@ -161,7 +184,11 @@ bool Places::getPlace(int id, Place& place)
   return status;
 }
 
-QPixmap Places::getPlaceSurfaceImage(int id, bool& status)
+/**
+ * Creates an image from the texture file and palette associated with the provided place ID.
+ * If successful, the parameter 'status' is set to true; otherwise, it is set to false.
+ */
+QImage Places::getPlaceSurfaceImage(int id, bool& status)
 {
   const uint8_t baseNum = s_planetTextureMapping[id * 2];
   const unsigned char palLetter = s_planetTextureMapping[id * 2 + 1];
@@ -175,10 +202,8 @@ QPixmap Places::getPlaceSurfaceImage(int id, bool& status)
   status = (m_pal->paletteByName(DatFileType_TEST, palFilename, pal) &&
             m_lib->getFileByName(DatFileType_TEST, plnFilename, plnFile));
 
-  QPixmap pm;
-  if (status)
-  {
-    pm = ImageConverter::plnToPixmap(plnFile, pal, status);
-  }
-  return pm;
+  QImage surfaceImage;
+  status = status && ImageConverter::plnToPixmap(plnFile, pal, surfaceImage);
+
+  return surfaceImage;
 }

@@ -12,6 +12,12 @@
 #define METATAB_TYPE_LOSTENGATEWAY 2
 #define METATEXT_RECORDSIZE_BYTES  2
 
+/**
+ * Enumeration of all the embedded text command bytes supported by the game.
+ * This enumeration (and the prefix on its values) begins with "GTxt" as an
+ * abbreviation for "game text", but the game's originally source code may
+ * have referred to it as "rtext".
+ */
 enum GTxtCmd
 {
   GTxtCmd_InsertPlayerName         = 0x01,
@@ -38,6 +44,13 @@ enum GTxtCmd
   GTxtCmd_ModifyMissionTable       = 0x16
 };
 
+/**
+ * Map associating game text commands with the number of bytes that each command
+ * takes as parameters. All of these byte counts are fixed values with the exception
+ * of the command GrantKnowledgePlace: this command can take either one or two bytes,
+ * depending on whether the place ID requires the extra width. (The place ID is unlike
+ * other IDs in the game in that the maximum ID is larger than a full 8-bit count.)
+ */
 static const QMap<GTxtCmd,int> g_gameTextParamCount =
 {
   { GTxtCmd_InsertPlayerName,         0 },
@@ -76,7 +89,7 @@ public:
   void clear();
 
   //! Produces a regular string from string data with embedded commands
-  QString readString(const char* data, int maxlen = 0x400);
+  QString readString(const char* data, int maxlen = 0x1000);
 
 private:
   DatLibrary* m_lib;

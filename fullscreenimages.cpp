@@ -1,11 +1,11 @@
 #include "fullscreenimages.h"
 #include "imageconverter.h"
 
-///
-/// Dictionary of .lbm images and their associated palette files.
-/// Note that this dictionary only contains files whose palette
-/// filename does not match the .lbm.
-///
+/**
+ * Dictionary of .lbm images and their associated palette files.
+ * Note that this dictionary only contains files whose palette
+ * filename does not match the .lbm.
+ */
 const QMap<QString,QString> FullscreenImages::s_lbmToPal =
 {
   { "cock1.lbm",    "backg.pal"    },
@@ -39,6 +39,9 @@ FullscreenImages::FullscreenImages(DatLibrary& lib, Palette& pal) :
 
 }
 
+/**
+ * Gets a map of all .lbm files stored across all of the game's DAT containers.
+ */
 QMap<DatFileType,QStringList> FullscreenImages::getAllLbmList()
 {
   QMap<DatFileType,QStringList> lbmContainerList;
@@ -53,6 +56,11 @@ QMap<DatFileType,QStringList> FullscreenImages::getAllLbmList()
   return lbmContainerList;
 }
 
+/**
+ * Reads and decodes the specified .lbm image (attempting to automatically determine its
+ * associated palette), and returns the finished image in the provided QImage.
+ * @return True when the .lbm was read and decoded successfully, false otherwise.
+ */
 bool FullscreenImages::getImage(DatFileType dat, QString lbmFilename, QImage& img)
 {
   bool status = false;

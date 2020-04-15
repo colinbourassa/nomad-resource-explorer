@@ -13,6 +13,10 @@ Ships::~Ships()
 
 }
 
+/**
+ * Gets a map of ship IDs to ship data structs, representing
+ * all ships in the game.
+ */
 QMap<int,Ship> Ships::getList()
 {
   if (m_shipList.isEmpty())
@@ -23,6 +27,9 @@ QMap<int,Ship> Ships::getList()
   return m_shipList;
 }
 
+/**
+ * Reads and parses records in the game's ship table (SHIP.TAB).
+ */
 bool Ships::populateList()
 {
   bool status = false;

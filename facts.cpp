@@ -11,11 +11,18 @@ Facts::~Facts()
 
 }
 
+/**
+ * Clears locally cached data.
+ */
 void Facts::clear()
 {
   m_factList.clear();
 }
 
+/**
+ * Gets a container of data structures that each holds information about one of the
+ * learnable facts from the game universe.
+ */
 QMap<int,Fact> Facts::getList()
 {
   if (m_factList.isEmpty())
@@ -26,6 +33,11 @@ QMap<int,Fact> Facts::getList()
   return m_factList;
 }
 
+/**
+ * Gets the data about the in-universe fact with the specified ID.
+ * If no fact with the specified ID is found, the returned struct
+ * will have an ID of 0 and empty string for its text.
+ */
 Fact Facts::getFact(int id) const
 {
   if (m_factList.contains(id))
@@ -41,6 +53,10 @@ Fact Facts::getFact(int id) const
   return f;
 }
 
+/**
+ * Gets a map of each alien race's receptivity to the specified fact ID.
+ * If no fact with the specified ID is found, an empty map will be returned.
+ */
 QMap<AlienRace,int> Facts::getReceptivity(int id)
 {
   QMap<AlienRace,int> recep;
@@ -53,6 +69,10 @@ QMap<AlienRace,int> Facts::getReceptivity(int id)
   return recep;
 }
 
+/**
+ * Reads and decodes the FACT.TAB data table.
+ * @return True when FACT.TAB was successfully read, false otherwise.
+ */
 bool Facts::populateList()
 {
   bool status = false;

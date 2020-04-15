@@ -4,6 +4,7 @@
 #include <QtEndian>
 #include <QImage>
 #include <QRgb>
+#include <string.h>
 
 const QMap<DatFileType,QString> DatLibrary::s_datFileNames
 {
@@ -24,6 +25,10 @@ DatLibrary::~DatLibrary()
 
 }
 
+/**
+ * Opens and reads each of the .DAT container files in the provided game data directory.
+ * @return True if all files were present and readable, false otherwise.
+ */
 bool DatLibrary::openData(QString pathToGameDir)
 {
   bool status = true;
@@ -45,6 +50,9 @@ bool DatLibrary::openData(QString pathToGameDir)
   return status;
 }
 
+/**
+ * Clears the cached contents of all the DAT files that were read in.
+ */
 void DatLibrary::closeData()
 {
   foreach (DatFileType datType, s_datFileNames.keys())
@@ -55,7 +63,12 @@ void DatLibrary::closeData()
   m_gameText.clear();
 }
 
-bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile)
+/**
+ * Reads file at the specified index in the DAT container and LZ decompress it (if necessary). The
+ * decompressed data is returned in the provided QByteArray.
+ * @return True when the requested file was found and decompressed successfully; false otherwise.
+ */
+bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile) const
 {
   bool status = false;
   const unsigned long indexEntryOffset = 2 + (index * sizeof(DatFileIndex));
@@ -94,7 +107,12 @@ bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray&
   return status;
 }
 
-bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& filedata)
+/**
+ * Searches the DAT container for the file with the specified name, reads and decompresses it,
+ * and returns the decompressed data in the provided QByteArray.
+ * @return True if the file was found, read, and decompressed successfully; false otherwise.
+ */
+bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& filedata) const
 {
   const char* rawdat = m_datContents[dat].constData();
   const long datsize = m_datContents[dat].size();
@@ -128,6 +146,10 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& fi
   return status;
 }
 
+/**
+ * Gets a list of all the files in the specified DAT who names match the provided file extension.
+ * @return List of matching filenames
+ */
 QStringList DatLibrary::getFilenamesByExtension(DatFileType dat, QString extension)
 {
   const char* rawdat = m_datContents[dat].constData();
@@ -158,11 +180,16 @@ QStringList DatLibrary::getFilenamesByExtension(DatFileType dat, QString extensi
   return filenames;
 }
 
-bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes)
+/**
+ * @brief DatLibrary::lzDecompress
+ * @return True if the file was successfully decompressed; false otherwise.
+ */
+bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes) const
 {
   bool status = true;
 
-  memset (m_lzRingBuffer, 0x20, LZ_RINGBUF_SIZE);
+  uint8_t lzRingBuffer[LZ_RINGBUF_SIZE];
+  memset (lzRingBuffer, 0x20, LZ_RINGBUF_SIZE);
 
   uint16_t bufPos = 0xFEE;
   uint16_t inputPos = 0;
@@ -203,7 +230,7 @@ bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompresse
         decodeByte = static_cast<uint8_t>(compressedfile[inputPos++]);
         decompressedFile.append(static_cast<char>(decodeByte));
 
-        m_lzRingBuffer[bufPos++] = decodeByte;
+        lzRingBuffer[bufPos++] = decodeByte;
         if (bufPos >= LZ_RINGBUF_SIZE)
         {
           bufPos = 0;
@@ -221,7 +248,7 @@ bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompresse
         byteIndexInChunk = 0;
         while (byteIndexInChunk < chunkSize)
         {
-          decodeByte = static_cast<uint8_t>(m_lzRingBuffer[chunkSource]);
+          decodeByte = static_cast<uint8_t>(lzRingBuffer[chunkSource]);
           decompressedFile.append(static_cast<char>(decodeByte));
 
           if (++chunkSource >= LZ_RINGBUF_SIZE)
@@ -229,7 +256,7 @@ bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompresse
             chunkSource = 0;
           }
 
-          m_lzRingBuffer[bufPos] = decodeByte;
+          lzRingBuffer[bufPos] = decodeByte;
           if (++bufPos >= LZ_RINGBUF_SIZE)
           {
             bufPos = 0;
@@ -251,6 +278,12 @@ bool DatLibrary::lzDecompress(QByteArray compressedfile, QByteArray& decompresse
   return status;
 }
 
+/**
+ * Convenience function that returns the string at the specified offset in GAMETEXT.TXT.
+ * This function is provided because the GAMETEXT strings are used by many different parts of the game.
+ * @return The null-terminated string found at the specified offset, or an empty string if
+ * an invalid offset was specified.
+ */
 QString DatLibrary::getGameText(int offset)
 {
   QString txt("");

@@ -4,6 +4,10 @@
 #include <string.h>
 #include "audio.h"
 
+/**
+ * Table of delta PCM subtables. Each subtable is one row of 16 values, where the first value is unused.
+ * These values are derived from an exponential transfer function.
+ */
 const int8_t Audio::s_deltaTable[240] =
 {
   0, -7,    -6,    -5,    -4,    -3,    -2,    -1,    0, 1,    2,    3,    4,    5,    6,    7,
@@ -29,7 +33,12 @@ Audio::Audio(DatLibrary& lib) :
 
 }
 
-int Audio::getStartLocation(QByteArray& nnvData, int soundId)
+/**
+ * Determines the start offset within the provided NNV data of the sound file with the given ID.
+ * @return The start offset of the specified sound file; or -1 if an error occurred (e.g. if the
+ * data was not large enough to contain a file with the specified ID.)
+ */
+int Audio::getStartLocation(const QByteArray& nnvData, int soundId)
 {
   int loc = -1;
 
@@ -45,7 +54,12 @@ int Audio::getStartLocation(QByteArray& nnvData, int soundId)
   return loc;
 }
 
-int Audio::getSoundDataLength(QByteArray& nnvData, int soundId)
+/**
+ * Determines the length in bytes of the sound file with the given ID within the provided NNV data.
+ * @return The length in bytes of the specified sound file; or -1 if an error occurred (e.g. if the
+ * data was not large enough to contain a file with the specified ID.)
+ */
+int Audio::getSoundDataLength(const QByteArray& nnvData, int soundId)
 {
   int len = -1;
 
@@ -61,6 +75,11 @@ int Audio::getSoundDataLength(QByteArray& nnvData, int soundId)
   return len;
 }
 
+/**
+ * Reads and decodes the DPCM sound data from the specified DAT container, NNV file, and ID. The
+ * provided QByteArray is populated with the full 8-bit unsigned PCM data.
+ * @return True if the file was read and decoded successfully; false otherwise.
+ */
 bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteArray& pcmData)
 {
   bool status = false;
@@ -84,7 +103,11 @@ bool Audio::readSound(DatFileType dat, QString nnvContainer, int soundId, QByteA
   return status;
 }
 
-void Audio::decode(uint8_t* encoded, int length, QByteArray& decoded)
+/**
+ * Decodes the 4-bit DPCM data at the specified location and of the specified length, putting
+ * the decoded 8-bit unsigned PCM output in the provided QByteArray.
+ */
+void Audio::decode(const uint8_t* encoded, int length, QByteArray& decoded)
 {
   bool upper_nibble = true;
   bool cmd_nibble = false;
@@ -171,6 +194,9 @@ void Audio::decode(uint8_t* encoded, int length, QByteArray& decoded)
   }
 }
 
+/**
+ * Returns the number of sound files contained in the specified NNV container.
+ */
 int Audio::getNumberOfSoundsInNNV(DatFileType dat, QString nnvContainer)
 {
   QByteArray nnvData;
@@ -185,6 +211,9 @@ int Audio::getNumberOfSoundsInNNV(DatFileType dat, QString nnvContainer)
   return soundCount;
 }
 
+/**
+ * Gets a list of all *.NNV files across all of the DAT containers used by the game.
+ */
 QMap<DatFileType,QStringList> Audio::getAllSoundList()
 {
   QMap<DatFileType,QStringList> nnvContainerList;

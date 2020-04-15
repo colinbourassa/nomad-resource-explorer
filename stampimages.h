@@ -14,6 +14,11 @@
 #define STAMP_EXTENSION ".stp"
 #define ROLL_EXTENSION  ".rol"
 
+/**
+ * Reads and decodes stamp (.stp) and stamp roll (.rol) image files (other
+ * than those for the inventory objects, which are separately handled by
+ * the InvObject class).
+ */
 class StampImages
 {
 public:

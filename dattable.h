@@ -6,6 +6,11 @@
 #include <QString>
 #include "datlibrary.h"
 
+/**
+ * Template for classes that handle the game's data table files. The base functionality
+ * in this template provides the ability to sequence through the entries in such a
+ * data table.
+ */
 template <typename StructType>
 class DatTable
 {

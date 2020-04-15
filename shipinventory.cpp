@@ -12,6 +12,10 @@ void ShipInventory::clear()
   m_inventories.clear();
 }
 
+/**
+ * Gets a map of object IDs and object quantities that describes the starting
+ * inventory for the ship with the provided ID.
+ */
 QMap<int,int> ShipInventory::getInventory(int shipId)
 {
   QMap<int,int> invent;
@@ -29,6 +33,10 @@ QMap<int,int> ShipInventory::getInventory(int shipId)
   return invent;
 }
 
+/**
+ * Reads INVENT.TAB and parses its records to build a local store of the game's
+ * ship inventory data.
+ */
 void ShipInventory::populateInventoryData()
 {
   QByteArray inventdata;

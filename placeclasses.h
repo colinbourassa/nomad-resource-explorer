@@ -50,11 +50,15 @@ typedef struct __attribute__((packed)) StClassTableEntry
   uint8_t unknown[4];
 } StClassTableEntry;
 
+/**
+ * Reads and parses data table with place class information (for stars and planets).
+ * This class stores information about planet names, resources, temperature, and
+ * other factors.
+ */
 class PlaceClasses
 {
 public:
   PlaceClasses(DatLibrary& lib);
-  const QMap<int,PlanetClass>* planetClassDataList();
   bool pclassData(int id, PlanetClass& pclass);
   void clear();
   QString getStarClassName(int id);

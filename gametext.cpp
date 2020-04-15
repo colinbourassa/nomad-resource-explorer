@@ -1,11 +1,23 @@
 #include "gametext.h"
 
+/**
+ * Processes the mission and conversation text in the game by removing the special
+ * nonprintable command bytes and inserting the proper substitution text.
+ */
 GameText::GameText(DatLibrary& lib) :
   m_lib(&lib)
 {
 
 }
 
+/**
+ * Returns a string that may be substituted for a metatext command. The metatext commands
+ * are one of three types:
+ * - Conversational synonym. Used to add variety to the alien dialog.
+ * - Translated phrases. Used to (partially) translate the Shaasa alien language.
+ * - Losten gateway code. Used to create (or recall) one of the randomly generated codes
+ *   for the Losten planetary gateway.
+ */
 QString GameText::getMetaString(int metaTabIndex)
 {
   QString metaStr;
@@ -45,6 +57,15 @@ QString GameText::getMetaString(int metaTabIndex)
   return metaStr;
 }
 
+/**
+ * Walks through the provided ASCII character string one byte at a time, consuming the special command
+ * bytes and their parameters, and producing the text that gets generated in their place (if any).
+ *
+ * TODO: It would be nice if this function took some sort of container reference as a parameter,
+ * and used it to return a list of the encountered command bytes that took some invisible actions
+ * (granting knowledge of people/places/things/facts, modifying the setup table, changing the alien's
+ * temperament, etc.)
+ */
 QString GameText::readString(const char* data, int maxlen)
 {
   QString clean;

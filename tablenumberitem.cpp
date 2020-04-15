@@ -1,5 +1,8 @@
 #include "tablenumberitem.h"
 
+/**
+ * Subclass of QTableWidgetItems with more intelligent sorting of strings that represent numbers.
+ */
 TableNumberItem::TableNumberItem(const QString txt) :
   QTableWidgetItem (txt)
 {

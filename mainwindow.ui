@@ -27,6 +27,9 @@
        <layout class="QGridLayout" name="gridLayout" columnstretch="4,3">
         <item row="1" column="1">
          <widget class="QTableWidget" name="m_shipInventoryTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::NoSelection</enum>
           </property>
@@ -68,6 +71,9 @@
         </item>
         <item row="0" column="0" rowspan="2">
          <widget class="QTableWidget" name="m_shipTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
@@ -370,6 +376,9 @@
         </item>
         <item row="0" column="0" rowspan="2">
          <widget class="QTableWidget" name="m_placeTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
@@ -432,6 +441,9 @@
         </item>
         <item row="0" column="0" rowspan="3">
          <widget class="QTableWidget" name="m_alienTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
@@ -493,6 +505,9 @@
         </item>
         <item row="1" column="0" rowspan="7">
          <widget class="QTableWidget" name="m_objTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
@@ -633,12 +648,12 @@
        <attribute name="title">
         <string>Facts</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5" rowstretch="3,1">
+       <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,3,1">
         <item row="1" column="0">
-         <widget class="QPlainTextEdit" name="m_factText"/>
-        </item>
-        <item row="0" column="0">
          <widget class="QTableWidget" name="m_factTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
@@ -730,6 +745,20 @@
           </column>
          </widget>
         </item>
+        <item row="2" column="0">
+         <widget class="QPlainTextEdit" name="m_factText">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="m_factLabel">
+          <property name="text">
+           <string>In-game facts with relative values to each alien race:</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="m_tabSounds">
@@ -782,6 +811,9 @@
         </item>
         <item row="0" column="0" rowspan="5">
          <widget class="QTreeWidget" name="m_soundTree">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="columnCount">
            <number>2</number>
           </property>
@@ -867,6 +899,9 @@
         </item>
         <item row="0" column="0" rowspan="2">
          <widget class="QTreeWidget" name="m_fullscreenTree">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <attribute name="headerVisible">
            <bool>false</bool>
           </attribute>
@@ -907,6 +942,9 @@
         </item>
         <item row="0" column="0" rowspan="2">
          <widget class="QTreeWidget" name="m_stampTree">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <column>
            <property name="text">
             <string notr="true">1</string>
@@ -982,7 +1020,11 @@
          </widget>
         </item>
         <item row="12" column="0" rowspan="4" colspan="4">
-         <widget class="QPlainTextEdit" name="m_convDialogueLine"/>
+         <widget class="QPlainTextEdit" name="m_convDialogueLine">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="7" column="1">
          <widget class="QRadioButton" name="m_convTopicButtonDispObj">
@@ -1065,6 +1107,9 @@
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
@@ -1123,6 +1168,9 @@
         </item>
         <item row="1" column="0" rowspan="11">
          <widget class="QTableWidget" name="m_convAlienTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>

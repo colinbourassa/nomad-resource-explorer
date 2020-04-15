@@ -12,6 +12,9 @@ ShipClasses::~ShipClasses()
 
 }
 
+/**
+ * Gets a map of all ship classes, keyed by class ID.
+ */
 QMap<int,ShipClass> ShipClasses::getList()
 {
   if (m_shipClasses.isEmpty())
@@ -20,9 +23,12 @@ QMap<int,ShipClass> ShipClasses::getList()
   }
 
   return m_shipClasses;
-
 }
 
+/**
+ * Reads the ship class data table (SCLASS.TAB), parses, and stores the data.
+ * @return
+ */
 bool ShipClasses::populateList()
 {
   bool status = false;
@@ -53,6 +59,10 @@ bool ShipClasses::populateList()
   return status;
 }
 
+/**
+ * Gets the name of the ship class with the provided ID.
+ * @return Ship class name, or empty string if no class with the provided ID was found.
+ */
 QString ShipClasses::getName(int id)
 {
   QString name;
