@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QString>
-#include <QMessageBox>
 #include <QFileDialog>
 #include <QFile>
 #include <QVector>
@@ -183,11 +182,17 @@ void MainWindow::setupAudio()
   m_audioFormat.setSampleType(QAudioFormat::UnSignedInt);
 
   QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+
   if (info.isFormatSupported(m_audioFormat))
   {
     m_audioOutput = new QAudioOutput(m_audioFormat, this);
     connect(m_audioOutput, SIGNAL(stateChanged(QAudio::State)), this, SLOT(onAudioStateChanged(QAudio::State)));
     setAudioStateLabel(m_audioOutput->state());
+  }
+  else
+  {
+    ui->m_soundWarningLabel->setText("Warning: device audio output device does not support this audio format."
+                                     " Sound output is disabled.");
   }
 }
 
@@ -211,8 +216,10 @@ void MainWindow::setAudioStateLabel(QAudio::State state)
     break;
   case QAudio::IdleState:
     ui->m_soundStateLabel->setText("Idle");
-    // TODO: on some systems, stopping output here seems to cut off the sound before it's actually finished playing
-    m_audioOutput->stop();
+    if (m_audioOutput)
+    {
+      m_audioOutput->stop();
+    }
     break;
   case QAudio::InterruptedState:
     ui->m_soundStateLabel->setText("Interrupted");
@@ -803,34 +810,44 @@ void MainWindow::on_m_soundNextButton_clicked()
  */
 void MainWindow::setSoundButtonStates()
 {
-  if ((m_audioOutput->state() == QAudio::StoppedState) && (m_currentNNVSoundId >= 0))
+  if (m_audioOutput)
   {
-    ui->m_soundTree->setEnabled(true);
-    ui->m_soundStopButton->setEnabled(false);
+    if ((m_audioOutput->state() == QAudio::StoppedState) && (m_currentNNVSoundId >= 0))
+    {
+      ui->m_soundTree->setEnabled(true);
+      ui->m_soundStopButton->setEnabled(false);
 
-    if (m_currentNNVSoundId >= 0)
-    {
-      ui->m_soundPlayButton->setEnabled(true);
-    }
+      if (m_currentNNVSoundId >= 0)
+      {
+        ui->m_soundPlayButton->setEnabled(true);
+      }
 
-    if (m_currentNNVSoundCount > 0)
-    {
-      ui->m_soundNextButton->setEnabled(m_currentNNVSoundId < (m_currentNNVSoundCount - 1));
-      ui->m_soundPrevButton->setEnabled(m_currentNNVSoundId > 0);
+      if (m_currentNNVSoundCount > 0)
+      {
+        ui->m_soundNextButton->setEnabled(m_currentNNVSoundId < (m_currentNNVSoundCount - 1));
+        ui->m_soundPrevButton->setEnabled(m_currentNNVSoundId > 0);
+      }
+      else
+      {
+        ui->m_soundNextButton->setEnabled(false);
+        ui->m_soundPrevButton->setEnabled(false);
+      }
     }
-    else
+    else if (m_audioOutput->state() == QAudio::ActiveState)
     {
+      ui->m_soundTree->setEnabled(false);
+      ui->m_soundPlayButton->setEnabled(false);
       ui->m_soundNextButton->setEnabled(false);
       ui->m_soundPrevButton->setEnabled(false);
+      ui->m_soundStopButton->setEnabled(true);
     }
   }
-  else if (m_audioOutput->state() == QAudio::ActiveState)
+  else
   {
-    ui->m_soundTree->setEnabled(false);
     ui->m_soundPlayButton->setEnabled(false);
     ui->m_soundNextButton->setEnabled(false);
     ui->m_soundPrevButton->setEnabled(false);
-    ui->m_soundStopButton->setEnabled(true);
+    ui->m_soundStopButton->setEnabled(false);
   }
 }
 

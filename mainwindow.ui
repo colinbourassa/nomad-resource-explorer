@@ -766,19 +766,6 @@
         <string>Sounds</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0,0,0,0,0">
-        <item row="0" column="5" rowspan="5">
-         <spacer name="m_soundHSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
         <item row="1" column="1">
          <widget class="QPushButton" name="m_soundPrevButton">
           <property name="enabled">
@@ -789,27 +776,32 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="m_soundPlayButton">
-          <property name="enabled">
-           <bool>false</bool>
+        <item row="0" column="1" colspan="3">
+         <widget class="QLabel" name="m_soundIDLabel">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
           </property>
           <property name="text">
-           <string>Play</string>
+           <string>Sound ID:</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
-         <widget class="QPushButton" name="m_soundStopButton">
-          <property name="enabled">
-           <bool>false</bool>
+        <item row="5" column="2">
+         <spacer name="m_soundVSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
           </property>
-          <property name="text">
-           <string>Stop</string>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
           </property>
-         </widget>
+         </spacer>
         </item>
-        <item row="0" column="0" rowspan="5">
+        <item row="0" column="0" rowspan="6">
          <widget class="QTreeWidget" name="m_soundTree">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
@@ -839,15 +831,36 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1" colspan="3">
-         <widget class="QLabel" name="m_soundIDLabel">
-          <property name="font">
-           <font>
-            <pointsize>14</pointsize>
-           </font>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="m_soundStopButton">
+          <property name="enabled">
+           <bool>false</bool>
           </property>
           <property name="text">
-           <string>Sound ID:</string>
+           <string>Stop</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="5" rowspan="6">
+         <spacer name="m_soundHSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="m_soundPlayButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Play</string>
           </property>
          </widget>
         </item>
@@ -867,18 +880,15 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="2">
-         <spacer name="m_soundVSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+        <item row="4" column="1" colspan="3">
+         <widget class="QLabel" name="m_soundWarningLabel">
+          <property name="text">
+           <string/>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
+          <property name="wordWrap">
+           <bool>true</bool>
           </property>
-         </spacer>
+         </widget>
         </item>
        </layout>
       </widget>
