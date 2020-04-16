@@ -46,7 +46,7 @@ class ConversationText
 {
 public:
   ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gtext);
-  QStringList getConversationText(int alienId, ConvTopicCategory topic, int thingId);
+  QString getConversationText(int alienId, ConvTopicCategory topic, int thingId, QMap<GTxtCmd,int>& commands);
   bool doesInterestingDialogExist(int alienId, ConvTopicCategory category, int thingId);
 
 private:
@@ -59,7 +59,7 @@ private:
   bool getTLKXData(ConvTableType tableType, int id, QByteArray& indexData, QByteArray& strData);
 
   //! Searches the provided TLKTR or TLKTC file to get a list of TLKN indices that match the provided criteria
-  QList<int> getTLKNIndexes(ConvTopicCategory topic, int thingId, const QByteArray& tlktData);
+  int getTLKNIndex(ConvTopicCategory topic, int thingId, const QByteArray& tlktData);
 
   const QString getTLKNCFilename(int id);
   const QString getTLKNRFilename(int id);
@@ -71,9 +71,9 @@ private:
   const QString getTLKXRStringsFilename(int id);
 
   //! Reads data from the provided TLKNC or TLKNR data to provide an index into a TLKXC/TLKXR file
-  QList<int> getTLKXIndexes(const QList<int>& tlknIndex, const QByteArray& tlknData);
+  int getTLKXIndex(int tlknIndex, const QByteArray& tlknData);
 
-  QStringList getTLKXStrings(const QList<int>& tlkxIndexes, const QByteArray& tlkxIndexData, const QByteArray& tlkxStrData);
+  QString getTLKXString(int tlkxIndex, const QByteArray& tlkxIndexData, const QByteArray& tlkxStrData, QMap<GTxtCmd,int>& commands);
 };
 
 #endif // CONVERSATIONTEXT_H

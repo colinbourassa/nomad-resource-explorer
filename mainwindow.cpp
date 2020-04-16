@@ -40,8 +40,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_currentNNVFilename(""),
   m_currentSoundDat(DatFileType_INVALID),
   m_audioOutput(nullptr),
-  m_currentConvTopic(ConvTopicCategory_GreetingInitial),
-  m_currentConvLinesPos(-1)
+  m_currentConvTopic(ConvTopicCategory_GreetingInitial)
 {
   ui->setupUi(this);
   putResourceLabelsInArray();
@@ -947,8 +946,7 @@ void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int curr
   Q_UNUSED(previousRow)
   Q_UNUSED(previousColumn)
 
-  ui->m_convDialogueLine->clear();
-  ui->m_convDialogueLine->clearHistory();
+  clearDialogLineAndCommandList();
 
   // We're going to repopulate the list of conversation topics for the currently selected alien and topic
   // category. Before we do, save the ID of the last topic selected by the user so that we can auto-select
@@ -1089,8 +1087,8 @@ void MainWindow::populateTopicTableForCategory(ConvTopicCategory category, QMap<
     }
   }
   ui->m_convTopicTable->resizeColumnToContents(0);
-  ui->m_convDialogueLine->clear();
-  ui->m_convDialogueLine->clearHistory();
+
+  clearDialogLineAndCommandList();
 
   // search through the rows to find one with the topic ID matching the previously selected topic ID;
   // if such a row is found, select it
@@ -1221,73 +1219,38 @@ void MainWindow::getConversationLinesForCurrentTopic()
 
   if ((alienId > 0) && ((thingId > 0) || thingIdOfZeroAllowed))
   {
-    m_currentConvLines = m_convText.getConversationText(alienId, m_currentConvTopic, thingId);
-    m_currentConvLinesPos = (m_currentConvLines.size() > 0) ? 0 : -1;
+    QMap<GTxtCmd,int> embeddedCommands;
+    QString currentConvLine = m_convText.getConversationText(alienId, m_currentConvTopic, thingId, embeddedCommands);
 
-    setConvNextPrevButtonState();
-    displayCurrentConversationLine();
+    clearDialogLineAndCommandList();
+    ui->m_convDialogueLine->setHtml(currentConvLine);
+
+    for (int commandIndex = 0; commandIndex < embeddedCommands.count(); commandIndex++)
+    {
+      const GTxtCmd command = embeddedCommands.keys().at(commandIndex);
+      const int param = embeddedCommands.values().at(commandIndex);
+
+      const int rowcount = ui->m_convCommandList->rowCount();
+
+      ui->m_convCommandList->insertRow(rowcount);
+      ui->m_convCommandList->setItem(rowcount, 0, new QTableWidgetItem(g_gameTextCommandName[command]));
+      ui->m_convCommandList->setItem(rowcount, 1, new QTableWidgetItem(QString("%1").arg(param)));
+      // TODO: rather than printing the numeric parameter in the second column, convert it to
+      // a human-readable string by using the command to determine which type of item it is
+    }
+    ui->m_convCommandList->resizeColumnToContents(0);
   }
 }
 
 /**
- * Responds to the activation of the button that advances to the next line of dialogue
- * that is applicable to the currently selected alien and conversation topic.
+ * Clears the box showing the current line of dialogue, and clears the table that
+ * shows all the embedded commands in that dialogue.
  */
-void MainWindow::on_m_convNextButton_clicked()
-{
-  if (m_currentConvLinesPos > 0)
-  {
-    m_currentConvLinesPos--;
-  }
-
-  setConvNextPrevButtonState();
-  displayCurrentConversationLine();
-}
-
-/**
- * Responds to the activation of the button that advances to the next line of dialogue
- * that is applicable to the currently selected alien and conversation topic.
- */
-void MainWindow::on_m_convPrevButton_clicked()
-{
-  if (m_currentConvLinesPos > 0)
-  {
-    m_currentConvLinesPos--;
-  }
-
-  setConvNextPrevButtonState();
-  displayCurrentConversationLine();
-}
-
-/**
- * Sets the enable/disable state of the conversation next/prev buttons, depending on the
- * availability of additional dialogue lines.
- */
-void MainWindow::setConvNextPrevButtonState()
-{
-  if (m_currentConvLinesPos >= 0)
-  {
-    ui->m_convNextButton->setEnabled(m_currentConvLines.size() > (m_currentConvLinesPos + 1));
-    ui->m_convPrevButton->setEnabled(m_currentConvLinesPos > 0);
-  }
-  else
-  {
-    ui->m_convNextButton->setEnabled(false);
-    ui->m_convPrevButton->setEnabled(false);
-  }
-}
-
-/**
- * Displays the currently selected line of conversation text.
- */
-void MainWindow::displayCurrentConversationLine()
+void MainWindow::clearDialogLineAndCommandList()
 {
   ui->m_convDialogueLine->clear();
   ui->m_convDialogueLine->clearHistory();
-  if ((m_currentConvLinesPos >= 0) && (m_currentConvLines.size() > m_currentConvLinesPos))
-  {
-    ui->m_convDialogueLine->setHtml(m_currentConvLines[m_currentConvLinesPos]);
-  }
+  ui->m_convCommandList->setRowCount(0);
 }
 
 /**

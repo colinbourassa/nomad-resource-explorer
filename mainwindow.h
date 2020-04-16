@@ -71,8 +71,6 @@ private slots:
   void on_m_convTopicButtonDispObj_clicked();
   void on_m_convTopicButtonGiveObj_clicked();
   void on_m_convTopicButtonGiveFact_clicked();
-  void on_m_convNextButton_clicked();
-  void on_m_convPrevButton_clicked();
   void on_m_convTopicButtonSeesItem_clicked();
   void on_m_stampTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
   void on_m_stampRollSlider_sliderMoved(int position);
@@ -121,8 +119,7 @@ private:
   QBuffer m_audioBuffer;
 
   ConvTopicCategory m_currentConvTopic;
-  QStringList m_currentConvLines;
-  int m_currentConvLinesPos;
+  QString m_currentConvLine;
 
   QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
 
@@ -143,8 +140,7 @@ private:
   void populateConversationTopicTable(int lastSelectedTopicId = -1);
   void populateTopicTableForCategory(ConvTopicCategory category, QMap<int,QString> topicList, int lastSelectedTopicId);
   void getConversationLinesForCurrentTopic();
-  void displayCurrentConversationLine();
-  void setConvNextPrevButtonState();
+  void clearDialogLineAndCommandList();
 
   void putResourceLabelsInArray();
   void clearAllResourceLabels();

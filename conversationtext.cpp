@@ -16,42 +16,42 @@ ConversationText::ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gt
  * Gets a list of dialog lines, each one being a response from the specified alien about the
  * thing with the provided ID in the specified conversation topic category.
  */
-QStringList ConversationText::getConversationText(int alienId, ConvTopicCategory topic, int thingId)
+QString ConversationText::getConversationText(int alienId, ConvTopicCategory topic, int thingId, QMap<GTxtCmd,int>& commands)
 {
-  QStringList dialogLines;
+  QString dialogLine;
   QByteArray tlktData;
   ConvTableType tableType = ConvTableType_Individual;
   int alienOrRaceId = alienId;
 
   getTLKTData(tableType, alienOrRaceId, tlktData);
 
-  QList<int> tlknIndexes = getTLKNIndexes(topic, thingId, tlktData);
+  int tlknIndex = getTLKNIndex(topic, thingId, tlktData);
 
   // if the individual-specific tables didn't have any entries for this topic,
   // fall back to the generic tables used by all members of an alien race
-  if (tlknIndexes.size() == 0)
+  if (tlknIndex < 0)
   {
     tableType = ConvTableType_Race;
     alienOrRaceId = m_aliens->getRace(alienId);
     getTLKTData(tableType, alienOrRaceId, tlktData);
-    tlknIndexes = getTLKNIndexes(topic, thingId, tlktData);
+    tlknIndex = getTLKNIndex(topic, thingId, tlktData);
   }
 
-  if (tlknIndexes.size() > 0)
+  if (tlknIndex >= 0)
   {
     QByteArray tlknData;
     getTLKNData(tableType, alienOrRaceId, tlknData);
 
     // get the list of indices in the table of pointers to dialog strings
-    const QList<int> tlkxIndexes = getTLKXIndexes(tlknIndexes, tlknData);
+    int tlkxIndex = getTLKXIndex(tlknIndex, tlknData);
 
     QByteArray tlkxIndexData;
     QByteArray tlkxStrData;
     getTLKXData(tableType, alienOrRaceId, tlkxIndexData, tlkxStrData);
-    dialogLines = getTLKXStrings(tlkxIndexes, tlkxIndexData, tlkxStrData);
+    dialogLine = getTLKXString(tlkxIndex, tlkxIndexData, tlkxStrData, commands);
   }
 
-  return dialogLines;
+  return dialogLine;
 }
 
 /**
@@ -89,25 +89,21 @@ bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& 
  * Builds and returns a list of strings, each one having been indexed by the provided list of indices.
  * The data used is provided in the QByteArrays containing the contents of the relevant TLKX files.
  */
-QStringList ConversationText::getTLKXStrings(const QList<int>& tlkxIndexes,
-                                             const QByteArray& tlkxIndexData,
-                                             const QByteArray& tlkxStrData)
+QString ConversationText::getTLKXString(int tlkxIndex,
+                                        const QByteArray& tlkxIndexData,
+                                        const QByteArray& tlkxStrData,
+                                        QMap<GTxtCmd,int>& commands)
 {
-  QStringList strings;
   const uint8_t* idxData = reinterpret_cast<const uint8_t*>(tlkxIndexData.data());
 
-  foreach (int idx, tlkxIndexes)
-  {
-    const int tlkxIndexOffset = (idx * TLKX_RECORDSIZE) + TLKX_RECORDSIZE;
-    uint32_t tlkxStrOffset = 0;
-    memcpy(&tlkxStrOffset, &idxData[tlkxIndexOffset], TLKX_RECORDSIZE);
-    tlkxStrOffset = qFromLittleEndian<quint32>(tlkxStrOffset);
+  const int tlkxIndexOffset = (tlkxIndex * TLKX_RECORDSIZE) + TLKX_RECORDSIZE;
+  uint32_t tlkxStrOffset = 0;
+  memcpy(&tlkxStrOffset, &idxData[tlkxIndexOffset], TLKX_RECORDSIZE);
+  tlkxStrOffset = qFromLittleEndian<quint32>(tlkxStrOffset);
 
-    const QString line = m_gtext->readString(tlkxStrData.data() + tlkxStrOffset);
-    strings.append(line);
-  }
+  const QString line = m_gtext->readString(tlkxStrData.data() + tlkxStrOffset, commands);
 
-  return strings;
+  return line;
 }
 
 /**
@@ -194,29 +190,23 @@ const QString ConversationText::getTLKXRStringsFilename(int id)
  * Returns the list of indices into the TLKX file set, given the provided list of TLKN indices and the
  * TLKN file data.
  */
-QList<int> ConversationText::getTLKXIndexes(const QList<int>& tlknIndexes, const QByteArray& tlknData)
+int ConversationText::getTLKXIndex(int tlknIndex, const QByteArray& tlknData)
 {
-  QList<int> tlkxIndexes;
-
   const uint8_t* data = reinterpret_cast<const uint8_t*>(tlknData.data());
+  const int offset = tlknIndex * TLKN_RECORDSIZE;
+  const int tlkxIndex = data[offset] + (0x100 * data[offset + 1]);
 
-  foreach (int tlknIndex, tlknIndexes)
-  {
-    const int offset = tlknIndex * TLKN_RECORDSIZE;
-    const int tlkxIndex = data[offset] + (0x100 * data[offset + 1]);
-    tlkxIndexes.append(tlkxIndex);
-  }
-
-  return tlkxIndexes;
+  return tlkxIndex;
 }
 
 /**
  * Gets the list of indices from the provided TLKT data that match the specified thing ID in the specified
  * conversation topic category. If none match, an empty list is returned.
  */
-QList<int> ConversationText::getTLKNIndexes(ConvTopicCategory topic, int requestedId, const QByteArray& tlktData)
+int ConversationText::getTLKNIndex(ConvTopicCategory topic, int requestedId, const QByteArray& tlktData)
 {
-  QList<int> indexes;
+  int index = -1;
+  int highestPriority = 0;
 
   const uint8_t* data = reinterpret_cast<const uint8_t*>(tlktData.data());
   int offset = 0;
@@ -224,57 +214,72 @@ QList<int> ConversationText::getTLKNIndexes(ConvTopicCategory topic, int request
   while (offset < tlktData.size())
   {
     const int firstByte = data[offset];
+    const int priority  = data[offset + 1];
     const int alienId   = data[offset + 3];
     const int placeId   = data[offset + 4] + (0x100 * data[offset + 5]);
     const int objectId  = data[offset + 6];
     const int miscId    = data[offset + 7];
     const int tlknIndex = data[offset + 8] + (0x100 * data[offset + 9]);
 
-    if ((topic == ConvTopicCategory_GreetingInitial) && (firstByte == TLKN_CMD_GREETFIRST))
+    if (priority >= highestPriority)
     {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_GreetingSubsequent) && (firstByte == TLKN_CMD_GREETNEXT))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_DisplayObject) && (firstByte == TLKN_CMD_DISPOBJECT) && (objectId == requestedId))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_GiveObject) && (firstByte == TLKN_CMD_GIVEOBJECT) && (objectId == requestedId))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_SeesObject) && (firstByte == TLKN_CMD_SEESOBJ) && (objectId == requestedId))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_AskAboutRace) && (firstByte == TLKN_CMD_ASKABOUTRACE) && (miscId == requestedId))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_AskAboutPerson) && (firstByte == TLKN_CMD_ASKABOUT) && (alienId == requestedId))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_AskAboutObject) && (firstByte == TLKN_CMD_ASKABOUT) && (objectId == requestedId))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_AskAboutLocation) && (firstByte == TLKN_CMD_ASKABOUT) && (placeId == requestedId))
-    {
-      indexes.append(tlknIndex);
-    }
-    else if ((topic == ConvTopicCategory_GiveFact) && (firstByte == TLKN_CMD_ASKABOUT) && (miscId == requestedId))
-    {
-      indexes.append(tlknIndex);
+      if ((topic == ConvTopicCategory_GreetingInitial) && (firstByte == TLKN_CMD_GREETFIRST))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_GreetingSubsequent) && (firstByte == TLKN_CMD_GREETNEXT))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_DisplayObject) && (firstByte == TLKN_CMD_DISPOBJECT) && (objectId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_GiveObject) && (firstByte == TLKN_CMD_GIVEOBJECT) && (objectId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_SeesObject) && (firstByte == TLKN_CMD_SEESOBJ) && (objectId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_AskAboutRace) && (firstByte == TLKN_CMD_ASKABOUTRACE) && (miscId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_AskAboutPerson) && (firstByte == TLKN_CMD_ASKABOUT) && (alienId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_AskAboutObject) && (firstByte == TLKN_CMD_ASKABOUT) && (objectId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_AskAboutLocation) && (firstByte == TLKN_CMD_ASKABOUT) && (placeId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+      else if ((topic == ConvTopicCategory_GiveFact) && (firstByte == TLKN_CMD_ASKABOUT) && (miscId == requestedId))
+      {
+        index = tlknIndex;
+      highestPriority = priority;
+      }
+
     }
 
     offset += TLKT_RECORDSIZE;
   }
 
-  return indexes;
+  return index;
 }
 
 /**
@@ -292,9 +297,9 @@ bool ConversationText::doesInterestingDialogExist(int alienId, ConvTopicCategory
 
   getTLKTData(tableType, alienOrRaceId, tlktData);
 
-  QList<int> tlknIndexes = getTLKNIndexes(category, thingId, tlktData);
+  int tlknIndex = getTLKNIndex(category, thingId, tlktData);
 
-  if (!tlknIndexes.isEmpty())
+  if (tlknIndex >= 0)
   {
     status = true;
   }
@@ -303,9 +308,9 @@ bool ConversationText::doesInterestingDialogExist(int alienId, ConvTopicCategory
     tableType = ConvTableType_Race;
     alienOrRaceId = m_aliens->getRace(alienId);
     getTLKTData(tableType, alienOrRaceId, tlktData);
-    tlknIndexes = getTLKNIndexes(category, thingId, tlktData);
+    tlknIndex = getTLKNIndex(category, thingId, tlktData);
 
-    status = !tlknIndexes.isEmpty();
+    status = (tlknIndex >= 0);
   }
 
   return status;

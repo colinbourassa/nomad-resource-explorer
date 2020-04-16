@@ -77,6 +77,32 @@ static const QMap<GTxtCmd,int> g_gameTextParamCount =
   { GTxtCmd_ModifyMissionTable,       1 }
 };
 
+static const QMap<GTxtCmd,QString> g_gameTextCommandName =
+{
+  { GTxtCmd_InsertPlayerName,         "Insert player's name" },
+  { GTxtCmd_InsertPlayerShip,         "Insert player's ship name" },
+  { GTxtCmd_InsertCurrentLocation,    "Insert current location" },
+  { GTxtCmd_GAMESTR,                  "Insert 'GAMESTR'" },
+  { GTxtCmd_MetaText,                 "Insert metatext" },
+  { GTxtCmd_AddItem,                  "Add item to inventory" },
+  { GTxtCmd_METAMOVE,                 "Insert 'METAMOVE'" },
+  { GTxtCmd_ChangeAlienTemperament,   "Change alien temperament" },
+  { GTxtCmd_GrantKnowledgeFact,       "Learn fact" },
+  { GTxtCmd_GrantKnowledgePlace,      "Learn about place" },
+  { GTxtCmd_AStateTableModifyA,       "Modify alien state table (0)" },
+  { GTxtCmd_GrantKnowledgeObject,     "Learn about object" },
+  { GTxtCmd_AStateTableModifyB,       "Modify alien state table (1)" },
+  { GTxtCmd_CopyEncountRelateTable,   "Copy encount_relate table" },
+  { GTxtCmd_GrantKnowledgeRace,       "Learn about race" },
+  { GTxtCmd_ModifyEncountRelate,      "Modify encount_relate table" },
+  { GTxtCmd_StoreShipIDInSetupTab,    "Store ship ID in setup table" },
+  { GTxtCmd_ModifySetupTable,         "Modify setup table" },
+  { GTxtCmd_SetAlienConvBehaviorFlag, "Set alien behavior flag" },
+  { GTxtCmd_SetAlienAttrMax,          "Set alien attribute to max" },
+  { GTxtCmd_SetAlienAttrMin,          "Set alien attribute to min" },
+  { GTxtCmd_ModifyMissionTable,       "Modify mission table" }
+};
+
 /**
  * Reads mission, conversation, and object text from a data file. This text
  * may have embedded command sequences that control the game environment, and
@@ -89,7 +115,7 @@ public:
   void clear();
 
   //! Produces a regular string from string data with embedded commands
-  QString readString(const char* data, int maxlen = 0x1000);
+  QString readString(const char* data, QMap<GTxtCmd,int>& commands, int maxlen = 0x1000);
 
 private:
   DatLibrary* m_lib;

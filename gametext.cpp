@@ -79,16 +79,12 @@ QString GameText::getMetaString(int metaTabIndex)
 /**
  * Walks through the provided ASCII character string one byte at a time, consuming the special command
  * bytes and their parameters, and producing the text that gets generated in their place (if any).
- *
- * TODO: It would be nice if this function took some sort of container reference as a parameter,
- * and used it to return a list of the encountered command bytes that took some invisible actions
- * (granting knowledge of people/places/things/facts, modifying the setup table, changing the alien's
- * temperament, etc.)
  */
-QString GameText::readString(const char* data, int maxlen)
+QString GameText::readString(const char* data, QMap<GTxtCmd,int>& commands, int maxlen)
 {
   QString clean;
   int pos = 0;
+  commands.clear();
 
   while ((data[pos] != 0) && (pos < maxlen))
   {
@@ -129,17 +125,56 @@ QString GameText::readString(const char* data, int maxlen)
       {
         clean.append(QString("<current location>").toHtmlEscaped());
       }
-      // because the number of places in the game can require a two-byte identifier,
-      // we need to check whether an additional byte must be consumed as a parameter to this command
-      else if (cmd == GTxtCmd_GrantKnowledgePlace)
+      else if ((cmd == GTxtCmd_AddItem) ||
+               ((cmd >= GTxtCmd_ChangeAlienTemperament) && (cmd <= GTxtCmd_ModifyMissionTable)))
       {
-        const uint8_t firstParamByte = static_cast<uint8_t>(data[pos]);
-        if (firstParamByte & 0x80)
+        // the command is one of several that modify game state, so let's capture it along
+        // with its parameters to pass back to the caller in a list
+
+        int param = 0;
+        if (g_gameTextParamCount.contains(cmd))
         {
-          pos++;
+          // the GrantKnowledgePlace command is special because it can use either one or two
+          // parameter bytes, determined during parsing by the content of the first byte
+          if (cmd == GTxtCmd_GrantKnowledgePlace)
+          {
+            param = data[pos];
+
+            // if bit 7 is set in the first parameter byte to GrantKnowledgePlace, we need
+            // to consume one additional byte and combine them to form a 16-bit place ID
+            if (param & 0x80)
+            {
+              // advance the input pointer once more since we just determined that an
+              // additional parameter byte is required
+              pos++;
+              if (pos < maxlen)
+              {
+                param &= 0x7F;
+                param |= (static_cast<uint16_t>(data[pos]) << 7);
+              }
+            }
+          }
+          else if (g_gameTextParamCount[cmd] == 1)
+          {
+            param = data[pos];
+          }
+          else if (g_gameTextParamCount[cmd] == 2)
+          {
+            // interpret bytes as little-endian 16-bit word
+            param = (static_cast<uint8_t>(data[pos]) + (0x100 * static_cast<uint8_t>(data[pos+1])));
+          }
+
+          commands.insertMulti(cmd, param);
         }
       }
+      else
+      {
+        // all other command values (bytes < 0x20) are unused, and cause the game's text engine to
+        // insert the string "<HUH?>"
+        clean.append(QString("<HUH?>").toHtmlEscaped());
+      }
 
+      // advance the pointer by the number of parameter bytes used by this command
       pos += g_gameTextParamCount[cmd];
     }
   }
