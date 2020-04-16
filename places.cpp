@@ -65,9 +65,14 @@ const uint8_t Places::s_planetTextureMapping[622] =
 };
 
 Places::Places(DatLibrary& lib, Palette& pal, PlaceClasses& pclasses) :
-  m_lib(&lib),
+  DatTable<PlaceTableEntry> (lib),
   m_pal(&pal),
   m_placeClasses(&pclasses)
+{
+
+}
+
+Places::~Places()
 {
 
 }
@@ -88,7 +93,7 @@ QString Places::getName(int id)
 {
   if (m_placeList.isEmpty())
   {
-    populatePlaceList();
+    populateList();
   }
 
   if (m_placeList.contains(id))
@@ -99,53 +104,45 @@ QString Places::getName(int id)
   return QString();
 }
 
-
-void Places::populatePlaceList()
+bool Places::populateList()
 {
-  QByteArray placedata;
+  bool status = false;
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "PLACE.TAB", placedata))
+  if (openFile(DatFileType_CONVERSE, "PLACE.TAB"))
   {
-    const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(placedata.data());
-    unsigned int offset = 0;
-    int id = 0;
+    status = true;
+    int index = 0;
+    PlaceTableEntry* currentEntry = getEntry(index);
 
-    while (offset <= (placedata.size() - sizeof(PlaceTableEntry)))
+    while (currentEntry != nullptr)
     {
-      const PlaceTableEntry* currentEntry = reinterpret_cast<const PlaceTableEntry*>(rawdata + offset);
-
       // the object is only valid if the name offset into GAMETEXT.TXT is not 0xFFFF
       if (currentEntry->nameOffset != 0xFFFF)
       {
         Place p;
-        p.id = id;
-        p.name = m_lib->getGameText(currentEntry->nameOffset);
+        p.id = index;
+        p.name = getGameText(currentEntry->nameOffset);
         p.isPlanet = currentEntry->isPlanet;
         p.classId = currentEntry->pclass;
 
-        if (p.isPlanet)
-        {
-          /* keep Planet/Star Class data separate from Place data?
-          PlanetClass pclassData;
-          if (m_placeClasses->pclassData(currentEntry->pclass, pclassData))
-          {
-            p.pclassName = pclassData.name;
-          }
-          */
-          p.race = static_cast<AlienRace>(currentEntry->race);
-          p.representativeId = currentEntry->planetRepId;
-          p.parentStarId = currentEntry->parentStarId;
-        }
-
         if (!p.name.isEmpty())
         {
-          m_placeList.insert(id,p);
+          if (p.isPlanet)
+          {
+            p.race = static_cast<AlienRace>(currentEntry->race);
+            p.representativeId = currentEntry->planetRepId;
+            p.parentStarId = currentEntry->parentStarId;
+          }
+
+          m_placeList.insert(index, p);
         }
       }
-      offset += sizeof(PlaceTableEntry);
-      id++;
+      index++;
+      currentEntry = getEntry(index);
     }
   }
+
+  return status;
 }
 
 /**
@@ -156,7 +153,7 @@ QMap<int,Place> Places::getPlaceList()
 {
   if (m_placeList.isEmpty())
   {
-    populatePlaceList();
+    populateList();
   }
   return m_placeList;
 }
@@ -172,7 +169,7 @@ bool Places::getPlace(int id, Place& place)
 
   if (m_placeList.isEmpty())
   {
-    populatePlaceList();
+    populateList();
   }
 
   if (m_placeList.contains(id))
