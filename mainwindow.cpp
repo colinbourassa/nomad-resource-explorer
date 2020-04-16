@@ -12,6 +12,8 @@
 #include <QAudioDeviceInfo>
 #include <QBuffer>
 #include <QTime>
+#include <QToolTip>
+#include <QCursor>
 #include "enums.h"
 #include "tablenumberitem.h"
 
@@ -946,6 +948,7 @@ void MainWindow::on_m_convAlienTable_currentCellChanged(int currentRow, int curr
   Q_UNUSED(previousColumn)
 
   ui->m_convDialogueLine->clear();
+  ui->m_convDialogueLine->clearHistory();
 
   // We're going to repopulate the list of conversation topics for the currently selected alien and topic
   // category. Before we do, save the ID of the last topic selected by the user so that we can auto-select
@@ -1087,6 +1090,7 @@ void MainWindow::populateTopicTableForCategory(ConvTopicCategory category, QMap<
   }
   ui->m_convTopicTable->resizeColumnToContents(0);
   ui->m_convDialogueLine->clear();
+  ui->m_convDialogueLine->clearHistory();
 
   // search through the rows to find one with the topic ID matching the previously selected topic ID;
   // if such a row is found, select it
@@ -1279,10 +1283,22 @@ void MainWindow::setConvNextPrevButtonState()
 void MainWindow::displayCurrentConversationLine()
 {
   ui->m_convDialogueLine->clear();
+  ui->m_convDialogueLine->clearHistory();
   if ((m_currentConvLinesPos >= 0) && (m_currentConvLines.size() > m_currentConvLinesPos))
   {
-    ui->m_convDialogueLine->setPlainText(m_currentConvLines[m_currentConvLinesPos]);
+    ui->m_convDialogueLine->setHtml(m_currentConvLines[m_currentConvLinesPos]);
   }
+}
+
+/**
+ * Responds to one of the conversation text synonyms being clicked by displaying a tooltip with
+ * the alternatives from which the game randomly selects. The list of synonyms is sent from the
+ * QTextBrowser to this slot by encoding them in a URL.
+ */
+void MainWindow::on_m_convDialogueLine_anchorClicked(const QUrl& arg1)
+{
+  const QString url = arg1.toString(QUrl::DecodeReserved).replace("|", "\n").trimmed();
+  QToolTip::showText(QCursor::pos(), url);
 }
 
 /**

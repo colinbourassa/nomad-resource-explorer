@@ -38,8 +38,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QString gameDir, QWidget* parent = nullptr);
-    ~MainWindow();
+  explicit MainWindow(QString gameDir, QWidget* parent = nullptr);
+  ~MainWindow();
 
 public slots:
   void onAudioStateChanged(QAudio::State);
@@ -78,6 +78,7 @@ private slots:
   void on_m_stampRollSlider_sliderMoved(int position);
   void on_actionAbout_triggered();
   void on_m_convFilterTopicsCheckbox_stateChanged(int arg1);
+  void on_m_convDialogueLine_anchorClicked(const QUrl &arg1);
 
 private:
   Ui::MainWindow *ui;

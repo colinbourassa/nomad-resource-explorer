@@ -1,4 +1,6 @@
 #include "gametext.h"
+#include <QString>
+#include <QUrl>
 
 /**
  * Processes the mission and conversation text in the game by removing the special
@@ -43,14 +45,31 @@ QString GameText::getMetaString(int metaTabIndex)
 
     if ((type == METATAB_TYPE_SYNONYM) || (type == METATAB_TYPE_TRANSLATION))
     {
+      QStringList synonyms;
       const uint8_t* metaTextData = reinterpret_cast<const uint8_t*>(m_metaTextTab.data());
-      const int metaTextOffset = metaTextIndex * METATEXT_RECORDSIZE_BYTES;
-      const int gametextOffset = metaTextData[metaTextOffset] + (0x100 * metaTextData[metaTextOffset + 1]);
-      metaStr = m_lib->getGameText(gametextOffset);
+
+      // build a string list of all the alternatives/options for this this metatext
+      for (int optionIndex = 0; optionIndex < numberOfOptions; optionIndex++)
+      {
+        const int metaTextOffset = (metaTextIndex + optionIndex) * METATEXT_RECORDSIZE_BYTES;
+        const int gametextOffset = metaTextData[metaTextOffset] + (0x100 * metaTextData[metaTextOffset + 1]);
+        synonyms.append(m_lib->getGameText(gametextOffset));
+      }
+
+      if (synonyms.size() > 0)
+      {
+        // build a URL for the anchor that is just a pipe-separated list of the synonyms
+        metaStr = "<a href=\"";
+        foreach (QString synonym, synonyms)
+        {
+          metaStr += synonym + "|";
+        }
+        metaStr += "\">" + synonyms[0] + "</a>";
+      }
     }
     else if (type == METATAB_TYPE_LOSTENGATEWAY)
     {
-      metaStr = QString("<Losten gateway code #%1>").arg(metaTextIndex + 1);
+      metaStr = QString("<Losten gateway code #%1>").arg(metaTextIndex + 1).toHtmlEscaped();
     }
   }
 
@@ -69,7 +88,6 @@ QString GameText::getMetaString(int metaTabIndex)
 QString GameText::readString(const char* data, int maxlen)
 {
   QString clean;
-
   int pos = 0;
 
   while ((data[pos] != 0) && (pos < maxlen))
@@ -77,7 +95,7 @@ QString GameText::readString(const char* data, int maxlen)
     // all normally printable characters are passed through to the output directly
     if (data[pos] >= 0x20)
     {
-      clean.append(data[pos]);
+      clean += QString(data[pos]).toHtmlEscaped();
       pos++;
     }
     else
@@ -87,19 +105,19 @@ QString GameText::readString(const char* data, int maxlen)
 
       if (cmd == GTxtCmd_InsertPlayerName)
       {
-        clean.append("<Player's name>");
+        clean.append(QString("<Player's name>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_InsertPlayerShip)
       {
-        clean.append("<Player's ship>");
+        clean.append(QString("<Player's ship>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_GAMESTR)
       {
-        clean.append("<GAMESTR>");
+        clean.append(QString("<GAMESTR>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_METAMOVE)
       {
-        clean.append("<METAMOVE>");
+        clean.append(QString("<METAMOVE>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_MetaText)
       {
@@ -109,7 +127,7 @@ QString GameText::readString(const char* data, int maxlen)
       }
       else if (cmd == GTxtCmd_InsertCurrentLocation)
       {
-        clean.append("<current location>");
+        clean.append(QString("<current location>").toHtmlEscaped());
       }
       // because the number of places in the game can require a two-byte identifier,
       // we need to check whether an additional byte must be consumed as a parameter to this command
