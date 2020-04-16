@@ -137,7 +137,7 @@
           <item row="1" column="2">
            <widget class="QLabel" name="m_placeClassData">
             <property name="text">
-             <string>&lt;class&gt;</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -179,7 +179,7 @@
           <item row="2" column="2">
            <widget class="QLabel" name="m_placeTemperatureData">
             <property name="text">
-             <string>&lt;temp&gt;</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -200,7 +200,7 @@
           <item row="4" column="2">
            <widget class="QLabel" name="m_placeRepData">
             <property name="text">
-             <string>&lt;rep&gt;</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -333,7 +333,7 @@
           <item row="0" column="2">
            <widget class="QLabel" name="m_placeTypeData">
             <property name="text">
-             <string>&lt;type&gt;</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -347,7 +347,7 @@
           <item row="3" column="2">
            <widget class="QLabel" name="m_placeRaceData">
             <property name="text">
-             <string>&lt;race&gt;</string>
+             <string/>
             </property>
            </widget>
           </item>
