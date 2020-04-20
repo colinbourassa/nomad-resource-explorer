@@ -59,6 +59,7 @@ public:
   Ships(DatLibrary& lib);
   virtual ~Ships();
   QMap<int,Ship> getList();
+  QString getName(int id);
 
 protected:
   bool populateList();

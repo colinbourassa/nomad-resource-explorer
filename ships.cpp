@@ -27,6 +27,23 @@ QMap<int,Ship> Ships::getList()
   return m_shipList;
 }
 
+QString Ships::getName(int id)
+{
+  QString name;
+
+  if (m_shipList.isEmpty())
+  {
+    populateList();
+  }
+
+  if (m_shipList.contains(id))
+  {
+    name = m_shipList[id].name;
+  }
+
+  return name;
+}
+
 /**
  * Reads and parses records in the game's ship table (SHIP.TAB).
  */

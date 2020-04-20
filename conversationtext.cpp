@@ -16,7 +16,7 @@ ConversationText::ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gt
  * Gets a list of dialog lines, each one being a response from the specified alien about the
  * thing with the provided ID in the specified conversation topic category.
  */
-QString ConversationText::getConversationText(int alienId, ConvTopicCategory topic, int thingId, QMap<GTxtCmd,int>& commands)
+QString ConversationText::getConversationText(int alienId, ConvTopicCategory topic, int thingId, QVector<QPair<GTxtCmd, int> >& commands)
 {
   QString dialogLine;
   QByteArray tlktData;
@@ -92,7 +92,7 @@ bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& 
 QString ConversationText::getTLKXString(int tlkxIndex,
                                         const QByteArray& tlkxIndexData,
                                         const QByteArray& tlkxStrData,
-                                        QMap<GTxtCmd,int>& commands)
+                                        QVector<QPair<GTxtCmd,int> >& commands)
 {
   const uint8_t* idxData = reinterpret_cast<const uint8_t*>(tlkxIndexData.data());
 
@@ -101,7 +101,7 @@ QString ConversationText::getTLKXString(int tlkxIndex,
   memcpy(&tlkxStrOffset, &idxData[tlkxIndexOffset], TLKX_RECORDSIZE);
   tlkxStrOffset = qFromLittleEndian<quint32>(tlkxStrOffset);
 
-  const QString line = m_gtext->readString(tlkxStrData.data() + tlkxStrOffset, commands);
+  const QString line = m_gtext->readString(tlkxStrData.data() + tlkxStrOffset, commands, true);
 
   return line;
 }

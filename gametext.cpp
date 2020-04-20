@@ -80,7 +80,7 @@ QString GameText::getMetaString(int metaTabIndex)
  * Walks through the provided ASCII character string one byte at a time, consuming the special command
  * bytes and their parameters, and producing the text that gets generated in their place (if any).
  */
-QString GameText::readString(const char* data, QMap<GTxtCmd,int>& commands, int maxlen)
+QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& commands, bool showEmbeddedCommands, int maxlen)
 {
   QString clean;
   int pos = 0;
@@ -132,7 +132,7 @@ QString GameText::readString(const char* data, QMap<GTxtCmd,int>& commands, int 
         // with its parameters to pass back to the caller in a list
 
         int param = 0;
-        if (g_gameTextParamCount.contains(cmd))
+        if (showEmbeddedCommands && g_gameTextParamCount.contains(cmd))
         {
           // the GrantKnowledgePlace command is special because it can use either one or two
           // parameter bytes, determined during parsing by the content of the first byte
@@ -156,7 +156,7 @@ QString GameText::readString(const char* data, QMap<GTxtCmd,int>& commands, int 
           }
           else if (g_gameTextParamCount[cmd] == 1)
           {
-            param = data[pos];
+            param = static_cast<uint8_t>(data[pos]);
           }
           else if (g_gameTextParamCount[cmd] == 2)
           {
@@ -164,7 +164,8 @@ QString GameText::readString(const char* data, QMap<GTxtCmd,int>& commands, int 
             param = (static_cast<uint8_t>(data[pos]) + (0x100 * static_cast<uint8_t>(data[pos+1])));
           }
 
-          commands.insertMulti(cmd, param);
+          commands.append(QPair<GTxtCmd,int>(cmd, param));
+          clean += QString("<font color=\"red\">[%1]</font>").arg(commands.count());
         }
       }
       else

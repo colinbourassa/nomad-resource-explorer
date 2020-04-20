@@ -14,6 +14,7 @@
 #include <QTime>
 #include <QToolTip>
 #include <QCursor>
+#include <QPair>
 #include "enums.h"
 #include "tablenumberitem.h"
 
@@ -282,6 +283,7 @@ void MainWindow::populatePlaceWidgets()
     ui->m_placeTable->setItem(rowcount, 1, new QTableWidgetItem(p.name));
   }
   ui->m_placeTable->resizeColumnsToContents();
+  ui->m_placeTable->resizeRowsToContents();
 }
 
 /*
@@ -305,6 +307,7 @@ void MainWindow::populateObjectWidgets()
     }
   }
   ui->m_objTable->resizeColumnsToContents();
+  ui->m_objTable->resizeRowsToContents();
 }
 
 /*
@@ -326,6 +329,7 @@ void MainWindow::populateAlienWidgets()
     ui->m_alienTable->setItem(rowcount, 2, new QTableWidgetItem(racename));
   }
   ui->m_alienTable->resizeColumnsToContents();
+  ui->m_alienTable->resizeRowsToContents();
 }
 
 /*
@@ -347,6 +351,7 @@ void MainWindow::populateShipWidgets()
     ui->m_shipTable->setItem(rowcount, 4, new QTableWidgetItem(m_places.getName(s.location)));
   }
   ui->m_shipTable->resizeColumnsToContents();
+  ui->m_shipTable->resizeRowsToContents();
 }
 
 /*
@@ -369,6 +374,7 @@ void MainWindow::populateFactWidgets()
     }
   }
   ui->m_factTable->resizeColumnsToContents();
+  ui->m_factTable->resizeRowsToContents();
 }
 
 /*
@@ -479,6 +485,7 @@ void MainWindow::populateConversationWidgets()
   }
 
   ui->m_convAlienTable->resizeColumnsToContents();
+  ui->m_convAlienTable->resizeRowsToContents();
 }
 
 /**
@@ -513,6 +520,7 @@ void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentCo
     // the stretchLastSection property is not ignored (QTBUG-52307)
     ui->m_shipInventoryTable->resizeColumnToContents(0);
     ui->m_shipInventoryTable->resizeColumnToContents(1);
+    ui->m_shipInventoryTable->resizeRowsToContents();
   }
 }
 
@@ -1087,6 +1095,7 @@ void MainWindow::populateTopicTableForCategory(ConvTopicCategory category, QMap<
     }
   }
   ui->m_convTopicTable->resizeColumnToContents(0);
+  ui->m_convTopicTable->resizeRowsToContents();
 
   clearDialogLineAndCommandList();
 
@@ -1219,27 +1228,73 @@ void MainWindow::getConversationLinesForCurrentTopic()
 
   if ((alienId > 0) && ((thingId > 0) || thingIdOfZeroAllowed))
   {
-    QMap<GTxtCmd,int> embeddedCommands;
+    QVector<QPair<GTxtCmd,int> > embeddedCommands;
     QString currentConvLine = m_convText.getConversationText(alienId, m_currentConvTopic, thingId, embeddedCommands);
 
     clearDialogLineAndCommandList();
     ui->m_convDialogueLine->setHtml(currentConvLine);
 
-    for (int commandIndex = 0; commandIndex < embeddedCommands.count(); commandIndex++)
+    // populate the table to display the details of the commands embedded in this dialogue line
+    QPair<GTxtCmd,int> cmdPair;
+    foreach (cmdPair, embeddedCommands)
     {
-      const GTxtCmd command = embeddedCommands.keys().at(commandIndex);
-      const int param = embeddedCommands.values().at(commandIndex);
+      const GTxtCmd command = cmdPair.first;
+      const int param = cmdPair.second;
 
       const int rowcount = ui->m_convCommandList->rowCount();
 
       ui->m_convCommandList->insertRow(rowcount);
       ui->m_convCommandList->setItem(rowcount, 0, new QTableWidgetItem(g_gameTextCommandName[command]));
       ui->m_convCommandList->setItem(rowcount, 1, new QTableWidgetItem(QString("%1").arg(param)));
-      // TODO: rather than printing the numeric parameter in the second column, convert it to
-      // a human-readable string by using the command to determine which type of item it is
+
+      const QString paramName = getNameForGameTextCommandParameter(command, param);
+      if (!paramName.isEmpty())
+      {
+        ui->m_convCommandList->setItem(rowcount, 2, new QTableWidgetItem(paramName));
+      }
     }
+
     ui->m_convCommandList->resizeColumnToContents(0);
+    ui->m_convCommandList->resizeColumnToContents(1);
+    ui->m_convCommandList->resizeRowsToContents();
   }
+}
+
+/**
+ * Get the human-readable name for the person/place/thing/fact described by the combination of
+ * command byte and parameter ID.
+ */
+QString MainWindow::getNameForGameTextCommandParameter(GTxtCmd cmd, int param)
+{
+  QString name;
+
+  if ((cmd == GTxtCmd_AddItem) || (cmd == GTxtCmd_GrantKnowledgeObject))
+  {
+    name = m_invObject.getName(param);
+  }
+  else if ((cmd == GTxtCmd_AStateTableModifyA) || (cmd == GTxtCmd_AStateTableModifyB))
+  {
+    name = m_aliens.getName(param);
+  }
+  else if (cmd == GTxtCmd_GrantKnowledgeRace)
+  {
+    const AlienRace race = static_cast<AlienRace>(param);
+    name = s_raceNames.contains(race) ? s_raceNames[race] : "(invalid)";
+  }
+  else if (cmd == GTxtCmd_GrantKnowledgePlace)
+  {
+    name = m_places.getName(param);
+  }
+  else if (cmd == GTxtCmd_StoreShipIDInSetupTab)
+  {
+    name = m_ships.getName(param);
+  }
+  else if (cmd == GTxtCmd_GrantKnowledgeFact)
+  {
+    name = m_facts.getFact(param).text;
+  }
+
+  return name;
 }
 
 /**

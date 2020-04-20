@@ -140,6 +140,7 @@ private:
   void populateConversationTopicTable(int lastSelectedTopicId = -1);
   void populateTopicTableForCategory(ConvTopicCategory category, QMap<int,QString> topicList, int lastSelectedTopicId);
   void getConversationLinesForCurrentTopic();
+  QString getNameForGameTextCommandParameter(GTxtCmd cmd, int param);
   void clearDialogLineAndCommandList();
 
   void putResourceLabelsInArray();

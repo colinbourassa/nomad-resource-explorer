@@ -107,7 +107,7 @@ QString InvObject::getObjectText(int id)
 
       if (txtOffset < objTextStrData.size())
       {
-        QMap<GTxtCmd,int> commands;
+        QVector<QPair<GTxtCmd,int> > commands;
         const char* rawdata = objTextStrData.data();
         txt = m_gtext->readString(rawdata + txtOffset, commands);
       }

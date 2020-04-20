@@ -46,7 +46,7 @@ class ConversationText
 {
 public:
   ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gtext);
-  QString getConversationText(int alienId, ConvTopicCategory topic, int thingId, QMap<GTxtCmd,int>& commands);
+  QString getConversationText(int alienId, ConvTopicCategory topic, int thingId, QVector<QPair<GTxtCmd,int> >& commands);
   bool doesInterestingDialogExist(int alienId, ConvTopicCategory category, int thingId);
 
 private:
@@ -73,7 +73,7 @@ private:
   //! Reads data from the provided TLKNC or TLKNR data to provide an index into a TLKXC/TLKXR file
   int getTLKXIndex(int tlknIndex, const QByteArray& tlknData);
 
-  QString getTLKXString(int tlkxIndex, const QByteArray& tlkxIndexData, const QByteArray& tlkxStrData, QMap<GTxtCmd,int>& commands);
+  QString getTLKXString(int tlkxIndex, const QByteArray& tlkxIndexData, const QByteArray& tlkxStrData, QVector<QPair<GTxtCmd,int> >& commands);
 };
 
 #endif // CONVERSATIONTEXT_H

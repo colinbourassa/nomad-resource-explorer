@@ -77,6 +77,10 @@ static const QMap<GTxtCmd,int> g_gameTextParamCount =
   { GTxtCmd_ModifyMissionTable,       1 }
 };
 
+/**
+ * Description of each embedded command type. Used when displaying the list of
+ * commands embedded in a line of dialogue to the user.
+ */
 static const QMap<GTxtCmd,QString> g_gameTextCommandName =
 {
   { GTxtCmd_InsertPlayerName,         "Insert player's name" },
@@ -89,7 +93,7 @@ static const QMap<GTxtCmd,QString> g_gameTextCommandName =
   { GTxtCmd_ChangeAlienTemperament,   "Change alien temperament" },
   { GTxtCmd_GrantKnowledgeFact,       "Learn fact" },
   { GTxtCmd_GrantKnowledgePlace,      "Learn about place" },
-  { GTxtCmd_AStateTableModifyA,       "Modify alien state table (0)" },
+  { GTxtCmd_AStateTableModifyA,       "Modify alien state table (0)" }, // TODO: should this be called "Grant knowledge of person"?
   { GTxtCmd_GrantKnowledgeObject,     "Learn about object" },
   { GTxtCmd_AStateTableModifyB,       "Modify alien state table (1)" },
   { GTxtCmd_CopyEncountRelateTable,   "Copy encount_relate table" },
@@ -115,7 +119,8 @@ public:
   void clear();
 
   //! Produces a regular string from string data with embedded commands
-  QString readString(const char* data, QMap<GTxtCmd,int>& commands, int maxlen = 0x1000);
+  QString readString(const char* data, QVector<QPair<GTxtCmd,int> >& commands,
+                     bool showEmbeddedCommands = false, int maxlen = 0x1000);
 
 private:
   DatLibrary* m_lib;
