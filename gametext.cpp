@@ -132,7 +132,7 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
         // with its parameters to pass back to the caller in a list
 
         int param = 0;
-        if (showEmbeddedCommands && g_gameTextParamCount.contains(cmd))
+        if (g_gameTextParamCount.contains(cmd))
         {
           // the GrantKnowledgePlace command is special because it can use either one or two
           // parameter bytes, determined during parsing by the content of the first byte
@@ -165,7 +165,11 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
           }
 
           commands.append(QPair<GTxtCmd,int>(cmd, param));
-          clean += QString("<font color=\"red\">[%1]</font>").arg(commands.count());
+
+          if (showEmbeddedCommands)
+          {
+            clean += QString("<font color=\"red\">[%1]</font>").arg(commands.count());
+          }
         }
       }
       else
