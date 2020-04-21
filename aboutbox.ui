@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>About</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -29,7 +29,7 @@
    <item row="1" column="0">
     <widget class="QLabel" name="m_labelGithub">
      <property name="text">
-      <string>&lt;a href=&quot;https://github.com/colinbourassa/nomad-resource-explorer&quot;&gt;https://github.com/colinbourassa/nomad-resource-explorer&lt;/a&gt;</string>
+      <string>&lt;a style=&quot;color:#ffc300&quot; href=&quot;https://github.com/colinbourassa/nomad-resource-explorer&quot;&gt;https://github.com/colinbourassa/nomad-resource-explorer&lt;/a&gt;</string>
      </property>
      <property name="openExternalLinks">
       <bool>true</bool>
@@ -39,7 +39,7 @@
    <item row="2" column="0">
     <widget class="QLabel" name="m_labelReference">
      <property name="text">
-      <string>&lt;a href=&quot;https://colinbourassa.github.io/media/nomad&quot;&gt;https://colinbourassa.github.io/media/nomad&lt;/a&gt;</string>
+      <string>&lt;a style=&quot;color:#ffc300&quot; href=&quot;https://colinbourassa.github.io/media/nomad&quot;&gt;https://colinbourassa.github.io/media/nomad&lt;/a&gt;</string>
      </property>
      <property name="openExternalLinks">
       <bool>true</bool>
