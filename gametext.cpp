@@ -59,7 +59,7 @@ QString GameText::getMetaString(int metaTabIndex)
       if (synonyms.size() > 0)
       {
         // build a URL for the anchor that is just a pipe-separated list of the synonyms
-        metaStr = "<a style=\"color:#ffc300;\" href=\"";
+        metaStr = "<a href=\"";
         foreach (QString synonym, synonyms)
         {
           metaStr += synonym + "|";
@@ -168,7 +168,7 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
 
           if (showEmbeddedCommands)
           {
-            clean += QString("<font color=\"#ff5300\">[%1]</font>").arg(commands.count());
+            clean += QString("<font color=\"red\">[%1]</font>").arg(commands.count());
           }
         }
       }

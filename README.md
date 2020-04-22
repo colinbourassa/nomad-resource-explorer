@@ -6,5 +6,3 @@ Intense! Interactive and Papyrus Design and published by GameTek.
 
 See reverse engineering information at: https://colinbourassa.github.io/media/nomad
 
-This application uses [ColinDuquesnoy's QDarkStyleSheet](https://github.com/ColinDuquesnoy/QDarkStyleSheet).
-
