@@ -158,6 +158,7 @@ void MainWindow::clearData()
 void MainWindow::openNewData(const QString gameDir)
 {
   clearData();
+  ui->statusBar->showMessage(QString("Using directory: %1").arg(gameDir));
 
   m_lib.openData(gameDir);
   populatePlaceWidgets();
@@ -1272,7 +1273,7 @@ QString MainWindow::getNameForGameTextCommandParameter(GTxtCmd cmd, int param)
   {
     name = m_invObject.getName(param);
   }
-  else if ((cmd == GTxtCmd_AStateTableModifyA) || (cmd == GTxtCmd_AStateTableModifyB))
+  else if ((cmd == GTxtCmd_GrantKnowledgeAlien) || (cmd == GTxtCmd_AStateTableModifyB))
   {
     name = m_aliens.getName(param);
   }

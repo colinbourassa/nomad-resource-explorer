@@ -15,8 +15,8 @@
 /**
  * Enumeration of all the embedded text command bytes supported by the game.
  * This enumeration (and the prefix on its values) begins with "GTxt" as an
- * abbreviation for "game text", but the game's originally source code may
- * have referred to it as "rtext".
+ * abbreviation for "game text", but the game's original source code may have
+ * referred to it as "rtext".
  */
 enum GTxtCmd
 {
@@ -30,7 +30,7 @@ enum GTxtCmd
   GTxtCmd_ChangeAlienTemperament   = 0x08,
   GTxtCmd_GrantKnowledgeFact       = 0x09,
   GTxtCmd_GrantKnowledgePlace      = 0x0A,
-  GTxtCmd_AStateTableModifyA       = 0x0B,
+  GTxtCmd_GrantKnowledgeAlien      = 0x0B,
   GTxtCmd_GrantKnowledgeObject     = 0x0C,
   GTxtCmd_AStateTableModifyB       = 0x0D,
   GTxtCmd_CopyEncountRelateTable   = 0x0E,
@@ -63,7 +63,7 @@ static const QMap<GTxtCmd,int> g_gameTextParamCount =
   { GTxtCmd_ChangeAlienTemperament,   1 },
   { GTxtCmd_GrantKnowledgeFact,       1 },
   { GTxtCmd_GrantKnowledgePlace,      1 }, // can possibly require a second argument byte as well
-  { GTxtCmd_AStateTableModifyA,       1 },
+  { GTxtCmd_GrantKnowledgeAlien,      1 },
   { GTxtCmd_GrantKnowledgeObject,     1 },
   { GTxtCmd_AStateTableModifyB,       0 },
   { GTxtCmd_CopyEncountRelateTable,   0 },
@@ -93,7 +93,7 @@ static const QMap<GTxtCmd,QString> g_gameTextCommandName =
   { GTxtCmd_ChangeAlienTemperament,   "Change alien temperament" },
   { GTxtCmd_GrantKnowledgeFact,       "Learn fact" },
   { GTxtCmd_GrantKnowledgePlace,      "Learn about place" },
-  { GTxtCmd_AStateTableModifyA,       "Modify alien state table (0)" }, // TODO: should this be called "Grant knowledge of person"?
+  { GTxtCmd_GrantKnowledgeAlien,      "Learn about person" },
   { GTxtCmd_GrantKnowledgeObject,     "Learn about object" },
   { GTxtCmd_AStateTableModifyB,       "Modify alien state table (1)" },
   { GTxtCmd_CopyEncountRelateTable,   "Copy encount_relate table" },
