@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1076</width>
+    <width>1208</width>
     <height>648</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="m_tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
@@ -495,8 +495,15 @@
        <attribute name="title">
         <string>Objects</string>
        </attribute>
-       <layout class="QGridLayout" name="m_objectTabLayout" columnstretch="2,1">
-        <item row="1" column="0" rowspan="7">
+       <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,5,0,0,0,2">
+        <item row="0" column="0">
+         <widget class="QLabel" name="m_objDescriptionLabel">
+          <property name="text">
+           <string>Inventory objects with relative values to each alien race:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
          <widget class="QTableWidget" name="m_objTable">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
@@ -597,46 +604,38 @@
           </column>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QLabel" name="m_objectUniqueLabel">
-          <property name="text">
-           <string>Unique:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="Line" name="m_objectHLine">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QGraphicsView" name="m_objectImageView"/>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="m_objDescriptionLabel">
-          <property name="text">
-           <string>Inventory objects with relative values to each alien race:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
+        <item row="2" column="0">
          <widget class="QLabel" name="m_objectTypeLabel">
           <property name="text">
            <string>Type:</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="2" column="1" rowspan="4">
+         <widget class="QGraphicsView" name="m_objectImageView"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="m_objectUniqueLabel">
+          <property name="text">
+           <string>Unique:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
          <widget class="QLabel" name="m_objectInfoTextLabel">
           <property name="text">
            <string>Informational text:</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
-         <widget class="QPlainTextEdit" name="m_objectText"/>
+        <item row="5" column="0">
+         <widget class="QPlainTextEdit" name="m_objectText">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -645,6 +644,13 @@
         <string>Facts</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,3,1">
+        <item row="0" column="0">
+         <widget class="QLabel" name="m_factLabel">
+          <property name="text">
+           <string>In-game facts with relative values to each alien race:</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="0">
          <widget class="QTableWidget" name="m_factTable">
           <property name="editTriggers">
@@ -743,15 +749,13 @@
         </item>
         <item row="2" column="0">
          <widget class="QPlainTextEdit" name="m_factText">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="m_factLabel">
-          <property name="text">
-           <string>In-game facts with relative values to each alien race:</string>
           </property>
          </widget>
         </item>
@@ -1236,6 +1240,11 @@
         </item>
         <item row="12" column="0" rowspan="2" colspan="3">
          <widget class="QTextBrowser" name="m_convDialogueLine">
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -1258,7 +1267,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1076</width>
+     <width>1208</width>
      <height>20</height>
     </rect>
    </property>
@@ -1308,9 +1317,10 @@
   <tabstop>m_planetView</tabstop>
   <tabstop>m_alienTable</tabstop>
   <tabstop>m_alienView</tabstop>
+  <tabstop>m_alienFrameSlider</tabstop>
   <tabstop>m_objTable</tabstop>
-  <tabstop>m_objectImageView</tabstop>
   <tabstop>m_objectText</tabstop>
+  <tabstop>m_objectImageView</tabstop>
   <tabstop>m_factTable</tabstop>
   <tabstop>m_factText</tabstop>
   <tabstop>m_soundTree</tabstop>
@@ -1322,6 +1332,7 @@
   <tabstop>m_fullscreenView</tabstop>
   <tabstop>m_stampTree</tabstop>
   <tabstop>m_stampView</tabstop>
+  <tabstop>m_stampRollSlider</tabstop>
   <tabstop>m_convAlienTable</tabstop>
   <tabstop>m_convTopicButtonGreeting0</tabstop>
   <tabstop>m_convTopicButtonGreeting1</tabstop>
@@ -1333,10 +1344,10 @@
   <tabstop>m_convTopicButtonGiveObj</tabstop>
   <tabstop>m_convTopicButtonGiveFact</tabstop>
   <tabstop>m_convTopicButtonSeesItem</tabstop>
+  <tabstop>m_convFilterTopicsCheckbox</tabstop>
   <tabstop>m_convTopicTable</tabstop>
   <tabstop>m_convDialogueLine</tabstop>
-  <tabstop>m_stampRollSlider</tabstop>
-  <tabstop>m_alienFrameSlider</tabstop>
+  <tabstop>m_convCommandList</tabstop>
  </tabstops>
  <resources/>
  <connections>
