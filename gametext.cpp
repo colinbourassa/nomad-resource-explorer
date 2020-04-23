@@ -2,6 +2,9 @@
 #include <QString>
 #include <QUrl>
 
+#define EMBEDDED_CMD_REFERENCE_STR "<font color=\"#da412a\">[%1]</font>"
+#define LINK_STYLE "style=\"color:#eaa92a;\""
+
 /**
  * Processes the mission and conversation text in the game by removing the special
  * nonprintable command bytes and inserting the proper substitution text.
@@ -59,7 +62,7 @@ QString GameText::getMetaString(int metaTabIndex)
       if (synonyms.size() > 0)
       {
         // build a URL for the anchor that is just a pipe-separated list of the synonyms
-        metaStr = "<a href=\"";
+        metaStr = QString("<a %1 href=\"").arg(LINK_STYLE);
         foreach (QString synonym, synonyms)
         {
           metaStr += synonym + "|";
@@ -168,7 +171,7 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
 
           if (showEmbeddedCommands)
           {
-            clean += QString("<font color=\"red\">[%1]</font>").arg(commands.count());
+            clean += QString(EMBEDDED_CMD_REFERENCE_STR).arg(commands.count());
           }
         }
       }

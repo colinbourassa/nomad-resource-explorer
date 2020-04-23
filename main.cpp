@@ -24,13 +24,11 @@ int main(int argc, char *argv[])
     darkPalette.setColor(QPalette::ButtonText, Qt::white);
     darkPalette.setColor(QPalette::BrightText, Qt::red);
     darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
-
     darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
     darkPalette.setColor(QPalette::HighlightedText, Qt::black);
 
     a.setPalette(darkPalette);
-
-    a.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }");
+    a.setStyleSheet("QToolTip { color: #ffffff; background-color: #13365c; border: 1px solid white; }");
 
 
     a.setApplicationVersion(QString("%1.%2.%3")
