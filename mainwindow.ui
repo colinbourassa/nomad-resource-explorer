@@ -629,7 +629,7 @@
          </widget>
         </item>
         <item row="5" column="0">
-         <widget class="QPlainTextEdit" name="m_objectText">
+         <widget class="QTextBrowser" name="m_objectText">
           <property name="font">
            <font>
             <pointsize>12</pointsize>

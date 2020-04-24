@@ -560,7 +560,7 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
     {
       ui->m_objectUniqueLabel->setText("Unique: No");
     }
-    ui->m_objectText->setPlainText(m_invObject.getObjectText(id));
+    ui->m_objectText->setHtml(m_invObject.getObjectText(id));
   }
 }
 
