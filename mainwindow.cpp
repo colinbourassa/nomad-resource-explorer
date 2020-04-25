@@ -15,8 +15,11 @@
 #include <QToolTip>
 #include <QCursor>
 #include <QPair>
+#include <QIcon>
 #include "enums.h"
 #include "tablenumberitem.h"
+
+#define ICON_PATH ":/icon/icon/nre-48x48.png"
 
 MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   QMainWindow(parent),
@@ -43,6 +46,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_audioOutput(nullptr),
   m_currentConvTopic(ConvTopicCategory_GreetingInitial)
 {
+  setWindowIcon(QIcon(ICON_PATH));
   ui->setupUi(this);
   putResourceLabelsInArray();
 

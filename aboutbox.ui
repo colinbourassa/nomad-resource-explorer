@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>448</width>
-    <height>150</height>
+    <width>440</width>
+    <height>136</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+   <item row="0" column="0" colspan="2">
     <widget class="QLabel" name="m_labelTitle">
      <property name="font">
       <font>
@@ -26,7 +26,17 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="1" column="0" rowspan="2">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="nre-resources.qrc">:/icon/icon/nre-original.png</pixmap>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
     <widget class="QLabel" name="m_labelGithub">
      <property name="text">
       <string>&lt;a href=&quot;https://github.com/colinbourassa/nomad-resource-explorer&quot;&gt;https://github.com/colinbourassa/nomad-resource-explorer&lt;/a&gt;</string>
@@ -36,7 +46,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item row="2" column="1">
     <widget class="QLabel" name="m_labelReference">
      <property name="text">
       <string>&lt;a href=&quot;https://colinbourassa.github.io/media/nomad&quot;&gt;https://colinbourassa.github.io/media/nomad&lt;/a&gt;</string>
@@ -46,7 +56,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="3" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="horizontalSpacer">
@@ -72,6 +82,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="nre-resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

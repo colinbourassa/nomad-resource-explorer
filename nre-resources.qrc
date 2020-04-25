@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>icon/nre-48x48.png</file>
+        <file>icon/nre-original.png</file>
+    </qresource>
+</RCC>

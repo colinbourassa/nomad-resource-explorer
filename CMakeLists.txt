@@ -23,6 +23,7 @@ include_directories ("${CMAKE_SOURCE_DIR}"
 
 qt5_wrap_ui (UI_SOURCE mainwindow.ui)
 qt5_wrap_ui (UI_SOURCE aboutbox.ui)
+qt5_add_resources (NRE_RESOURCE nre-resources.qrc)
 
 add_definitions ("-DNRE_VER_MAJOR=${NRE_VER_MAJOR}"
                  "-DNRE_VER_MINOR=${NRE_VER_MINOR}"
@@ -69,6 +70,8 @@ add_executable (nomad-resource-explorer
     conversationtext.h
     stampimages.cpp
     stampimages.h
+    nre.rc
+    ${NRE_RESOURCE}
     ${UI_SOURCE})
 
 message (STATUS "Build type is: ${CMAKE_BUILD_TYPE}")
