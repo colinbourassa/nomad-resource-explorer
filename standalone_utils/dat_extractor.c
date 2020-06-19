@@ -35,7 +35,8 @@ typedef struct
 
 bool decode_dat(const char* filename);
 int  lz_inflate(uint8_t* inputbuf,  uint16_t inputbuf_len,
-                uint8_t* outputbuf, uint32_t outputbuf_len);
+                uint8_t* outputbuf, uint32_t outputbuf_len,
+                int skip_uncompressed_bytes);
 
 int main (int argc, char** argv)
 {
@@ -118,24 +119,25 @@ bool decode_dat(const char* datfilename)
       uint32_t* uncompressed_size = (uint32_t*)&(index[indexpos].data[INDEX_UNCOMP_SIZE_OFFSET]);
       uint32_t* offset            = (uint32_t*)&(index[indexpos].data[INDEX_OFFSET_OFFSET]);
       uint16_t* flags             = (uint16_t*)&(index[indexpos].data[INDEX_BITFIELD_OFFSET]);
+      int skip_uncompressed_bytes = 0;
 
-      // if bit 2 isn't set in the flags, the file is stored in a manner that
-      // this extractor doesn't yet support, so we need to skip it
-      if (~*flags & 0x0004)
+      // check whether this file has an uncompressed 4-byte header
+      // (used only for fullscreen raw VGA images)
+      if ((~*flags & 0x0004) && (*flags & 0x0100))
       {
-        skipfile = true;
-        printf("Skipping index %u ('%s'), unknown storage format...\n", indexpos, filename);
+        skip_uncompressed_bytes = 4;
       }
 
       if (!skipfile)
       {
-        buf_compressed = malloc(*compressed_size);
-        buf_decompressed = malloc(*uncompressed_size);
+        buf_compressed = malloc(*compressed_size + skip_uncompressed_bytes);
+        buf_decompressed = malloc(*uncompressed_size + skip_uncompressed_bytes);
 
         if ((buf_compressed != NULL) && (buf_decompressed != NULL))
         {
           printf("Extracting index %u ('%s', %s, size %u, offset 0x%X)...\n",
-              indexpos, filename, (*flags & 0x0100) ? "compressed" : "uncompressed", *compressed_size, *offset);
+              indexpos, filename, (*flags & 0x0100) ? "compressed" : "uncompressed",
+              *compressed_size + skip_uncompressed_bytes, *offset);
         }
         else
         {
@@ -143,7 +145,7 @@ bool decode_dat(const char* datfilename)
           if (buf_compressed == NULL)
           {
             fprintf(stderr, "Error: failed to allocate buffer of %d bytes for reading file at index %d ('%s').\n",
-                *compressed_size, indexpos, filename);
+                *compressed_size + skip_uncompressed_bytes, indexpos, filename);
           }
           else if (buf_decompressed == NULL)
           {
@@ -166,10 +168,12 @@ bool decode_dat(const char* datfilename)
       if (status && !skipfile)
       {
         // read the contained file
-        if (fread(buf_compressed, 1, *compressed_size, fd) != *compressed_size)
+        if (fread(buf_compressed, 1, *compressed_size + skip_uncompressed_bytes, fd) !=
+            *compressed_size + skip_uncompressed_bytes)
         {
           status = false;
-          fprintf(stderr, "Error: failed to read %d bytes from offset %08X.\n", *compressed_size, *offset);
+          fprintf(stderr, "Error: failed to read %d bytes from offset %08X.\n",
+                  *compressed_size + skip_uncompressed_bytes, *offset);
         }
       }
 
@@ -178,11 +182,12 @@ bool decode_dat(const char* datfilename)
         // check the flags to see whether this file was actually stored compressed; only decompress if necessary
         if (*flags & 0x0100)
         {
-          decompressed_size = lz_inflate(buf_compressed, *compressed_size,
-                                         buf_decompressed, *uncompressed_size);
+          decompressed_size = lz_inflate(buf_compressed, *compressed_size + skip_uncompressed_bytes,
+                                         buf_decompressed, *uncompressed_size + skip_uncompressed_bytes,
+                                         skip_uncompressed_bytes);
           status = (decompressed_size > 0);
 
-          if (decompressed_size != *uncompressed_size)
+          if (decompressed_size != (*uncompressed_size + skip_uncompressed_bytes))
           {
             fprintf(stderr, "Warning: File at index %d (%s) was listed as having an uncompressed size of %d, but unpacked to %d bytes!\n",
                     indexpos, filename, *uncompressed_size, decompressed_size);
@@ -262,7 +267,8 @@ bool decode_dat(const char* datfilename)
  * Inflates data from an 8-bit LZ-compressed buffer.
  */
 int lz_inflate(uint8_t* input,  uint16_t inputbuf_len,
-               uint8_t* output, uint32_t outputbuf_len)
+               uint8_t* output, uint32_t outputbuf_len,
+               int skip_uncompressed_bytes)
 {
   uint8_t buffer[LZ_RINGBUF_SIZE];
   uint16_t bufpos = 0xFEE;
@@ -277,6 +283,14 @@ int lz_inflate(uint8_t* input,  uint16_t inputbuf_len,
   uint16_t chunkSource = 0;
 
   memset(buffer, 0x20, LZ_RINGBUF_SIZE);
+
+  while ((skip_uncompressed_bytes > 0) &&
+         (inputpos < inputbuf_len) &&
+         (outputpos < outputbuf_len))
+  {
+    output[outputpos++] = input[inputpos++];
+    skip_uncompressed_bytes--;
+  }
 
   while ((inputpos < inputbuf_len) && (outputpos < outputbuf_len))
   {
