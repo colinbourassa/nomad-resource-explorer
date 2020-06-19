@@ -39,6 +39,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_fullscreenImages(m_lib, m_palette),
   m_stamps(m_lib, m_palette),
   m_convText(m_lib, m_aliens, m_gametext),
+  m_missions(m_lib, m_gametext),
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
   m_currentNNVFilename(""),
@@ -145,6 +146,7 @@ void MainWindow::clearData()
   m_shipClasses.clear();
   m_inventory.clear();
   m_facts.clear();
+  m_missions.clear();
 
   m_alienFrames.clear();
   m_stampImages.clear();
@@ -174,6 +176,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateFullscreenLbmWidgets();
   populateStampWidgets();
   populateConversationWidgets();
+  populateMissionWidgets();
 }
 
 /**
@@ -491,6 +494,24 @@ void MainWindow::populateConversationWidgets()
 
   ui->m_convAlienTable->resizeColumnsToContents();
   ui->m_convAlienTable->resizeRowsToContents();
+}
+
+/**
+ * Populates the mission description widgets.
+ */
+void MainWindow::populateMissionWidgets()
+{
+  QList<int> missionIds = m_missions.getList().keys();
+  int highestKey = 1;
+  foreach (int key, missionIds)
+  {
+    if (key > highestKey)
+    {
+      highestKey = key;
+    }
+  }
+  ui->m_missionIdSpinBox->setMaximum(highestKey);
+  showInfoForMission(ui->m_missionIdSpinBox->value());
 }
 
 /**
@@ -1240,28 +1261,7 @@ void MainWindow::getConversationLinesForCurrentTopic()
     ui->m_convDialogueLine->setHtml(currentConvLine);
 
     // populate the table to display the details of the commands embedded in this dialogue line
-    QPair<GTxtCmd,int> cmdPair;
-    foreach (cmdPair, embeddedCommands)
-    {
-      const GTxtCmd command = cmdPair.first;
-      const int param = cmdPair.second;
-
-      const int rowcount = ui->m_convCommandList->rowCount();
-
-      ui->m_convCommandList->insertRow(rowcount);
-      ui->m_convCommandList->setItem(rowcount, 0, new QTableWidgetItem(g_gameTextCommandName[command]));
-      ui->m_convCommandList->setItem(rowcount, 1, new QTableWidgetItem(QString("%1").arg(param)));
-
-      const QString paramName = getNameForGameTextCommandParameter(command, param);
-      if (!paramName.isEmpty())
-      {
-        ui->m_convCommandList->setItem(rowcount, 2, new QTableWidgetItem(paramName));
-      }
-    }
-
-    ui->m_convCommandList->resizeColumnToContents(0);
-    ui->m_convCommandList->resizeColumnToContents(1);
-    ui->m_convCommandList->resizeRowsToContents();
+    populateGameTextCommandList(ui->m_convCommandList, embeddedCommands);
   }
 }
 
@@ -1320,8 +1320,7 @@ void MainWindow::clearDialogLineAndCommandList()
  */
 void MainWindow::on_m_convDialogueLine_anchorClicked(const QUrl& arg1)
 {
-  const QString url = arg1.toString(QUrl::DecodeReserved).replace("|", "\n").trimmed();
-  QToolTip::showText(QCursor::pos(), url);
+  showAnchorTooltip(arg1);
 }
 
 /**
@@ -1343,4 +1342,73 @@ void MainWindow::displayStamp(int rollIndex)
     m_stampScene.addPixmap(QPixmap::fromImage(m_stampImages[rollIndex]));
     ui->m_stampView->setScene(&m_stampScene);
   }
+}
+
+void MainWindow::on_m_missionIdSpinBox_valueChanged(int arg1)
+{
+  showInfoForMission(arg1);
+}
+
+void MainWindow::showInfoForMission(int id)
+{
+  ui->m_missionStartText->clear();
+  ui->m_missionStartText->clearHistory();
+  ui->m_missionReqText->clear();
+  ui->m_missionReqText->clearHistory();
+  ui->m_missionEndText->clear();
+  ui->m_missionEndText->clearHistory();
+  ui->m_missionStartCommandList->setRowCount(0);
+  ui->m_missionEndCommandList->setRowCount(0);
+
+  QMap<int,Mission> missions = m_missions.getList();
+  if (missions.contains(id))
+  {
+    ui->m_missionStartText->setHtml(missions[id].startText);
+    ui->m_missionEndText->setHtml(missions[id].completeText);
+    populateGameTextCommandList(ui->m_missionStartCommandList, missions[id].startTextCommands);
+    populateGameTextCommandList(ui->m_missionEndCommandList,   missions[id].completeTextCommands);
+  }
+}
+
+void MainWindow::showAnchorTooltip(const QUrl& url)
+{
+  const QString urlStr = url.toString(QUrl::DecodeReserved).replace("|", "\n").trimmed();
+  QToolTip::showText(QCursor::pos(), urlStr);
+}
+
+void MainWindow::populateGameTextCommandList(QTableWidget* table, QVector<QPair<GTxtCmd,int> >& commands)
+{
+  // populate the table to display the details of the commands embedded in this dialogue line
+  QPair<GTxtCmd,int> cmdPair;
+  foreach (cmdPair, commands)
+  {
+    const GTxtCmd command = cmdPair.first;
+    const int param = cmdPair.second;
+
+    const int rowcount = table->rowCount();
+
+    table->insertRow(rowcount);
+    table->setItem(rowcount, 0, new QTableWidgetItem(g_gameTextCommandName[command]));
+    table->setItem(rowcount, 1, new QTableWidgetItem(QString("%1").arg(param)));
+
+    const QString paramName = getNameForGameTextCommandParameter(command, param);
+    if (!paramName.isEmpty())
+    {
+      table->setItem(rowcount, 2, new QTableWidgetItem(paramName));
+    }
+  }
+
+  table->resizeColumnToContents(0);
+  table->resizeColumnToContents(1);
+  table->resizeRowsToContents();
+}
+
+void MainWindow::on_m_missionStartText_anchorClicked(const QUrl& arg1)
+{
+  showAnchorTooltip(arg1);
+}
+
+void MainWindow::on_m_missionEndText_anchorClicked(const QUrl& arg1)
+{
+  showAnchorTooltip(arg1);
 }

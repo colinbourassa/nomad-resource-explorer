@@ -12,6 +12,7 @@
 #include <QAudioOutput>
 #include <QListWidgetItem>
 #include <QLabel>
+#include <QTableWidget>
 #include "aboutbox.h"
 #include "datlibrary.h"
 #include "gametext.h"
@@ -28,6 +29,7 @@
 #include "fullscreenimages.h"
 #include "stampimages.h"
 #include "conversationtext.h"
+#include "missions.h"
 
 namespace Ui {
 class MainWindow;
@@ -77,6 +79,10 @@ private slots:
   void on_actionAbout_triggered();
   void on_m_convFilterTopicsCheckbox_stateChanged(int arg1);
   void on_m_convDialogueLine_anchorClicked(const QUrl &arg1);
+  void on_m_missionIdSpinBox_valueChanged(int arg1);
+  void on_m_missionStartText_anchorClicked(const QUrl &arg1);
+
+  void on_m_missionEndText_anchorClicked(const QUrl &arg1);
 
 private:
   Ui::MainWindow *ui;
@@ -99,6 +105,7 @@ private:
   FullscreenImages m_fullscreenImages;
   StampImages m_stamps;
   ConversationText m_convText;
+  Missions m_missions;
 
   QMap<int,QImage> m_alienFrames;
   QList<QImage> m_stampImages;
@@ -135,6 +142,7 @@ private:
   void populateStampWidgets();
   void populateFactWidgets();
   void populateConversationWidgets();
+  void populateMissionWidgets();
   void loadAlienFrame(int frameId);
 
   void populateConversationTopicTable(int lastSelectedTopicId = -1);
@@ -152,6 +160,10 @@ private:
   void setAudioStateLabel(QAudio::State state);
 
   void displayStamp(int rollIndex);
+
+  void showInfoForMission(int id);
+  void showAnchorTooltip(const QUrl& url);
+  void populateGameTextCommandList(QTableWidget* table, QVector<QPair<GTxtCmd,int> >& commands);
 };
 
 #endif // MAINWINDOW_H
