@@ -8,6 +8,9 @@ Missions::Missions(DatLibrary& lib, GameText& gametext) :
 
 }
 
+/**
+ * Gets the list of missions read from the data file, populating it first if necessary.
+ */
 QMap<int,Mission> Missions::getList()
 {
   if (m_missions.isEmpty())
@@ -18,6 +21,9 @@ QMap<int,Mission> Missions::getList()
   return m_missions;
 }
 
+/**
+ * Parses the MISSION.TAB data file to read information about Alliance mission postings.
+ */
 bool Missions::populateList()
 {
   bool status = false;
@@ -47,6 +53,11 @@ bool Missions::populateList()
         {
           m.action = MissionActionType_DeliverItem;
         }
+        else
+        {
+          m.action = MissionActionType_Unknown;
+        }
+        m.missionActionRawVal = currentEntry->actionRequired;
         m.startText    = getMissionText(qFromLittleEndian<quint16>(currentEntry->startTextIndex), m.startTextCommands);
         m.completeText = getMissionText(qFromLittleEndian<quint16>(currentEntry->completeTextIndex), m.completeTextCommands);
         m.objectiveId  = currentEntry->objectiveId;
@@ -62,6 +73,10 @@ bool Missions::populateList()
   return status;
 }
 
+/**
+ * Returns the text associated with a missions at the provided index in the MISTEXT.IDX index file.
+ * Populates the provided QVector with the list of game commands embedded in that text.
+ */
 QString Missions::getMissionText(uint16_t idxFileIndex, QVector<QPair<GTxtCmd,int> >& commands)
 {
   QByteArray misTextIdxData;

@@ -13,14 +13,16 @@ enum MissionActionType
 {
   MissionActionType_None,
   MissionActionType_DestroyShip,
-  MissionActionType_DeliverItem
+  MissionActionType_DeliverItem,
+  MissionActionType_Unknown
 };
 
 struct Mission
 {
   MissionActionType action;
-  int  objectiveId;
-  int  objectiveLocation;
+  int missionActionRawVal;
+  int objectiveId;
+  int objectiveLocation;
   QString startText;
   QString completeText;
   QVector<QPair<GTxtCmd,int> > startTextCommands;

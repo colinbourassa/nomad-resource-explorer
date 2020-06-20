@@ -1344,11 +1344,18 @@ void MainWindow::displayStamp(int rollIndex)
   }
 }
 
+/**
+ * Responds to a change in the currently selected mission ID by calling a routine to update
+ * the mission information being displayed.
+ */
 void MainWindow::on_m_missionIdSpinBox_valueChanged(int arg1)
 {
   showInfoForMission(arg1);
 }
 
+/**
+ * Populates the mission text widgets with information about the currently selected mission ID.
+ */
 void MainWindow::showInfoForMission(int id)
 {
   ui->m_missionStartText->clear();
@@ -1367,15 +1374,42 @@ void MainWindow::showInfoForMission(int id)
     ui->m_missionEndText->setHtml(missions[id].completeText);
     populateGameTextCommandList(ui->m_missionStartCommandList, missions[id].startTextCommands);
     populateGameTextCommandList(ui->m_missionEndCommandList,   missions[id].completeTextCommands);
+
+    if (missions[id].action == MissionActionType_None)
+    {
+      ui->m_missionReqText->setHtml("(No action required.)");
+    }
+    else if (missions[id].action == MissionActionType_DeliverItem)
+    {
+      const QString itemName = m_invObject.getName(missions[id].objectiveId);
+      ui->m_missionReqText->setHtml(QString("Deliver item: %1").arg(itemName));
+    }
+    else if (missions[id].action == MissionActionType_DestroyShip)
+    {
+      const QString shipName = m_ships.getName(missions[id].objectiveId);
+      ui->m_missionReqText->setHtml(QString("Destroy ship: %1").arg(shipName));
+    }
+    else
+    {
+      ui->m_missionReqText->setHtml(QString("Unknown action type %1, objective ID %2").arg(missions[id].missionActionRawVal).arg(missions[id].objectiveId));
+    }
   }
 }
 
+/**
+ * Decodes the provided string into a list of game text alternate strings and displays
+ * them in a tooltip at the current cursor position.
+ */
 void MainWindow::showAnchorTooltip(const QUrl& url)
 {
   const QString urlStr = url.toString(QUrl::DecodeReserved).replace("|", "\n").trimmed();
   QToolTip::showText(QCursor::pos(), urlStr);
 }
 
+/**
+ * Populates cells in a three-column QTableWidget with the information contained in the supplied
+ * list of gametext commands.
+ */
 void MainWindow::populateGameTextCommandList(QTableWidget* table, QVector<QPair<GTxtCmd,int> >& commands)
 {
   // populate the table to display the details of the commands embedded in this dialogue line
@@ -1403,11 +1437,17 @@ void MainWindow::populateGameTextCommandList(QTableWidget* table, QVector<QPair<
   table->resizeRowsToContents();
 }
 
+/**
+ * Displays tooltip with list of synonyms from metatext in mission start text.
+ */
 void MainWindow::on_m_missionStartText_anchorClicked(const QUrl& arg1)
 {
   showAnchorTooltip(arg1);
 }
 
+/**
+ * Displays tooltip with list of synonyms from metatext in mission end text.
+ */
 void MainWindow::on_m_missionEndText_anchorClicked(const QUrl& arg1)
 {
   showAnchorTooltip(arg1);

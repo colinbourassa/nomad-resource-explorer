@@ -5,5 +5,5 @@
 - Play game to reveal "default" dialog lines (e.g. "I don't know anything about that.")
   Locate them in the talk text files, and work backwards to determine how their indexing works.
 
-- 3D model display (using Qt3D)
+- 3D model display (using QtQuick3D)
 
