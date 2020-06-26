@@ -132,6 +132,7 @@ private:
 
   void clearData();
   void openNewData(const QString gameDir);
+  void connectGLViewerSliders();
   void setupAudio();
   void populatePlaceWidgets();
   void populateObjectWidgets();
@@ -144,23 +145,18 @@ private:
   void populateConversationWidgets();
   void populateMissionWidgets();
   void loadAlienFrame(int frameId);
-
   void populateConversationTopicTable(int lastSelectedTopicId = -1);
   void populateTopicTableForCategory(ConvTopicCategory category, QMap<int,QString> topicList, int lastSelectedTopicId);
   void getConversationLinesForCurrentTopic();
   QString getNameForGameTextCommandParameter(GTxtCmd cmd, int param);
   void clearDialogLineAndCommandList();
-
   void putResourceLabelsInArray();
   void clearAllResourceLabels();
   void clearPlaceLabels();
-
   void setSoundButtonStates();
   void setSoundIDLabel(QString nnvName, int soundId);
   void setAudioStateLabel(QAudio::State state);
-
   void displayStamp(int rollIndex);
-
   void showInfoForMission(int id);
   void showAnchorTooltip(const QUrl& url);
   void populateGameTextCommandList(QTableWidget* table, QVector<QPair<GTxtCmd,int> >& commands);

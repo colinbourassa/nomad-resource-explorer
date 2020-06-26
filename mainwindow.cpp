@@ -59,6 +59,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
 
   setupAudio();
   clearAllResourceLabels();
+  connectGLViewerSliders();
 
   if (!gameDir.isEmpty())
   {
@@ -71,6 +72,16 @@ MainWindow::~MainWindow()
   delete m_audioOutput;
   delete m_aboutBox;
   delete ui;
+}
+
+void MainWindow::connectGLViewerSliders()
+{
+  connect(ui->m_3dSliderX, &QSlider::valueChanged, ui->m_3dModelViewer, &GLShipViewerWidget::setXRotation);
+  connect(ui->m_3dModelViewer, &GLShipViewerWidget::xRotationChanged, ui->m_3dSliderX, &QSlider::setValue);
+  connect(ui->m_3dSliderY, &QSlider::valueChanged, ui->m_3dModelViewer, &GLShipViewerWidget::setYRotation);
+  connect(ui->m_3dModelViewer, &GLShipViewerWidget::yRotationChanged, ui->m_3dSliderY, &QSlider::setValue);
+  connect(ui->m_3dSliderZ, &QSlider::valueChanged, ui->m_3dModelViewer, &GLShipViewerWidget::setZRotation);
+  connect(ui->m_3dModelViewer, &GLShipViewerWidget::zRotationChanged, ui->m_3dSliderZ, &QSlider::setValue);
 }
 
 void MainWindow::on_actionAbout_triggered()

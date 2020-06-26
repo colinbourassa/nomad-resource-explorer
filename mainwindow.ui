@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="m_tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>10</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
@@ -1439,6 +1439,79 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="m_tab3dModels">
+       <attribute name="title">
+        <string>3D models</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0,0,0">
+        <item>
+         <widget class="QTreeWidget" name="m_3dModelTree">
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="GLShipViewerWidget" name="m_3dModelViewer"/>
+        </item>
+        <item>
+         <widget class="QSlider" name="m_3dSliderX">
+          <property name="maximum">
+           <number>5760</number>
+          </property>
+          <property name="singleStep">
+           <number>16</number>
+          </property>
+          <property name="pageStep">
+           <number>240</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::TicksBelow</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="m_3dSliderY">
+          <property name="maximum">
+           <number>5760</number>
+          </property>
+          <property name="singleStep">
+           <number>16</number>
+          </property>
+          <property name="pageStep">
+           <number>240</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::TicksBelow</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="m_3dSliderZ">
+          <property name="maximum">
+           <number>5760</number>
+          </property>
+          <property name="singleStep">
+           <number>16</number>
+          </property>
+          <property name="pageStep">
+           <number>240</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -1490,6 +1563,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>GLShipViewerWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>glshipviewerwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>m_tabs</tabstop>
   <tabstop>m_shipTable</tabstop>

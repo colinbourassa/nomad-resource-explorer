@@ -12,7 +12,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   message (FATAL_ERROR "Error: This project does not currently support MSVC compilers due to the handling of struct packing attributes. Windows builds are supported via MXE or MinGW.")
 endif ()
 
-find_package (Qt5 COMPONENTS Core Widgets Multimedia REQUIRED)
+find_package (Qt5 COMPONENTS Core Widgets Multimedia OpenGL REQUIRED)
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} -s")
@@ -72,6 +72,10 @@ add_executable (nomad-resource-explorer
     stampimages.h
     missions.cpp
     missions.h
+    glshipviewerwidget.cpp
+    glshipviewerwidget.h
+    shipmodeldata.cpp
+    shipmodeldata.h
     nre.rc
     ${NRE_RESOURCE}
     ${UI_SOURCE})
