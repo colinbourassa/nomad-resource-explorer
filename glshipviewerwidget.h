@@ -31,6 +31,7 @@ class GLShipViewerWidget : public QOpenGLWidget, protected QOpenGLFunctions
 public:
   GLShipViewerWidget(QWidget* parent = nullptr);
   ~GLShipViewerWidget();
+  ShipModelData* model();
 
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;

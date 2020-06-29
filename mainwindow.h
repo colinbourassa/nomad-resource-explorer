@@ -81,8 +81,8 @@ private slots:
   void on_m_convDialogueLine_anchorClicked(const QUrl &arg1);
   void on_m_missionIdSpinBox_valueChanged(int arg1);
   void on_m_missionStartText_anchorClicked(const QUrl &arg1);
-
   void on_m_missionEndText_anchorClicked(const QUrl &arg1);
+  void on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
   Ui::MainWindow *ui;
@@ -144,6 +144,7 @@ private:
   void populateFactWidgets();
   void populateConversationWidgets();
   void populateMissionWidgets();
+  void populate3dModelWidgets();
   void loadAlienFrame(int frameId);
   void populateConversationTopicTable(int lastSelectedTopicId = -1);
   void populateTopicTableForCategory(ConvTopicCategory category, QMap<int,QString> topicList, int lastSelectedTopicId);

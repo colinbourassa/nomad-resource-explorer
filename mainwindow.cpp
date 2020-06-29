@@ -188,6 +188,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateStampWidgets();
   populateConversationWidgets();
   populateMissionWidgets();
+  populate3dModelWidgets();
 }
 
 /**
@@ -523,6 +524,40 @@ void MainWindow::populateMissionWidgets()
   }
   ui->m_missionIdSpinBox->setMaximum(highestKey);
   showInfoForMission(ui->m_missionIdSpinBox->value());
+}
+
+/**
+ * Populates the tree of 3D model (BIN) files.
+ * TODO: This may need to use a hardcoded list of .BIN files that matches that
+ * stored in the game's executable. We can't just key on the .BIN file extension
+ * because that will also pull in font data and possibly other unrelated files.
+ */
+void MainWindow::populate3dModelWidgets()
+{
+  ui->m_3dModelTree->clear();
+
+  QMap<DatFileType,QStringList> binList;
+  binList[DatFileType_TEST] = m_lib.getFilenamesByExtension(DatFileType_TEST, ".bin");
+
+  foreach (DatFileType dat, binList.keys())
+  {
+    if (binList[dat].size() > 0)
+    {
+      const QString datFilename = m_lib.s_datFileNames[dat];
+      QTreeWidgetItem* datTreeParent = new QTreeWidgetItem(ui->m_3dModelTree);
+      datTreeParent->setText(0, datFilename);
+
+      foreach (QString stampFilename, binList[dat])
+      {
+        QTreeWidgetItem* binChild = new QTreeWidgetItem();
+        binChild->setText(0, stampFilename);
+        datTreeParent->addChild(binChild);
+      }
+    }
+  }
+
+  ui->m_3dModelTree->expandAll();
+  ui->m_3dModelTree->resizeColumnToContents(0);
 }
 
 /**
@@ -1462,4 +1497,35 @@ void MainWindow::on_m_missionStartText_anchorClicked(const QUrl& arg1)
 void MainWindow::on_m_missionEndText_anchorClicked(const QUrl& arg1)
 {
   showAnchorTooltip(arg1);
+}
+
+void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+{
+  Q_UNUSED(previous)
+
+  ui->m_3dModelViewer->model()->clear();
+  ui->m_3dModelViewer->repaint();
+
+  if (current)
+  {
+    const QString binFilename = current->text(0);
+    if (current->parent())
+    {
+      const QString datFilename = current->parent()->text(0);
+      const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
+
+      QByteArray binData;
+      if (m_lib.getFileByName(dat, binFilename, binData))
+      {
+        QString modelInfo;
+        ui->m_3dModelViewer->model()->loadData(binData, modelInfo);
+        ui->m_3dModelViewer->repaint();
+        ui->m_3dModelInfoText->setText(modelInfo);
+      }
+      else
+      {
+        ui->m_3dModelInfoText->setHtml(QString("<b>Error:</b> Could not load '%1'").arg(binFilename));
+      }
+    }
+  }
 }
