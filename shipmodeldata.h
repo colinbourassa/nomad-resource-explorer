@@ -3,6 +3,7 @@
 
 #include <qopengl.h>
 #include <QVector>
+#include <QMap>
 #include <QVector3D>
 #include <QColor>
 #include <QString>
@@ -33,6 +34,8 @@ public:
   void clear();
 
 private:
+  static int getTotalVertexCount(const QMap<int,QVector<int> >& polygons);
+
   void quad(QVector3D a, QVector3D b, QVector3D c, QVector3D d, QColor color);
   void tri(QVector3D a, QVector3D b, QVector3D c, QColor color);
   void add(const QVector3D& v, const QVector3D& n, const QColor c);

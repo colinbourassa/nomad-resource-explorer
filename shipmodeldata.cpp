@@ -24,32 +24,6 @@ QMap<int,QColor> ShipModelData::s_modelColors =
 
 ShipModelData::ShipModelData()
 {
-  /* TEMP */
-  m_data.resize(250 * 9);
-
-  const QVector3D v0( .200f,  .050f,  .000f);
-  const QVector3D v1( .100f,  .100f,  .000f);
-  const QVector3D v2( .100f,  .050f, -.050f);
-  const QVector3D v3(-.040f,  .050f,  .000f);
-  const QVector3D v4( .100f,  .050f,  .050f);
-  const QVector3D v5( .100f, -.050f,  .050f);
-  const QVector3D v6(-.040f, -.050f,  .000f);
-  const QVector3D v7( .200f, -.050f,  .000f);
-  const QVector3D v8( .100f, -.050f, -.050f);
-  const QVector3D v9( .100f, -.100f,  .000f);
-
-  tri (v0, v1, v2,     Qt::gray);
-  quad(v3, v4, v5, v6, Qt::red);
-  quad(v7, v0, v2, v8, Qt::red);
-  tri (v6, v5, v9,     Qt::gray);
-  tri (v9, v7, v8,     Qt::gray);
-  tri (v4, v3, v1,     Qt::gray);
-  tri (v0, v4, v1,     Qt::gray);
-  tri (v6, v9, v8,     Qt::gray);
-  tri (v5, v7, v9,     Qt::gray);
-  quad(v3, v2, v8, v6, Qt::red);
-  quad(v5, v4, v0, v7, Qt::red);
-  tri (v1, v3, v2,     Qt::gray);
 }
 
 /**
@@ -149,6 +123,15 @@ bool ShipModelData::loadData(const QByteArray& bin, QString& modelInfo)
         {
           status = true;
 
+          // Before we start to call the tri() and quad() routines to add the triangles
+          // to the vertex buffer, we need to first compute the space required.
+          // Each triangle will need six vertices because we do both the front and back
+          // faces, and the number of triangles per polygon is ((n - 2) * 3). The data
+          // for each vertex occupies nine floats (3 * coords, 3 * normal, 3 * RGB).
+
+          const int totalPolyVertexCount = getTotalVertexCount(polygonPoints);
+          m_data.resize(totalPolyVertexCount * FLOATS_PER_VERTEX);
+
           foreach (int polygonId, polygonPoints.keys())
           {
             QVector<int>* polyVertexList = &polygonPoints[polygonId];
@@ -200,6 +183,24 @@ void ShipModelData::clear()
 {
   m_count = 0;
   m_data.clear();
+}
+
+/**
+ * Counts up the total number vertices needed to render both the front- and back-faces
+ * of all the triangles in all the polygons.
+ */
+int ShipModelData::getTotalVertexCount(const QMap<int,QVector<int> >& polygons)
+{
+  int vertexTotal = 0;
+
+  foreach (const QVector<int> poly, polygons.values())
+  {
+    // six vertices (three per face) per triangle,
+    // with (n-2) triangles per polygon where n is the polygon vertex count
+    vertexTotal += (poly.size() - 2) * 6;
+  }
+
+  return vertexTotal;
 }
 
 /**

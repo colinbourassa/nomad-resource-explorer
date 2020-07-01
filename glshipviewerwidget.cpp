@@ -38,11 +38,6 @@ GLShipViewerWidget::GLShipViewerWidget(QWidget* parent) : QOpenGLWidget(parent)
 
 }
 
-ShipModelData* GLShipViewerWidget::model()
-{
-  return &m_model;
-}
-
 GLShipViewerWidget::~GLShipViewerWidget()
 {
   cleanup();
@@ -102,6 +97,25 @@ void GLShipViewerWidget::cleanup()
   delete m_program;
   m_program = nullptr;
   doneCurrent();
+}
+
+void GLShipViewerWidget::clear()
+{
+  m_model.clear();
+  m_logoVbo.bind();
+  m_logoVbo.allocate(m_model.constData(), m_model.count() * sizeof(GLfloat));
+  repaint();
+}
+
+bool GLShipViewerWidget::loadData(const QByteArray& bin, QString& modelInfo)
+{
+  bool status = m_model.loadData(bin, modelInfo);
+
+  m_logoVbo.bind();
+  m_logoVbo.allocate(m_model.constData(), m_model.count() * sizeof(GLfloat));
+  repaint();
+
+  return status;
 }
 
 void GLShipViewerWidget::initializeGL()
@@ -179,13 +193,6 @@ void GLShipViewerWidget::resizeGL(int w, int h)
 
 void GLShipViewerWidget::paintGL()
 {
-  /* TODO: some subset of these actions must happen after changing the vertex buffer contents;
-   * requires investigation */
-  m_logoVbo.create();
-  m_logoVbo.bind();
-  m_logoVbo.allocate(m_model.constData(), m_model.count() * sizeof(GLfloat));
-  setupVertexAttribs();
-
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);

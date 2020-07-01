@@ -1503,8 +1503,8 @@ void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, Q
 {
   Q_UNUSED(previous)
 
-  ui->m_3dModelViewer->model()->clear();
-  ui->m_3dModelViewer->repaint();
+  ui->m_3dModelViewer->clear();
+  ui->m_3dModelInfoText->clear();
 
   if (current)
   {
@@ -1518,8 +1518,7 @@ void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, Q
       if (m_lib.getFileByName(dat, binFilename, binData))
       {
         QString modelInfo;
-        ui->m_3dModelViewer->model()->loadData(binData, modelInfo);
-        ui->m_3dModelViewer->repaint();
+        ui->m_3dModelViewer->loadData(binData, modelInfo);
         ui->m_3dModelInfoText->setText(modelInfo);
       }
       else
