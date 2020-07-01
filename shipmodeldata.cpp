@@ -41,7 +41,7 @@ bool ShipModelData::loadData(const QByteArray& bin, QString& modelInfo)
   QMap<int,QColor> polygonColors;
 
   // each vertex ID maps to a point in 3D space
-  QMap<int,QVector3D> vertices;
+  QMap<int,QVector3D> allVertices;
 
   // start by ensuring that we have at least enough data to
   // cover for the 16-bit polygon count
@@ -116,45 +116,37 @@ bool ShipModelData::loadData(const QByteArray& bin, QString& modelInfo)
           const float vertZ = qFromLittleEndian<qint16>(bin.data() + offset);
           offset += sizeof(int16_t);
 
-          vertices[globalVertexIndex++] = QVector3D(vertX / 500.0f, vertY / 500.0f, vertZ / 500.0f);
+          // TODO: perhaps find a better way to do the initial scaling than dividing by 500
+          allVertices[globalVertexIndex++] = QVector3D(vertX / 500.0f, vertY / 500.0f, vertZ / 500.0f);
         }
 
         if (globalVertexIndex == vertCount)
         {
           status = true;
 
-          // Before we start to call the tri() and quad() routines to add the triangles
-          // to the vertex buffer, we need to first compute the space required.
-          // Each triangle will need six vertices because we do both the front and back
-          // faces, and the number of triangles per polygon is ((n - 2) * 3). The data
-          // for each vertex occupies nine floats (3 * coords, 3 * normal, 3 * RGB).
-
+          // Before we start to actually add the vertex data to the vertex buffer,
+          // we need to first compute the space required. Each triangle will need
+          // six vertices because we do both the front and back faces, and the
+          // number of triangles per polygon is (n - 2). The data for each vertex
+          // occupies nine floats (3 for coords, 3 for normal, 3 for RGB).
           const int totalPolyVertexCount = getTotalVertexCount(polygonPoints);
           m_data.resize(totalPolyVertexCount * FLOATS_PER_VERTEX);
 
           foreach (int polygonId, polygonPoints.keys())
           {
             QVector<int>* polyVertexList = &polygonPoints[polygonId];
+            QVector<QVector3D> singlePolyVerts;
 
-            if (polyVertexList->size() == 3)
+            // using the IDs of each vertex in this polygon, retrieve
+            // the actual QVector3D info and put it all in a list
+            foreach (int vertexId, polygonPoints[polygonId])
             {
-              tri(vertices[polyVertexList->at(0)],
-                  vertices[polyVertexList->at(1)],
-                  vertices[polyVertexList->at(2)],
-                  polygonColors[polygonId]);
+              singlePolyVerts.append(allVertices[vertexId]);
             }
-            else if (polyVertexList->size() == 4)
-            {
-              quad(vertices[polyVertexList->at(0)],
-                   vertices[polyVertexList->at(1)],
-                   vertices[polyVertexList->at(2)],
-                   vertices[polyVertexList->at(3)],
-                   polygonColors[polygonId]);
-            }
-            else
-            {
-              modelInfo += QString("\nWarning: Polygon %1 has %2 faces; skipping...\n").arg(polygonId).arg(polyVertexList->size());
-            }
+
+            // pass the list and color to the triangulation function
+            // so that the data can be added to the vertex buffer
+            triangulatePolygon(singlePolyVerts, polygonColors[polygonId]);
           }
         }
         else
@@ -221,44 +213,22 @@ void ShipModelData::add(const QVector3D& v, const QVector3D& n, const QColor col
   m_count += FLOATS_PER_VERTEX;
 }
 
-/**
- * Triangulates a 4-gon into triangles, computes the normals for the vertices,
- * and calls a routine to add those vertices and their associated attributes to
- * the OpenGL buffer.
- */
-void ShipModelData::quad(QVector3D a, QVector3D b, QVector3D c, QVector3D d, QColor color)
+void ShipModelData::triangulatePolygon(const QVector<QVector3D>& vertices,
+                                       const QColor color)
 {
-  QVector3D n = QVector3D::normal(QVector3D(d.x() - a.x(), d.y() - a.y(), d.z() - a.z()),
-                                  QVector3D(b.x() - a.x(), b.y() - a.y(), b.z() - a.z()));
-
-  add(QVector3D(a.x(), a.y(), a.z()), n, color);
-  add(QVector3D(d.x(), d.y(), d.z()), n, color);
-  add(QVector3D(b.x(), b.y(), b.z()), n, color);
-
-  add(QVector3D(c.x(), c.y(), c.z()), n, color);
-  add(QVector3D(b.x(), b.y(), b.z()), n, color);
-  add(QVector3D(d.x(), d.y(), d.z()), n, color);
-
-  // is this second section here to provide a back face? is that what's going on?
-
-  n = QVector3D::normal(QVector3D(a.x() - d.x(), a.y() - d.y(), a.z() - d.z()),
-                        QVector3D(b.x() - d.x(), b.y() - d.y(), b.z() - d.z()));
-
-  add(QVector3D(d.x(), d.y(), d.z()), n, color);
-  add(QVector3D(a.x(), a.y(), a.z()), n, color);
-  add(QVector3D(b.x(), b.y(), b.z()), n, color);
-
-  add(QVector3D(b.x(), b.y(), b.z()), n, color);
-  add(QVector3D(c.x(), c.y(), c.z()), n, color);
-  add(QVector3D(d.x(), d.y(), d.z()), n, color);
+  // at least three vertices are required
+  if (vertices.size() >= 3)
+  {
+    // we assume that the vertices are listed in contiguous order
+    // for the polygons, which means that it's trivial to triangulate
+    for (int lastVertex = 2; lastVertex < vertices.size(); lastVertex++)
+    {
+      addTriangle(vertices[0], vertices[lastVertex], vertices[lastVertex - 1], color);
+    }
+  }
 }
 
-/**
- * Computes the normals for the vertices provided that define a triangle, and
- * calls a routine that adds those vertices, their normals, and their colors
- * to an OpenGL buffer.
- */
-void ShipModelData::tri(QVector3D a, QVector3D b, QVector3D c, QColor color)
+void ShipModelData::addTriangle(QVector3D a, QVector3D b, QVector3D c, QColor color)
 {
   QVector3D n = QVector3D::normal(QVector3D(c.x() - a.x(), c.y() - a.y(), c.z() - a.z()),
                                   QVector3D(b.x() - a.x(), b.y() - a.y(), b.z() - a.z()));

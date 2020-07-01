@@ -1528,3 +1528,8 @@ void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, Q
     }
   }
 }
+
+void MainWindow::on_m_3dZoomSlider_valueChanged(int value)
+{
+
+}

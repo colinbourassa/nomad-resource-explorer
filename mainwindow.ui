@@ -1446,23 +1446,27 @@
        <attribute name="title">
         <string>3D models</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_8" rowstretch="4,1" columnstretch="0,1,0,0,0">
-        <item row="0" column="0" rowspan="2">
-         <widget class="QTreeWidget" name="m_3dModelTree">
-          <attribute name="headerVisible">
-           <bool>false</bool>
-          </attribute>
-          <column>
-           <property name="text">
-            <string notr="true">1</string>
-           </property>
-          </column>
+       <layout class="QGridLayout" name="gridLayout_8" rowstretch="4,0,1" columnstretch="0,1,0,0,0">
+        <item row="0" column="4" rowspan="3">
+         <widget class="QSlider" name="m_3dSliderZ">
+          <property name="maximum">
+           <number>5760</number>
+          </property>
+          <property name="singleStep">
+           <number>16</number>
+          </property>
+          <property name="pageStep">
+           <number>240</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="GLShipViewerWidget" name="m_3dModelViewer"/>
+        <item row="2" column="1">
+         <widget class="QTextBrowser" name="m_3dModelInfoText"/>
         </item>
-        <item row="0" column="2" rowspan="2">
+        <item row="0" column="2" rowspan="3">
          <widget class="QSlider" name="m_3dSliderX">
           <property name="maximum">
            <number>5760</number>
@@ -1481,7 +1485,19 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="3" rowspan="2">
+        <item row="0" column="0" rowspan="3">
+         <widget class="QTreeWidget" name="m_3dModelTree">
+          <attribute name="headerVisible">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="0" column="3" rowspan="3">
          <widget class="QSlider" name="m_3dSliderY">
           <property name="maximum">
            <number>5760</number>
@@ -1500,24 +1516,24 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="4" rowspan="2">
-         <widget class="QSlider" name="m_3dSliderZ">
-          <property name="maximum">
-           <number>5760</number>
-          </property>
-          <property name="singleStep">
-           <number>16</number>
-          </property>
-          <property name="pageStep">
-           <number>240</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
+        <item row="0" column="1">
+         <widget class="GLShipViewerWidget" name="m_3dModelViewer"/>
         </item>
         <item row="1" column="1">
-         <widget class="QTextBrowser" name="m_3dModelInfoText"/>
+         <widget class="QSlider" name="m_3dZoomSlider">
+          <property name="minimum">
+           <number>-200</number>
+          </property>
+          <property name="maximum">
+           <number>200</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::TicksBothSides</enum>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

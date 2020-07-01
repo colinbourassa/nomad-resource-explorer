@@ -84,6 +84,8 @@ private slots:
   void on_m_missionEndText_anchorClicked(const QUrl &arg1);
   void on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
+  void on_m_3dZoomSlider_valueChanged(int value);
+
 private:
   Ui::MainWindow *ui;
   AboutBox* m_aboutBox;
