@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="m_tabs">
       <property name="currentIndex">
-       <number>10</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="m_tabShips">
        <attribute name="title">
@@ -1446,8 +1446,33 @@
        <attribute name="title">
         <string>3D models</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_8" rowstretch="4,0,1" columnstretch="0,1,0,0,0">
-        <item row="0" column="4" rowspan="3">
+       <layout class="QGridLayout" name="gridLayout_8" rowstretch="4,0,1" columnstretch="0,1,1,1,1,0,0,0,0,0,0">
+        <item row="2" column="1" colspan="7">
+         <widget class="QTextBrowser" name="m_3dModelInfoText"/>
+        </item>
+        <item row="1" column="4">
+         <widget class="QPushButton" name="m_3dSpinZButton">
+          <property name="text">
+           <string>Spin Z axis</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" rowspan="3">
+         <widget class="QTreeWidget" name="m_3dModelTree">
+          <attribute name="headerVisible">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="0" column="10" rowspan="3">
          <widget class="QSlider" name="m_3dSliderZ">
           <property name="maximum">
            <number>5760</number>
@@ -1463,10 +1488,7 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QTextBrowser" name="m_3dModelInfoText"/>
-        </item>
-        <item row="0" column="2" rowspan="3">
+        <item row="0" column="8" rowspan="3">
          <widget class="QSlider" name="m_3dSliderX">
           <property name="maximum">
            <number>5760</number>
@@ -1485,19 +1507,27 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="0" rowspan="3">
-         <widget class="QTreeWidget" name="m_3dModelTree">
-          <attribute name="headerVisible">
-           <bool>false</bool>
-          </attribute>
-          <column>
-           <property name="text">
-            <string notr="true">1</string>
-           </property>
-          </column>
+        <item row="1" column="6">
+         <widget class="QLabel" name="m_3dZoomHelpLabel">
+          <property name="text">
+           <string>Mouse wheel to zoom</string>
+          </property>
          </widget>
         </item>
-        <item row="0" column="3" rowspan="3">
+        <item row="0" column="1" colspan="7">
+         <widget class="GLShipViewerWidget" name="m_3dModelViewer"/>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="m_3dSpinYButton">
+          <property name="text">
+           <string>Spin Y axis</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="9" rowspan="3">
          <widget class="QSlider" name="m_3dSliderY">
           <property name="maximum">
            <number>5760</number>
@@ -1516,24 +1546,35 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="GLShipViewerWidget" name="m_3dModelViewer"/>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="m_3dSpinXButton">
+          <property name="text">
+           <string>Spin X axis</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QSlider" name="m_3dZoomSlider">
-          <property name="minimum">
-           <number>-200</number>
+         <widget class="QPushButton" name="m_3dResetButton">
+          <property name="text">
+           <string>Reset view</string>
           </property>
-          <property name="maximum">
-           <number>200</number>
-          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <property name="tickPosition">
-           <enum>QSlider::TicksBothSides</enum>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
           </property>
-         </widget>
+         </spacer>
         </item>
        </layout>
       </widget>

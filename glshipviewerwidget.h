@@ -10,6 +10,7 @@
 #include <QMatrix4x4>
 #include <QPoint>
 #include <QMouseEvent>
+#include <QWheelEvent>
 #include "shipmodeldata.h"
 
 static void qNormalizeAngle(int& angle)
@@ -37,6 +38,10 @@ public:
 
   void clear();
   bool loadData(const QByteArray& bin, QString& modelInfo);
+  void incrementXRotation();
+  void incrementYRotation();
+  void incrementZRotation();
+  void resetView();
 
 public slots:
   void setXRotation(int angle);
@@ -55,6 +60,7 @@ protected:
   void resizeGL(int w, int h) override;
   void mousePressEvent(QMouseEvent* event) override;
   void mouseMoveEvent(QMouseEvent* event) override;
+  void wheelEvent(QWheelEvent* event) override;
 
 private:
   void setupVertexAttribs();
@@ -62,6 +68,7 @@ private:
   int m_xRot = 0;
   int m_yRot = 0;
   int m_zRot = 0;
+  float m_zoom = 1.0;
   QPoint m_lastPos;
   ShipModelData m_model;
   QOpenGLVertexArrayObject m_vao;

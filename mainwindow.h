@@ -13,6 +13,7 @@
 #include <QListWidgetItem>
 #include <QLabel>
 #include <QTableWidget>
+#include <QTimer>
 #include "aboutbox.h"
 #include "datlibrary.h"
 #include "gametext.h"
@@ -50,6 +51,7 @@ private slots:
   void on_actionOpen_game_data_dir_triggered();
   void onExit();
   void onCloseDataFiles();
+  void onTimer();
   void on_m_objTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
@@ -83,8 +85,13 @@ private slots:
   void on_m_missionStartText_anchorClicked(const QUrl &arg1);
   void on_m_missionEndText_anchorClicked(const QUrl &arg1);
   void on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
+  void on_m_3dSpinXButton_toggled(bool checked);
+  void on_m_3dSpinYButton_toggled(bool checked);
+  void on_m_3dSpinZButton_toggled(bool checked);
+  void timerControl();
+  void reset3DView();
 
-  void on_m_3dZoomSlider_valueChanged(int value);
+  void on_m_3dResetButton_clicked();
 
 private:
   Ui::MainWindow *ui;
@@ -131,11 +138,13 @@ private:
   QString m_currentConvLine;
 
   QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
+  QTimer m_timer;
 
   void clearData();
   void openNewData(const QString gameDir);
   void connectGLViewerSliders();
   void setupAudio();
+  void setupTimer();
   void populatePlaceWidgets();
   void populateObjectWidgets();
   void populateAlienWidgets();

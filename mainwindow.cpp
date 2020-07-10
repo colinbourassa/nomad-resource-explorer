@@ -58,6 +58,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   ui->m_stampView->scale(2, 2);
 
   setupAudio();
+  setupTimer();
   clearAllResourceLabels();
   connectGLViewerSliders();
 
@@ -72,6 +73,12 @@ MainWindow::~MainWindow()
   delete m_audioOutput;
   delete m_aboutBox;
   delete ui;
+}
+
+void MainWindow::setupTimer()
+{
+  m_timer.setInterval(40);
+  connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimer()));
 }
 
 void MainWindow::connectGLViewerSliders()
@@ -528,9 +535,6 @@ void MainWindow::populateMissionWidgets()
 
 /**
  * Populates the tree of 3D model (BIN) files.
- * TODO: This may need to use a hardcoded list of .BIN files that matches that
- * stored in the game's executable. We can't just key on the .BIN file extension
- * because that will also pull in font data and possibly other unrelated files.
  */
 void MainWindow::populate3dModelWidgets()
 {
@@ -547,11 +551,20 @@ void MainWindow::populate3dModelWidgets()
       QTreeWidgetItem* datTreeParent = new QTreeWidgetItem(ui->m_3dModelTree);
       datTreeParent->setText(0, datFilename);
 
-      foreach (QString stampFilename, binList[dat])
+      foreach (QString binFilename, binList[dat])
       {
-        QTreeWidgetItem* binChild = new QTreeWidgetItem();
-        binChild->setText(0, stampFilename);
-        datTreeParent->addChild(binChild);
+        // there are a handful of .BIN files that aren't actually
+        // 3D models, so we manually check for those to exclude them
+        const QString binFilenameUcase = binFilename.toUpper();
+        if ((binFilenameUcase != "COMPUTER.BIN") &&
+            (binFilenameUcase != "SMFONT.BIN") &&
+            (binFilenameUcase != "LGFONT.BIN") &&
+            (binFilenameUcase != "SC200240.BIN"))
+        {
+          QTreeWidgetItem* binChild = new QTreeWidgetItem();
+          binChild->setText(0, binFilename);
+          datTreeParent->addChild(binChild);
+        }
       }
     }
   }
@@ -1505,6 +1518,7 @@ void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, Q
 
   ui->m_3dModelViewer->clear();
   ui->m_3dModelInfoText->clear();
+  reset3DView();
 
   if (current)
   {
@@ -1529,7 +1543,64 @@ void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, Q
   }
 }
 
-void MainWindow::on_m_3dZoomSlider_valueChanged(int value)
+void MainWindow::onTimer()
 {
+  if (ui->m_3dSpinXButton->isChecked())
+  {
+    ui->m_3dModelViewer->incrementXRotation();
+  }
+  if (ui->m_3dSpinYButton->isChecked())
+  {
+    ui->m_3dModelViewer->incrementYRotation();
+  }
+  if (ui->m_3dSpinZButton->isChecked())
+  {
+    ui->m_3dModelViewer->incrementZRotation();
+  }
+}
 
+void MainWindow::timerControl()
+{
+  if (ui->m_3dSpinXButton->isChecked() ||
+      ui->m_3dSpinYButton->isChecked() ||
+      ui->m_3dSpinZButton->isChecked())
+  {
+    m_timer.start();
+  }
+  else
+  {
+    m_timer.stop();
+  }
+}
+
+void MainWindow::on_m_3dSpinXButton_toggled(bool checked)
+{
+  Q_UNUSED(checked)
+  timerControl();
+}
+
+void MainWindow::on_m_3dSpinYButton_toggled(bool checked)
+{
+  Q_UNUSED(checked)
+  timerControl();
+}
+
+void MainWindow::on_m_3dSpinZButton_toggled(bool checked)
+{
+  Q_UNUSED(checked)
+  timerControl();
+}
+
+void MainWindow::on_m_3dResetButton_clicked()
+{
+  reset3DView();
+}
+
+void MainWindow::reset3DView()
+{
+  m_timer.stop();
+  ui->m_3dSpinXButton->setChecked(false);
+  ui->m_3dSpinYButton->setChecked(false);
+  ui->m_3dSpinZButton->setChecked(false);
+  ui->m_3dModelViewer->resetView();
 }

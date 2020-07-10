@@ -1,5 +1,8 @@
 #include "glshipviewerwidget.h"
 
+#define ROTATION_STEP 16
+#define ROTATION_MAX 5760
+
 static const char *vertexShaderSourceCore =
     "#version 150\n"
     "in vec4 vertex;\n"
@@ -84,6 +87,51 @@ void GLShipViewerWidget::setZRotation(int angle)
     emit zRotationChanged(angle);
     update();
   }
+}
+
+void GLShipViewerWidget::incrementXRotation()
+{
+  m_xRot += ROTATION_STEP;
+  if (m_xRot > ROTATION_MAX)
+  {
+    m_xRot = 0;
+  }
+  emit xRotationChanged(m_xRot);
+  update();
+}
+
+void GLShipViewerWidget::incrementYRotation()
+{
+  m_yRot += ROTATION_STEP;
+  if (m_yRot > ROTATION_MAX)
+  {
+    m_yRot = 0;
+  }
+  emit yRotationChanged(m_yRot);
+  update();
+}
+
+void GLShipViewerWidget::incrementZRotation()
+{
+  m_zRot += ROTATION_STEP;
+  if (m_zRot > ROTATION_MAX)
+  {
+    m_zRot = 0;
+  }
+  emit zRotationChanged(m_zRot);
+  update();
+}
+
+void GLShipViewerWidget::resetView()
+{
+  m_xRot = 0;
+  m_yRot = 0;
+  m_zRot = 0;
+  m_zoom = 1.0;
+  update();
+  emit xRotationChanged(m_xRot);
+  emit yRotationChanged(m_yRot);
+  emit zRotationChanged(m_zRot);
 }
 
 void GLShipViewerWidget::cleanup()
@@ -201,6 +249,7 @@ void GLShipViewerWidget::paintGL()
   m_world.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
   m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
   m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
+  m_world.scale(m_zoom);
 
   QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
   m_program->bind();
@@ -235,4 +284,11 @@ void GLShipViewerWidget::mouseMoveEvent(QMouseEvent* event)
 void GLShipViewerWidget::mousePressEvent(QMouseEvent* event)
 {
   m_lastPos = event->pos();
+}
+
+void GLShipViewerWidget::wheelEvent(QWheelEvent* event)
+{
+  const float deltaf = event->delta() / 800.0f;
+  m_zoom += deltaf;
+  repaint();
 }
