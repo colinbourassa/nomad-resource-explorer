@@ -247,7 +247,7 @@ else()
   set (CPACK_DEBIAN_PACKAGE_MAINTAINER "Colin Bourassa <colin.bourassa@gmail.com>")
   set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "Graphical data file explorer for the game resources from the 1993 space trading adventure 'Nomad'")
   set (CPACK_DEBIAN_PACKAGE_SECTION "Miscellaneous")
-  set (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.13), libstdc++6 (>= 4.6.3), libqt5core5 (>= 5.12.4) | libqt5core5a (>= 5.12.4), libqt5gui5 (>= 5.12.4), libqt5widgets5 (>= 5.12.4), libqt5network5 (>= 5.12.4), libqt5multimedia5 (>= 5.12.4)")
+  set (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.13), libstdc++6 (>= 4.6.3), libqt5core5 (>= 5.12.4) | libqt5core5a (>= 5.12.4), libqt5gui5 (>= 5.12.4), libqt5widgets5 (>= 5.12.4), libqt5network5 (>= 5.12.4), libqt5multimedia5 (>= 5.12.4), libqt5opengl5 (>= 5.12.4)")
   set (CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${NRE_VER_MAJOR}.${NRE_VER_MINOR}.${NRE_VER_PATCH}-${CMAKE_SYSTEM_NAME}-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
   set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 
