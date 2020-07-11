@@ -5,6 +5,7 @@
 #include <QPalette>
 #include <QColor>
 #include <QStyleFactory>
+#include <QSurfaceFormat>
 
 int main(int argc, char *argv[])
 {
@@ -46,6 +47,11 @@ int main(int argc, char *argv[])
     parser.process(a);
     const QStringList args = parser.positionalArguments();
     const QString gameDir = (args.size() > 0) ? args[0] : QString("");
+
+    // set up multisampling for the 3D model display
+    QSurfaceFormat fmt;
+    fmt.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(fmt);
 
     MainWindow w(gameDir);
     w.show();

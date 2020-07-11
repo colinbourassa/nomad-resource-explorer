@@ -124,9 +124,10 @@ void GLShipViewerWidget::incrementZRotation()
 
 void GLShipViewerWidget::resetView()
 {
-  m_xRot = 0;
+  // preset the X and Z rotations for a reasonable view
+  m_xRot = (ROTATION_MAX / 3 * 2);
   m_yRot = 0;
-  m_zRot = 0;
+  m_zRot = (ROTATION_MAX / 8);
   m_zoom = 1.0;
   update();
   emit xRotationChanged(m_xRot);
@@ -168,13 +169,6 @@ bool GLShipViewerWidget::loadData(const QByteArray& bin, QString& modelInfo)
 
 void GLShipViewerWidget::initializeGL()
 {
-  // In this example the widget's corresponding top-level window can change
-  // several times during the widget's lifetime. Whenever this happens, the
-  // QOpenGLWidget's associated context is destroyed and a new one is created.
-  // Therefore we have to be prepared to clean up the resources on the
-  // aboutToBeDestroyed() signal, instead of the destructor. The emission of
-  // the signal will be followed by an invocation of initializeGL() where we
-  // can recreate all resources.
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &GLShipViewerWidget::cleanup);
 
   initializeOpenGLFunctions();
@@ -209,11 +203,11 @@ void GLShipViewerWidget::initializeGL()
   // Store the vertex attribute bindings for the program.
   setupVertexAttribs();
 
-  // Our camera never changes in this example.
+  // fixed camera
   m_camera.setToIdentity();
-  m_camera.translate(0, 0, -1);
+  m_camera.translate(0, 0, -2);
 
-  // Light position is fixed.
+  // fixed lighting
   m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
 
   m_program->release();
@@ -236,7 +230,6 @@ void GLShipViewerWidget::resizeGL(int w, int h)
 {
   m_proj.setToIdentity();
   m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
-
 }
 
 void GLShipViewerWidget::paintGL()

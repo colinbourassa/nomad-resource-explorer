@@ -77,7 +77,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupTimer()
 {
-  m_timer.setInterval(40);
+  m_timer.setInterval(25);
   connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimer()));
 }
 
@@ -1543,6 +1543,9 @@ void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, Q
   }
 }
 
+/**
+ * Increment the rotation value for all of the 3D model axes whose rotation button is checked.
+ */
 void MainWindow::onTimer()
 {
   if (ui->m_3dSpinXButton->isChecked())
@@ -1559,6 +1562,10 @@ void MainWindow::onTimer()
   }
 }
 
+/**
+ * Start the 3D model rotation timer if any of the rotation buttons are checked,
+ * and stop the timer if none of them are checked.
+ */
 void MainWindow::timerControl()
 {
   if (ui->m_3dSpinXButton->isChecked() ||
@@ -1573,29 +1580,48 @@ void MainWindow::timerControl()
   }
 }
 
+/**
+ * Calls a routine to start/stop the rotation timer depending on whether
+ * any of the 3D rotation buttons are checked.
+ */
 void MainWindow::on_m_3dSpinXButton_toggled(bool checked)
 {
   Q_UNUSED(checked)
   timerControl();
 }
 
+/**
+ * Calls a routine to start/stop the rotation timer depending on whether
+ * any of the 3D rotation buttons are checked.
+ */
 void MainWindow::on_m_3dSpinYButton_toggled(bool checked)
 {
   Q_UNUSED(checked)
   timerControl();
 }
 
+/**
+ * Calls a routine to start/stop the rotation timer depending on whether
+ * any of the 3D rotation buttons are checked.
+ */
 void MainWindow::on_m_3dSpinZButton_toggled(bool checked)
 {
   Q_UNUSED(checked)
   timerControl();
 }
 
+/**
+ * Responds to the "reset" button being clicked by calling a routine
+ * that resets the view parameters.
+ */
 void MainWindow::on_m_3dResetButton_clicked()
 {
   reset3DView();
 }
 
+/**
+ * Reset the rotation and zoom of the 3D view to the original values.
+ */
 void MainWindow::reset3DView()
 {
   m_timer.stop();
