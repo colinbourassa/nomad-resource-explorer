@@ -90,8 +90,8 @@ private slots:
   void on_m_3dSpinZButton_toggled(bool checked);
   void timerControl();
   void reset3DView();
-
   void on_m_3dResetButton_clicked();
+  void on_m_paletteTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
   Ui::MainWindow *ui;
@@ -156,6 +156,7 @@ private:
   void populateConversationWidgets();
   void populateMissionWidgets();
   void populate3dModelWidgets();
+  void populatePaletteWidgets();
   void loadAlienFrame(int frameId);
   void populateConversationTopicTable(int lastSelectedTopicId = -1);
   void populateTopicTableForCategory(ConvTopicCategory category, QMap<int,QString> topicList, int lastSelectedTopicId);

@@ -62,15 +62,22 @@ void Palette::clear()
  * overlays it on the default VGA palette, and returns it in the provided vector.
  * @return True when loading the palette data was successful, false otherwise
  */
-bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette) const
+bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette, bool prefillWithDefaultVga) const
 {
   bool status = false;
   QByteArray paldata;
 
   if (m_lib->getFileByName(datContainer, palFileName, paldata))
   {
-    // start with the default VGA palette, so that we can overlay the palette subset from the file
-    palette = s_defaultVgaPalette;
+    if (prefillWithDefaultVga)
+    {
+      // start with the default VGA palette, so that we can overlay the palette subset from the file
+      palette = s_defaultVgaPalette;
+    }
+    else
+    {
+      palette.fill(QColor(0, 0, 0).rgb(), 256);
+    }
 
     // Some palettes (such as GAME.PAL) have fewer than 256 colors,
     // but we'll want to fill in the remaining colors because some images
@@ -146,7 +153,25 @@ bool Palette::gamePalette(QVector<QRgb>& palette)
  * overlays it on the default VGA palette, and returns it in the provided vector.
  * @return True when loading the palette data was successful, false otherwise
  */
-bool Palette::paletteByName(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette) const
+bool Palette::paletteByName(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette, bool prefillWithDefaultVga) const
 {
-  return loadPalData(datContainer, palFileName, palette);
+  return loadPalData(datContainer, palFileName, palette, prefillWithDefaultVga);
+}
+
+
+/**
+ * Gets a list of all *.PAL files across all of the DAT containers used by the game.
+ */
+QMap<DatFileType,QStringList> Palette::getAllPaletteList()
+{
+  QMap<DatFileType,QStringList> palContainerList;
+
+  for (int datIdx = 0; datIdx < DatFileType_NUM_DAT_FILES; datIdx++)
+  {
+    const DatFileType datType = static_cast<DatFileType>(datIdx);
+    QStringList palsInDat = m_lib->getFilenamesByExtension(datType, ".PAL");
+    palContainerList[datType] = palsInDat;
+  }
+
+  return palContainerList;
 }

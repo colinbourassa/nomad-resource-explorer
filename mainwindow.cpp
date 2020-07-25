@@ -196,6 +196,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateConversationWidgets();
   populateMissionWidgets();
   populate3dModelWidgets();
+  populatePaletteWidgets();
 }
 
 /**
@@ -571,6 +572,35 @@ void MainWindow::populate3dModelWidgets()
 
   ui->m_3dModelTree->expandAll();
   ui->m_3dModelTree->resizeColumnToContents(0);
+}
+
+/**
+ * Populates the tree of palette (PAL) files.
+ */
+void MainWindow::populatePaletteWidgets()
+{
+  ui->m_paletteTree->clear();
+
+  const QMap<DatFileType,QStringList> palList = m_palette.getAllPaletteList();
+  foreach (DatFileType dat, palList.keys())
+  {
+    if (palList[dat].size() > 0)
+    {
+      const QString datFilename = m_lib.s_datFileNames[dat];
+      QTreeWidgetItem* datTreeParent = new QTreeWidgetItem(ui->m_paletteTree);
+      datTreeParent->setText(0, datFilename);
+
+      foreach (QString palFilename, palList[dat])
+      {
+        QTreeWidgetItem* palChild = new QTreeWidgetItem();
+        palChild->setText(0, palFilename);
+        datTreeParent->addChild(palChild);
+      }
+    }
+  }
+
+  ui->m_paletteTree->expandAll();
+  ui->m_paletteTree->resizeColumnToContents(0);
 }
 
 /**
@@ -1629,4 +1659,38 @@ void MainWindow::reset3DView()
   ui->m_3dSpinYButton->setChecked(false);
   ui->m_3dSpinZButton->setChecked(false);
   ui->m_3dModelViewer->resetView();
+}
+
+void MainWindow::on_m_paletteTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+{
+  Q_UNUSED(previous)
+
+  if (current)
+  {
+    const QString palFilename = current->text(0);
+    if (current->parent())
+    {
+      const QString datFilename = current->parent()->text(0);
+      const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
+
+      QVector<QRgb> pal;
+
+      if (m_palette.paletteByName(dat, palFilename, pal, false))
+      {
+        ui->m_paletteTable->clear();
+        ui->m_paletteTable->setRowCount(16);
+        ui->m_paletteTable->setColumnCount(16);
+
+        for (int palIdx = 0; (palIdx < pal.size() && palIdx < 256); palIdx++)
+        {
+          const int rowIdx = palIdx / 16;
+          const int colIdx = palIdx % 16;
+          QTableWidgetItem* cell = new QTableWidgetItem();
+          cell->setBackgroundColor(pal[palIdx]);
+          ui->m_paletteTable->setItem(rowIdx, colIdx, cell);
+        }
+        ui->m_paletteTable->resizeColumnsToContents();
+      }
+    }
+  }
 }

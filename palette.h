@@ -14,7 +14,8 @@ public:
 
   void defaultVgaPalette(QVector<QRgb>& palette);
   bool gamePalette(QVector<QRgb>& palette);
-  bool paletteByName(DatFileType datContainer, QString palFilename, QVector<QRgb>& palette) const;
+  bool paletteByName(DatFileType datContainer, QString palFilename, QVector<QRgb>& palette, bool prefillWithDefaultVga = true) const;
+  QMap<DatFileType,QStringList> getAllPaletteList();
 
 private:
   static const QVector<QRgb> s_defaultVgaPalette;
@@ -22,7 +23,7 @@ private:
   DatLibrary* m_lib;
   QVector<QRgb> m_gamePal;
 
-  bool loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette) const;
+  bool loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette, bool prefillWithDefaultVga = true) const;
 };
 
 #endif

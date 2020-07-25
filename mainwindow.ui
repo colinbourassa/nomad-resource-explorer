@@ -1578,6 +1578,41 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="m_tabPalettes">
+       <attribute name="title">
+        <string>Palettes</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,3,1">
+        <item>
+         <widget class="QTreeWidget" name="m_paletteTree">
+          <attribute name="headerVisible">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="m_paletteTable"/>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>223</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
