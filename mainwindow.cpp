@@ -1542,6 +1542,11 @@ void MainWindow::on_m_missionEndText_anchorClicked(const QUrl& arg1)
   showAnchorTooltip(arg1);
 }
 
+/**
+ * Reponds to a 3D model filename being selected by loading the model's
+ * data into the 3D viewer and displaying its informational text
+ * in the associated box.
+ */
 void MainWindow::on_m_3dModelTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
   Q_UNUSED(previous)
@@ -1661,6 +1666,10 @@ void MainWindow::reset3DView()
   ui->m_3dModelViewer->resetView();
 }
 
+/**
+ * Responds to a new palette filename being selected by loading and
+ * displaying the palette data in the table widget.
+ */
 void MainWindow::on_m_paletteTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
   Q_UNUSED(previous)
