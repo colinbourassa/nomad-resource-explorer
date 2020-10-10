@@ -166,6 +166,13 @@ if (MINGW)
     message (SEND_ERROR "Could not find Qt5Network library!")
   endif ()
 
+  get_target_property (QT5OPENGL_LIB Qt5::OpenGL LOCATION)
+  if (QT5OPENGL_LIB)
+    message (STATUS "Qt5::OpenGL location is ${QT5OPENGL_LIB}")
+  else ()
+    message (SEND_ERROR "Could not find Qt5OpenGL library!")
+  endif ()
+
   get_target_property (QT5WINDOWS_LIB Qt5::QWindowsIntegrationPlugin LOCATION)
   if (QT5WINDOWS_LIB)
     message (STATUS "Qt5::QWindows location is ${QT5WINDOWS_LIB}")
@@ -199,6 +206,7 @@ if (MINGW)
                   ${QT5WIDGETS_LIB}
                   ${QT5MULTIMEDIA_LIB}
                   ${QT5NETWORK_LIB}
+                  ${QT5OPENGL_LIB}
                   ${QT5GUI_LIB}
            DESTINATION ".")
   install (FILES ${QT5WINDOWS_LIB}      DESTINATION "platforms")
