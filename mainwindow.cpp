@@ -1686,10 +1686,6 @@ void MainWindow::on_m_paletteTree_currentItemChanged(QTreeWidgetItem* current, Q
 
       if (m_palette.paletteByName(dat, palFilename, pal, false))
       {
-        ui->m_paletteTable->clear();
-        ui->m_paletteTable->setRowCount(16);
-        ui->m_paletteTable->setColumnCount(16);
-
         for (int palIdx = 0; (palIdx < pal.size() && palIdx < 256); palIdx++)
         {
           const int rowIdx = palIdx / 16;

@@ -1596,7 +1596,168 @@
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="m_paletteTable"/>
+         <widget class="QTableWidget" name="m_paletteTable">
+          <row>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>5</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>6</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>7</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>8</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>9</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>A</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>B</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>C</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>D</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>E</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>F</string>
+           </property>
+          </row>
+          <column>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>5</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>6</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>7</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>8</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>9</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>A</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>B</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>C</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>D</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>E</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>F</string>
+           </property>
+          </column>
+         </widget>
         </item>
         <item>
          <spacer name="horizontalSpacer_2">
