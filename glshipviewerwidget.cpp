@@ -281,7 +281,7 @@ void GLShipViewerWidget::mousePressEvent(QMouseEvent* event)
 
 void GLShipViewerWidget::wheelEvent(QWheelEvent* event)
 {
-  const float deltaf = event->delta() / 800.0f;
+  const float deltaf = event->angleDelta().y() / 800.0f;
   m_zoom += deltaf;
   repaint();
 }

@@ -16,6 +16,7 @@
 #include <QCursor>
 #include <QPair>
 #include <QIcon>
+#include <QBrush>
 #include "enums.h"
 #include "tablenumberitem.h"
 
@@ -1691,7 +1692,7 @@ void MainWindow::on_m_paletteTree_currentItemChanged(QTreeWidgetItem* current, Q
           const int rowIdx = palIdx / 16;
           const int colIdx = palIdx % 16;
           QTableWidgetItem* cell = new QTableWidgetItem();
-          cell->setBackgroundColor(pal[palIdx]);
+          cell->setBackground(QBrush(pal[palIdx]));
           ui->m_paletteTable->setItem(rowIdx, colIdx, cell);
         }
         ui->m_paletteTable->resizeColumnsToContents();
