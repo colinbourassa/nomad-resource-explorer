@@ -4,7 +4,7 @@
 #define ROTATION_MAX 5760
 
 static const char *vertexShaderSourceCore =
-    "#version 150\n"
+    "#version 140\n"
     "in vec4 vertex;\n"
     "in vec3 normal;\n"
     "in vec3 color;\n"
@@ -22,7 +22,7 @@ static const char *vertexShaderSourceCore =
     "}\n";
 
 static const char *fragmentShaderSourceCore =
-    "#version 150\n"
+    "#version 140\n"
     "in highp vec3 vert;\n"
     "in highp vec3 vertNormal;\n"
     "in highp vec3 vertColor;\n"
