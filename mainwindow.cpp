@@ -216,16 +216,23 @@ void MainWindow::setupAudio()
 
   QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
 
-  if (info.isFormatSupported(m_audioFormat))
+  if (info.isNull())
   {
-    m_audioOutput = new QAudioOutput(m_audioFormat, this);
-    connect(m_audioOutput, SIGNAL(stateChanged(QAudio::State)), this, SLOT(onAudioStateChanged(QAudio::State)));
-    setAudioStateLabel(m_audioOutput->state());
+    ui->m_soundWarningLabel->setText("Warning: no default audio device found. Audio output is disabled.");
   }
   else
   {
-    ui->m_soundWarningLabel->setText("Warning: device audio output device does not support this audio format."
-                                     " Sound output is disabled.");
+    if (info.isFormatSupported(m_audioFormat))
+    {
+      m_audioOutput = new QAudioOutput(m_audioFormat, this);
+      connect(m_audioOutput, SIGNAL(stateChanged(QAudio::State)), this, SLOT(onAudioStateChanged(QAudio::State)));
+      setAudioStateLabel(m_audioOutput->state());
+    }
+    else
+    {
+      ui->m_soundWarningLabel->setText(
+        "Default audio device does not support required output format. Sound output is disabled.");
+    }
   }
 }
 
