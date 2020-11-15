@@ -17,6 +17,8 @@
 #include <QPair>
 #include <QIcon>
 #include <QBrush>
+#include <QMessageBox>
+#include <QDir>
 #include "enums.h"
 #include "tablenumberitem.h"
 
@@ -907,6 +909,41 @@ void MainWindow::on_m_soundPlayButton_clicked()
 }
 
 /**
+ * Prompts for a target filename and saves the selected audio as a .WAV file.
+ */
+void MainWindow::on_m_soundMakeWav_clicked()
+{
+  if (m_currentNNVSoundId >= 0)
+  {
+    m_audioPcmData.clear();
+    if (m_audio.readSound(m_currentSoundDat, m_currentNNVFilename, m_currentNNVSoundId, m_audioPcmData))
+    {
+      const int dotPosition = m_currentNNVFilename.indexOf('.');
+      const QString baseFilename = (dotPosition > 0) ? m_currentNNVFilename.mid(0, dotPosition) : m_currentNNVFilename;
+      const QString defaultWavName = QString("%1/%2-%3.wav").arg(QDir::currentPath())
+                                                            .arg(baseFilename)
+                                                            .arg(m_currentNNVSoundId)
+                                                            .toLower();
+
+      QString saveName = QFileDialog::getSaveFileName(this, "Select output .WAV file name", defaultWavName, "WAV sounds (*.wav)");
+      if (!saveName.isEmpty())
+      {
+        QDir::setCurrent(QFileInfo(saveName).absolutePath());
+        if (!saveName.contains('.'))
+        {
+          saveName += ".wav";
+        }
+        m_audio.writeWavFile(saveName, m_audioPcmData);
+      }
+    }
+    else
+    {
+      QMessageBox::warning(this, "Error", "Failed to read audio data. Unable to save output file.");
+    }
+  }
+}
+
+/**
  * Stops the audio output.
  * The enable/disable state of the sound related widgets will be updated by the stateChanged()
  * handler for the QAudioOutput object, which will be triggered by stopping the playback.
@@ -974,6 +1011,8 @@ void MainWindow::setSoundButtonStates()
     ui->m_soundPrevButton->setEnabled(false);
     ui->m_soundStopButton->setEnabled(false);
   }
+
+  ui->m_soundMakeWav->setEnabled(m_currentNNVSoundId >= 0);
 }
 
 /**

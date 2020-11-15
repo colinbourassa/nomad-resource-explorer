@@ -1,5 +1,9 @@
 #include <QtEndian>
 #include <QString>
+#include <QFile>
+#include <QIODevice>
+#include <QDataStream>
+#include <QtEndian>
 #include <stdint.h>
 #include <string.h>
 #include "audio.h"
@@ -226,4 +230,40 @@ QMap<DatFileType,QStringList> Audio::getAllSoundList()
   }
 
   return nnvContainerList;
+}
+
+/**
+ * Creates a .WAV file (with the specified name) containing the raw PCM audio
+ * data in the provided buffer, prefixed with a .WAV header.
+ */
+bool Audio::writeWavFile(const QString filename, const QByteArray& pcmData)
+{
+  bool status = false;
+
+  QFile outFile (filename);
+  if (outFile.open(QIODevice::WriteOnly))
+  {
+    const quint32 pcmDataSize = pcmData.size();
+    QByteArray outBuf;
+    QDataStream ds (&outBuf, QIODevice::WriteOnly);
+    ds.setByteOrder(QDataStream::LittleEndian);
+    ds << quint32(0x46464952); // ChunkID ("RIFF")
+    ds << quint32(pcmDataSize + 32); // ChunkSize
+    ds << quint32(0x45564157); // Format ("WAVE")
+    ds << quint32(0x20746d66); // Subchunk1ID ("fmt ")
+    ds << quint32(16);         // Subchunk1Size
+    ds << quint16(1);          // AudioFormat
+    ds << quint16(1);          // NumChannels
+    ds << quint32(7042);       // SampleRate
+    ds << quint32(7042);       // ByteRate
+    ds << quint16(1);          // BlockAlign
+    ds << quint16(8);          // BitsPerSample
+    ds << quint32(0x61746164); // Subchunk2ID ("data")
+    ds << quint32(pcmDataSize); // Subchunk2Size
+    ds << pcmData;
+    status = (outFile.write(outBuf) == outBuf.size());
+    outFile.close();
+  }
+
+  return status;
 }

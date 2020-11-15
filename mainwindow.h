@@ -61,6 +61,7 @@ private slots:
   void on_m_soundPlayButton_clicked();
   void on_m_soundNextButton_clicked();
   void on_m_soundStopButton_clicked();
+  void on_m_soundMakeWav_clicked();
   void on_m_shipTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_factTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_fullscreenTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);

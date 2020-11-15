@@ -16,6 +16,7 @@ public:
   bool readSound(DatFileType dat, QString nnvContainer, int soundId, QByteArray& pcmData);
   int getNumberOfSoundsInNNV(DatFileType dat, QString nnvContainer);
   QMap<DatFileType, QStringList> getAllSoundList();
+  bool writeWavFile(const QString filename, const QByteArray& pcmData);
 
 private:
   static const int8_t s_deltaTable[];
