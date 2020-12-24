@@ -1422,7 +1422,7 @@ QString MainWindow::getNameForGameTextCommandParameter(GTxtCmd cmd, int param)
     const AlienRace race = static_cast<AlienRace>(param);
     name = s_raceNames.contains(race) ? s_raceNames[race] : "(invalid)";
   }
-  else if (cmd == GTxtCmd_GrantKnowledgePlace)
+  else if ((cmd == GTxtCmd_GrantKnowledgePlace) || (cmd == GTxtCmd_StorePlaceIDInSetupTable))
   {
     name = m_places.getName(param);
   }
