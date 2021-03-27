@@ -124,13 +124,6 @@ if (MINGW)
     message (SEND_ERROR "Could not find libwinpthread!")
   endif ()
 
-  find_package (ZLIB REQUIRED)
-  if (ZLIB_FOUND)
-    message ("ZLIB location is ${ZLIB_LIBRARIES}")
-  else ()
-    message (SEND_ERROR "Could not find zlib!")
-  endif ()
-
   get_target_property (QT5CORE_LIB Qt5::Core LOCATION)
   if (QT5CORE_LIB)
     message (STATUS "Qt5::Core location is ${QT5CORE_LIB}")
@@ -201,7 +194,6 @@ if (MINGW)
                   ${LIBSTDCPP}
                   ${LIBWINPTHREAD}
                   ${LIBZSTD}
-                  ${ZLIB_LIBRARIES}
                   ${QT5CORE_LIB}
                   ${QT5WIDGETS_LIB}
                   ${QT5MULTIMEDIA_LIB}
