@@ -104,7 +104,7 @@ static const QMap<GTxtCmd,QString> g_gameTextCommandName =
   { GTxtCmd_SetAlienConvBehaviorFlag, "Set alien behavior flag" },
   { GTxtCmd_SetAlienAttrMax,          "Set alien attribute to max" },
   { GTxtCmd_SetAlienAttrMin,          "Set alien attribute to min" },
-  { GTxtCmd_ModifyMissionTable,       "Modify mission table" }
+  { GTxtCmd_ModifyMissionTable,       "Mark mission complete" }
 };
 
 /**

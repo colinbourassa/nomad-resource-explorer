@@ -165,6 +165,10 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
           {
             // interpret bytes as little-endian 16-bit word
             param = (static_cast<uint8_t>(data[pos]) + (0x100 * static_cast<uint8_t>(data[pos+1])));
+
+            // Note: the ModifyEncountRelate command actually takes two single-byte parameters.
+            // Since this is the only command with parameters in this format, we're combining them
+            // into a single 16-bit word for the sake of consistency with the other commands.
           }
 
           commands.append(QPair<GTxtCmd,int>(cmd, param));

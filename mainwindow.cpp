@@ -1434,6 +1434,14 @@ QString MainWindow::getNameForGameTextCommandParameter(GTxtCmd cmd, int param)
   {
     name = m_facts.getFact(param).text;
   }
+  else if (cmd == GTxtCmd_ModifyEncountRelate)
+  {
+    const uint8_t byteA = (param & 0xFF);
+    const uint8_t byteB = (param >> 8);
+    const AlienRace race = static_cast<AlienRace>(byteA);
+    const QString raceName = s_raceNames.contains(race) ? s_raceNames[race] : "(invalid)";
+    name = QString("%1: %2").arg(raceName).arg(byteB);
+  }
 
   return name;
 }
@@ -1559,7 +1567,20 @@ void MainWindow::populateGameTextCommandList(QTableWidget* table, QVector<QPair<
 
     table->insertRow(rowcount);
     table->setItem(rowcount, 0, new QTableWidgetItem(g_gameTextCommandName[command]));
-    table->setItem(rowcount, 1, new QTableWidgetItem(QString("%1").arg(param)));
+
+    // the command ModifyEncountRelate is a special case
+    // in that it takes two 8-bit parameters
+    if (command == GTxtCmd_ModifyEncountRelate)
+    {
+      const uint8_t byteA = (param & 0xFF);
+      const uint8_t byteB = (param >> 8);
+      const QString twoParamStr = QString("%1, %2").arg(byteA).arg(byteB);
+      table->setItem(rowcount, 1, new QTableWidgetItem(twoParamStr));
+    }
+    else
+    {
+      table->setItem(rowcount, 1, new QTableWidgetItem(QString("%1").arg(param)));
+    }
 
     const QString paramName = getNameForGameTextCommandParameter(command, param);
     if (!paramName.isEmpty())
