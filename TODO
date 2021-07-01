@@ -1,5 +1,9 @@
 - Display of each ship's equipment
 
-- Play game to reveal "default" dialog lines (e.g. "I don't know anything about that.")
-  Locate them in the talk text files, and work backwards to determine how their indexing works.
+- Add name of palette that was used for surface textures, aliens
 
+- Sound visualization
+
+- Clear palette display when the selection leaves an item (so that it remains clear when a DAT container is selected)
+
+- Mark the unused/skipped palette entries somehow?

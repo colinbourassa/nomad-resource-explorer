@@ -38,7 +38,7 @@ enum GTxtCmd
   GTxtCmd_ModifyEncountRelate      = 0x10,
   GTxtCmd_StoreShipIDInSetupTab    = 0x11,
   GTxtCmd_StorePlaceIDInSetupTable = 0x12,
-  GTxtCmd_SetAlienConvBehaviorFlag = 0x13,
+  GTxtCmd_EndConversation          = 0x13,
   GTxtCmd_SetAlienAttrMax          = 0x14,
   GTxtCmd_SetAlienAttrMin          = 0x15,
   GTxtCmd_ModifyMissionTable       = 0x16
@@ -71,7 +71,7 @@ static const QMap<GTxtCmd,int> g_gameTextParamCount =
   { GTxtCmd_ModifyEncountRelate,      2 },
   { GTxtCmd_StoreShipIDInSetupTab,    1 },
   { GTxtCmd_StorePlaceIDInSetupTable, 2 },
-  { GTxtCmd_SetAlienConvBehaviorFlag, 0 },
+  { GTxtCmd_EndConversation,          0 },
   { GTxtCmd_SetAlienAttrMax,          0 },
   { GTxtCmd_SetAlienAttrMin,          0 },
   { GTxtCmd_ModifyMissionTable,       1 }
@@ -101,7 +101,7 @@ static const QMap<GTxtCmd,QString> g_gameTextCommandName =
   { GTxtCmd_ModifyEncountRelate,      "Modify encount_relate table" },
   { GTxtCmd_StoreShipIDInSetupTab,    "Store ship ID in setup table" },
   { GTxtCmd_StorePlaceIDInSetupTable, "Store place ID in setup table" },
-  { GTxtCmd_SetAlienConvBehaviorFlag, "Set alien behavior flag" },
+  { GTxtCmd_EndConversation,          "End conversation" },
   { GTxtCmd_SetAlienAttrMax,          "Set alien attribute to max" },
   { GTxtCmd_SetAlienAttrMin,          "Set alien attribute to min" },
   { GTxtCmd_ModifyMissionTable,       "Mark mission complete" }
