@@ -58,25 +58,34 @@ void Palette::clear()
 }
 
 /**
- * Loads a palette file with the specified name (and from the specified DAT container),
- * overlays it on the default VGA palette, and returns it in the provided vector.
+ * Loads a palette file with the specified name (and from the specified DAT container)
+ * and returns it in the provided vector. If a pointer to a startIndex location is given,
+ * only the palette colors actually contained in the indicated file will be returned;
+ * otherwise, it is assumed that the caller wants a full 256-color palette and the
+ * color data in the indicated file will be overlayed on a standard VGA palette.
  * @return True when loading the palette data was successful, false otherwise
  */
-bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette, bool prefillWithDefaultVga) const
+bool Palette::loadPalData(DatFileType datContainer,
+                          QString palFileName,
+                          QVector<QRgb>& palette,
+                          int* startIndex) const
 {
   bool status = false;
   QByteArray paldata;
 
   if (m_lib->getFileByName(datContainer, palFileName, paldata))
   {
-    if (prefillWithDefaultVga)
+    bool prepopulated = false;
+    palette.clear();
+
+    // if the caller didn't provide a pointer to a location we can use
+    // to report the number of colors in the palette, we assume that
+    // they want a full 256-color palette and we'll overlay the palette
+    // file on top of the default VGA colors
+    if (startIndex == nullptr)
     {
-      // start with the default VGA palette, so that we can overlay the palette subset from the file
       palette = s_defaultVgaPalette;
-    }
-    else
-    {
-      palette.fill(QColor(0, 0, 0).rgb(), 256);
+      prepopulated = true;
     }
 
     // Some palettes (such as GAME.PAL) have fewer than 256 colors,
@@ -90,7 +99,13 @@ bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector
 
     if (paldata.size() >= 3)
     {
-      uint8_t startIndex = static_cast<uint8_t>(paldata[1]);
+      int srcStartIndex = static_cast<uint8_t>(paldata[1]);
+
+      if (startIndex)
+      {
+        *startIndex = srcStartIndex;
+      }
+
       int colorCount = paldata[2];
 
       if (colorCount == 0)
@@ -113,7 +128,14 @@ bool Palette::loadPalData(DatFileType datContainer, QString palFileName, QVector
           int g = (rawbyteB << 2) | (rawbyteB >> 4);
           int b = (rawbyteC << 2) | (rawbyteC >> 4);
 
-          palette[startIndex + sourcePalIdx] = qRgb(r,g,b);
+          if (prepopulated)
+          {
+            palette[sourcePalIdx + srcStartIndex] = qRgb(r,g,b);
+          }
+          else
+          {
+            palette.append(qRgb(r,g,b));
+          }
         }
 
         status = true;
@@ -153,9 +175,12 @@ bool Palette::gamePalette(QVector<QRgb>& palette)
  * overlays it on the default VGA palette, and returns it in the provided vector.
  * @return True when loading the palette data was successful, false otherwise
  */
-bool Palette::paletteByName(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette, bool prefillWithDefaultVga) const
+bool Palette::paletteByName(DatFileType datContainer,
+                            QString palFileName,
+                            QVector<QRgb>& palette,
+                            int* startIndex) const
 {
-  return loadPalData(datContainer, palFileName, palette, prefillWithDefaultVga);
+  return loadPalData(datContainer, palFileName, palette, startIndex);
 }
 
 

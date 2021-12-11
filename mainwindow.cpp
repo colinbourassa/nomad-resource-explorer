@@ -1742,6 +1742,8 @@ void MainWindow::on_m_paletteTree_currentItemChanged(QTreeWidgetItem* current, Q
 {
   Q_UNUSED(previous)
 
+  ui->m_paletteTable->clearContents();
+
   if (current)
   {
     const QString palFilename = current->text(0);
@@ -1751,15 +1753,30 @@ void MainWindow::on_m_paletteTree_currentItemChanged(QTreeWidgetItem* current, Q
       const DatFileType dat = DatLibrary::s_datFileNames.key(datFilename);
 
       QVector<QRgb> pal;
+      int startIndex = 0;
 
-      if (m_palette.paletteByName(dat, palFilename, pal, false))
+      if (m_palette.paletteByName(dat, palFilename, pal, &startIndex))
       {
-        for (int palIdx = 0; (palIdx < pal.size() && palIdx < 256); palIdx++)
+        const int palSize = pal.size();
+
+        for (int palIdx = 0; palIdx < 256; palIdx++)
         {
           const int rowIdx = palIdx / 16;
           const int colIdx = palIdx % 16;
           QTableWidgetItem* cell = new QTableWidgetItem();
-          cell->setBackground(QBrush(pal[palIdx]));
+
+          if ((palIdx < startIndex) || (palIdx >= (startIndex + palSize)))
+          {
+            // specially mark the cells that are outside of the palette data bounds
+            cell->setText("X");
+            cell->setTextAlignment(Qt::AlignCenter);
+            cell->setBackground(QBrush(qRgb(0,0,0)));
+          }
+          else
+          {
+            cell->setBackground(QBrush(pal[palIdx - startIndex]));
+          }
+
           ui->m_paletteTable->setItem(rowIdx, colIdx, cell);
         }
         ui->m_paletteTable->resizeColumnsToContents();
@@ -1767,3 +1784,4 @@ void MainWindow::on_m_paletteTree_currentItemChanged(QTreeWidgetItem* current, Q
     }
   }
 }
+

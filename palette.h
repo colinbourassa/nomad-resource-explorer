@@ -1,9 +1,9 @@
 #ifndef PALETTE_H
 #define PALETTE_H
 
+#include <QString>
 #include <QVector>
 #include <QRgb>
-#include <stdint.h>
 #include "datlibrary.h"
 
 class Palette
@@ -14,7 +14,10 @@ public:
 
   void defaultVgaPalette(QVector<QRgb>& palette);
   bool gamePalette(QVector<QRgb>& palette);
-  bool paletteByName(DatFileType datContainer, QString palFilename, QVector<QRgb>& palette, bool prefillWithDefaultVga = true) const;
+  bool paletteByName(DatFileType datContainer,
+                     QString palFilename,
+                     QVector<QRgb>& palette,
+                     int* startIndex = nullptr) const;
   QMap<DatFileType,QStringList> getAllPaletteList();
 
 private:
@@ -23,7 +26,10 @@ private:
   DatLibrary* m_lib;
   QVector<QRgb> m_gamePal;
 
-  bool loadPalData(DatFileType datContainer, QString palFileName, QVector<QRgb>& palette, bool prefillWithDefaultVga = true) const;
+  bool loadPalData(DatFileType datContainer,
+                   QString palFileName,
+                   QVector<QRgb>& palette,
+                   int* startIndex = nullptr) const;
 };
 
 #endif
