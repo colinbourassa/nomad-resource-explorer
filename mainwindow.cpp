@@ -23,6 +23,8 @@
 #include "tablenumberitem.h"
 
 #define ICON_PATH ":/icon/icon/nre-48x48.png"
+#define SURFACE_TEXTURE_PAL_LABEL_PREFIX "Surface texture palette: "
+#define ALIEN_PAL_LABEL_PREFIX "Alien palette: "
 
 MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   QMainWindow(parent),
@@ -150,6 +152,7 @@ void MainWindow::clearPlaceLabels()
   ui->m_placeRaceData->clear();
   ui->m_placeTemperatureData->clear();
   ui->m_placeRepData->clear();
+  ui->m_planetTexturePalLabel->setText(SURFACE_TEXTURE_PAL_LABEL_PREFIX);
 }
 
 /**
@@ -738,11 +741,13 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
 
         if (id != 0x132) // special check for Second Harmony space station, which uses a 3D model
         {
-          QImage surfaceImg = m_places.getPlaceSurfaceImage(id, status);
+          QString palFilename = "";
+          const QImage surfaceImg = m_places.getPlaceSurfaceImage(id, status, palFilename);
           if (status)
           {
             m_planetSurfaceScene.addPixmap(QPixmap::fromImage(surfaceImg));
             ui->m_planetView->setScene(&m_planetSurfaceScene);
+            ui->m_planetTexturePalLabel->setText(QString(SURFACE_TEXTURE_PAL_LABEL_PREFIX) + palFilename);
           }
         }
 
@@ -794,6 +799,8 @@ void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentC
 
   m_alienFrames.clear();
   m_aliens.clear();
+  ui->m_alienPaletteLabel->setText(ALIEN_PAL_LABEL_PREFIX);
+
   const QTableWidgetItem* const selectedItem = ui->m_alienTable->item(currentRow, 0);
 
   if (selectedItem)
@@ -803,16 +810,19 @@ void MainWindow::on_m_alienTable_currentCellChanged(int currentRow, int currentC
     Alien a;
     if (m_aliens.getAlien(id, a))
     {
-      if (m_aliens.getAnimationFrames(id, m_alienFrames) && (m_alienFrames.count() > 0))
+      QString palFilename = "";
+      if (m_aliens.getAnimationFrames(id, m_alienFrames, palFilename) && (m_alienFrames.count() > 0))
       {
         ui->m_alienFrameSlider->setEnabled(true);
         ui->m_alienFrameSlider->setMaximum(m_alienFrames.count() - 1);
         ui->m_alienFrameSlider->setSliderPosition(0);
+        ui->m_alienPaletteLabel->setText(QString(ALIEN_PAL_LABEL_PREFIX) + palFilename);
         loadAlienFrame(0);
       }
       else
       {
         ui->m_alienFrameSlider->setMaximum(63);
+        ui->m_alienFrameSlider->setValue(0);
         ui->m_alienFrameSlider->setEnabled(false);
         m_alienScene.clear();
         ui->m_alienView->setScene(&m_alienScene);

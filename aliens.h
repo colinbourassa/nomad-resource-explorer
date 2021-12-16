@@ -37,7 +37,7 @@ public:
   QString getName(int id);
   AlienRace getRace(int id);
   bool getAlien(int id, Alien& alien);
-  bool getAnimationFrames(int id, QMap<int,QImage>& frames);
+  bool getAnimationFrames(int id, QMap<int,QImage>& frames, QString& paletteFile);
 
 protected:
   bool populateList();

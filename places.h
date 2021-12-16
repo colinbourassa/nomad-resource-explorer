@@ -3,6 +3,7 @@
 
 #include <QImage>
 #include <QMap>
+#include <QString>
 #include <stdint.h>
 #include "enums.h"
 #include "datlibrary.h"
@@ -47,7 +48,7 @@ public:
   void clear();
   QMap<int,Place> getPlaceList();
   bool getPlace(int id, Place& p);
-  QImage getPlaceSurfaceImage(int id, bool& status);
+  QImage getPlaceSurfaceImage(int id, bool& status, QString& palFilename);
   QString getName(int id);
 
 protected:

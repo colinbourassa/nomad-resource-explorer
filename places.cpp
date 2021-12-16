@@ -185,13 +185,13 @@ bool Places::getPlace(int id, Place& place)
  * Creates an image from the texture file and palette associated with the provided place ID.
  * If successful, the parameter 'status' is set to true; otherwise, it is set to false.
  */
-QImage Places::getPlaceSurfaceImage(int id, bool& status)
+QImage Places::getPlaceSurfaceImage(int id, bool& status, QString& palFilename)
 {
   const uint8_t baseNum = s_planetTextureMapping[id * 2];
   const unsigned char palLetter = s_planetTextureMapping[id * 2 + 1];
 
   const QString plnFilename = QString("WORLD%1a.pln").arg(baseNum, 2, 10, QChar('0'));
-  const QString palFilename = QString("WORLD%1%2.pal").arg(baseNum, 2, 10, QChar('0')).arg(QString(palLetter));
+  palFilename = QString("WORLD%1%2.pal").arg(baseNum, 2, 10, QChar('0')).arg(QString(palLetter));
 
   QByteArray plnFile;
   QVector<QRgb> pal;

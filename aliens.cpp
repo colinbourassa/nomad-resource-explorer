@@ -188,7 +188,7 @@ bool Aliens::populateList()
  * @return True when the animation file and all of the frame data was read and
  * decoded successfully; false otherwise.
  */
-bool Aliens::getAnimationFrames(int alienId, QMap<int, QImage>& frames)
+bool Aliens::getAnimationFrames(int alienId, QMap<int, QImage>& frames, QString& palFilename)
 {
   bool status = true;
 
@@ -201,7 +201,7 @@ bool Aliens::getAnimationFrames(int alienId, QMap<int, QImage>& frames)
     if (m_lib->getFileByName(DatFileType_ANIM, anmFilename, anmFileData))
     {
       // the ASCII string for the palette filename begins at offset 00 in the ANM file
-      const QString palFilename = QString::fromLocal8Bit(anmFileData.data());
+      palFilename = QString::fromLocal8Bit(anmFileData.data());
       QVector<QRgb> pal;
 
       if (m_pal->paletteByName(DatFileType_ANIM, palFilename, pal))
