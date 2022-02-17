@@ -1480,9 +1480,9 @@ void MainWindow::on_m_convDialogueLine_anchorClicked(const QUrl& arg1)
 /**
  * Responds to the stamp roll slider being moved by displaying the stamp at the selected index.
  */
-void MainWindow::on_m_stampRollSlider_sliderMoved(int position)
+void MainWindow::on_m_stampRollSlider_valueChanged(int value)
 {
-  displayStamp(position);
+  displayStamp(value);
 }
 
 /**

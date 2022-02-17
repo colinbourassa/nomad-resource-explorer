@@ -78,7 +78,7 @@ private slots:
   void on_m_convTopicButtonGiveFact_clicked();
   void on_m_convTopicButtonSeesItem_clicked();
   void on_m_stampTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
-  void on_m_stampRollSlider_sliderMoved(int position);
+  void on_m_stampRollSlider_valueChanged(int value);
   void on_actionAbout_triggered();
   void on_m_convFilterTopicsCheckbox_stateChanged(int arg1);
   void on_m_convDialogueLine_anchorClicked(const QUrl &arg1);
