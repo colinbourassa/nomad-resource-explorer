@@ -3,7 +3,7 @@ project (nomad-resource-explorer)
 
 set (NRE_VER_MAJOR 1)
 set (NRE_VER_MINOR 6)
-set (NRE_VER_PATCH 0)
+set (NRE_VER_PATCH 1)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 set (CMAKE_AUTOMOC ON)
