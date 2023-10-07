@@ -164,7 +164,7 @@ bool Palette::gamePalette(QVector<QRgb>& palette)
   bool status = true;
   if (m_gamePal.size() == 0)
   {
-    status = loadPalData(DatFileType_TEST, s_gamePalFilename, m_gamePal);
+    status = loadPalData(DatFileType::TEST, s_gamePalFilename, m_gamePal);
   }
   palette = m_gamePal;
   return status;
@@ -183,7 +183,6 @@ bool Palette::paletteByName(DatFileType datContainer,
   return loadPalData(datContainer, palFileName, palette, startIndex);
 }
 
-
 /**
  * Gets a list of all *.PAL files across all of the DAT containers used by the game.
  */
@@ -191,7 +190,7 @@ QMap<DatFileType,QStringList> Palette::getAllPaletteList()
 {
   QMap<DatFileType,QStringList> palContainerList;
 
-  for (int datIdx = 0; datIdx < DatFileType_NUM_DAT_FILES; datIdx++)
+  for (int datIdx = 0; datIdx < static_cast<int>(DatFileType::NumFiles); datIdx++)
   {
     const DatFileType datType = static_cast<DatFileType>(datIdx);
     QStringList palsInDat = m_lib->getFilenamesByExtension(datType, ".PAL");
@@ -200,3 +199,4 @@ QMap<DatFileType,QStringList> Palette::getAllPaletteList()
 
   return palContainerList;
 }
+

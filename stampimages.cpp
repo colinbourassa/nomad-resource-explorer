@@ -33,7 +33,7 @@ const QList<DatFileType> StampImages::s_datsToSearch =
   // in the standard game, the only STP/ROL images that are
   // not already handled by the inventory object code are
   // those in TEST.DAT
-  DatFileType_TEST
+  DatFileType::TEST
 };
 
 StampImages::StampImages(DatLibrary& lib, Palette& pal) :
@@ -203,3 +203,4 @@ int StampImages::getNumOfStampsInRoll(const QByteArray& roll)
 
   return count;
 }
+

@@ -46,7 +46,7 @@ QMap<DatFileType,QStringList> FullscreenImages::getAllLbmList()
 {
   QMap<DatFileType,QStringList> lbmContainerList;
 
-  for (int datIdx = 0; datIdx < DatFileType_NUM_DAT_FILES; datIdx++)
+  for (int datIdx = 0; datIdx < static_cast<int>(DatFileType::NumFiles); datIdx++)
   {
     const DatFileType datType = static_cast<DatFileType>(datIdx);
     const QStringList lbmsInDat = m_lib->getFilenamesByExtension(datType, s_lbmExtension);

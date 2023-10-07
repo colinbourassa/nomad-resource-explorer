@@ -1,6 +1,4 @@
-#ifndef PLACECLASSES_H
-#define PLACECLASSES_H
-
+#pragma once
 #include <QString>
 #include <QVector>
 #include <stdint.h>
@@ -20,7 +18,6 @@ struct StarClass
   QString name;
 };
 
-// TODO: better multi-compiler support for struct packing?
 typedef struct __attribute__((packed)) PClassTableEntry
 {
   uint16_t nameOffset;
@@ -44,11 +41,15 @@ typedef struct __attribute__((packed)) PClassTableEntry
   uint8_t  unknown_c;
 } PClassTableEntry;
 
+static_assert(sizeof(PClassTableEntry) == 48, "PClassTableEntry packing does not match game data");
+
 typedef struct __attribute__((packed)) StClassTableEntry
 {
   uint16_t nameOffset;
   uint8_t unknown[4];
 } StClassTableEntry;
+
+static_assert(sizeof(StClassTableEntry) == 6, "StClassTableEntry packing does not match game data");
 
 /**
  * Reads and parses data table with place class information (for stars and planets).
@@ -72,4 +73,3 @@ private:
   void populatePlaceClassList();
 };
 
-#endif // PLACECLASSES_H

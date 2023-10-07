@@ -12,7 +12,6 @@
 GameText::GameText(DatLibrary& lib) :
   m_lib(&lib)
 {
-
 }
 
 /**
@@ -30,12 +29,12 @@ QString GameText::getMetaString(int metaTabIndex)
 
   if (m_metaTab.isEmpty())
   {
-    status = m_lib->getFileByName(DatFileType_CONVERSE, "META.TAB", m_metaTab);
+    status = m_lib->getFileByName(DatFileType::CONVERSE, "META.TAB", m_metaTab);
   }
 
   if (status && m_metaTextTab.isEmpty())
   {
-    status = m_lib->getFileByName(DatFileType_CONVERSE, "METATXT.TAB", m_metaTextTab);
+    status = m_lib->getFileByName(DatFileType::CONVERSE, "METATXT.TAB", m_metaTextTab);
   }
 
   if (status)
@@ -193,3 +192,4 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
 
   return clean;
 }
+

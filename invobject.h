@@ -1,6 +1,4 @@
-#ifndef INVENTORY_H
-#define INVENTORY_H
-
+#pragma once
 #include <QMap>
 #include <QImage>
 #include <stdint.h>
@@ -9,58 +7,42 @@
 #include "enums.h"
 #include "palette.h"
 
-enum InventoryObjType
+enum class InventoryObjType
 {
-  InventoryObjType_Normal = 0,
-  InventoryObjType_NormalWithText = 1,
-  InventoryObjType_Engine = 2,
-  InventoryObjType_Scanner = 3,
-  InventoryObjType_Jammer = 4,
-  InventoryObjType_Shield = 5,
-  InventoryObjType_Missile = 6,
-  InventoryObjType_MissileLoader = 7,
-  InventoryObjType_ShipBotbooster = 0xA,
-  InventoryObjType_LaborBot = 0xB,
-  InventoryObjType_LaborBotEnhancement = 0xC,
-  InventoryObjType_Award = 0xD,
-  InventoryObjType_Translator = 0xE,
-  InventoryObjType_Invalid = 0xFF
+  Normal = 0,
+  NormalWithText = 1,
+  Engine = 2,
+  Scanner = 3,
+  Jammer = 4,
+  Shield = 5,
+  Missile = 6,
+  MissileLoader = 7,
+  ShipBotbooster = 0xA,
+  LaborBot = 0xB,
+  LaborBotEnhancement = 0xC,
+  Award = 0xD,
+  Translator = 0xE,
+  Invalid = 0xFF
 };
 
-inline QString getInventoryObjTypeText(InventoryObjType type)
+static const QMap<InventoryObjType,QString> s_objTypeNames =
 {
-  switch (type)
-  {
-  case InventoryObjType_Normal:
-    return QString("Normal");
-  case InventoryObjType_NormalWithText:
-    return QString("Normal (with descriptive text)");
-  case InventoryObjType_Engine:
-    return QString("Engine");
-  case InventoryObjType_Scanner:
-    return QString("Scanner");
-  case InventoryObjType_Jammer:
-    return QString("Jammer");
-  case InventoryObjType_Shield:
-    return QString("Shield");
-  case InventoryObjType_Missile:
-    return QString("Missile");
-  case InventoryObjType_MissileLoader:
-    return QString("Missile loader");
-  case InventoryObjType_ShipBotbooster:
-    return QString("Ship botbooster");
-  case InventoryObjType_LaborBot:
-    return QString("Labor bot");
-  case InventoryObjType_LaborBotEnhancement:
-    return QString("Labor bot enhancement");
-  case InventoryObjType_Award:
-    return QString("Award/medal/recognition");
-  case InventoryObjType_Translator:
-    return QString("Translator device");
-  default:
-    return QString("(invalid)");
-  }
-}
+  {InventoryObjType::Normal, "Normal"},
+  {InventoryObjType::NormalWithText, "Normal (with descriptive text)"},
+  {InventoryObjType::Engine, "Engine"},
+  {InventoryObjType::Scanner, "Scanner"},
+  {InventoryObjType::Jammer, "Jammer"},
+  {InventoryObjType::Shield, "Shield"},
+  {InventoryObjType::Missile, "Missile"},
+  {InventoryObjType::MissileLoader, "Missile loader"},
+  {InventoryObjType::ShipBotbooster, "Ship botbooster"},
+  {InventoryObjType::LaborBot, "Labor bot"},
+  {InventoryObjType::LaborBotEnhancement, "Labor bot enhancement"},
+  {InventoryObjType::Award, "Award/medal/recognition"},
+  {InventoryObjType::Translator, "Translator device"},
+  {InventoryObjType::Invalid, "(invalid)"},
+
+};
 
 struct InventoryObj
 {
@@ -72,7 +54,7 @@ struct InventoryObj
   int subtype;
   QString objText;
   bool knownByPlayer;
-  int valueByRace[AlienRace_NumRaces];
+  int valueByRace[static_cast<int>(AlienRace::NumRaces)];
 };
 
 typedef struct __attribute__((packed)) ObjectTableEntry
@@ -85,15 +67,16 @@ typedef struct __attribute__((packed)) ObjectTableEntry
   uint8_t type;
   uint8_t subtype;
   uint8_t flags;
-  uint8_t valueByRace[AlienRace_NumRaces];
+  uint8_t valueByRace[static_cast<int>(AlienRace::NumRaces)];
   uint8_t unknown_d;
 } ObjectTableEntry;
+
+static_assert(sizeof(ObjectTableEntry) == 24, "ObjectTableEntry packing does not match game data");
 
 class InvObject : public DatTable<ObjectTableEntry>
 {
 public:
   InvObject(DatLibrary& lib, Palette& pal, GameText& gtext);
-  virtual ~InvObject();
   bool getImage(int id, QImage& img);
   QMap<int,InventoryObj> getList();
   InventoryObjType getObjectType(int id);
@@ -110,6 +93,4 @@ private:
   GameText* m_gtext;
   QMap<int,InventoryObj> m_objList;
 };
-
-#endif // INVENTORY_H
 

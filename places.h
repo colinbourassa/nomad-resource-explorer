@@ -1,6 +1,4 @@
-#ifndef PLACES_H
-#define PLACES_H
-
+#pragma once
 #include <QImage>
 #include <QMap>
 #include <QString>
@@ -35,6 +33,8 @@ typedef struct __attribute__((packed)) PlaceTableEntry
   uint8_t unknown_b[6];
 } PlaceTableEntry;
 
+static_assert(sizeof(PlaceTableEntry) == 16, "PlaceTableEntry packing does not match game data");
+
 /**
  * Reads data about places (stars and planets) from data files, and also provides images of the
  * surface textures used when planets are rendered in game.
@@ -43,7 +43,6 @@ class Places : public DatTable<PlaceTableEntry>
 {
 public:
   Places(DatLibrary& lib, Palette& pal, PlaceClasses& pclasses);
-  virtual ~Places();
 
   void clear();
   QMap<int,Place> getPlaceList();
@@ -62,4 +61,3 @@ private:
   static const uint8_t s_planetTextureMapping[622];
 };
 
-#endif // PLACES_H

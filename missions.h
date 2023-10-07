@@ -1,6 +1,4 @@
-#ifndef MISSIONS_H
-#define MISSIONS_H
-
+#pragma once
 #include <stdint.h>
 #include <QVector>
 #include <QPair>
@@ -9,12 +7,12 @@
 #include "datlibrary.h"
 #include "gametext.h"
 
-enum MissionActionType
+enum class MissionActionType
 {
-  MissionActionType_None,
-  MissionActionType_DestroyShip,
-  MissionActionType_DeliverItem,
-  MissionActionType_Unknown
+  None,
+  DestroyShip,
+  DeliverItem,
+  Unknown
 };
 
 struct Mission
@@ -42,6 +40,8 @@ typedef struct __attribute__((packed)) MissionTableEntry
 
 } MissionTableEntry;
 
+static_assert(sizeof(MissionTableEntry) == 24, "MissionTableEntry packing does not match game data");
+
 class Missions : public DatTable<MissionTableEntry>
 {
 public:
@@ -58,4 +58,3 @@ private:
   QString getMissionText(uint16_t idxFileIndex, QVector<QPair<GTxtCmd,int> >& commands);
 };
 
-#endif // MISSIONS_H

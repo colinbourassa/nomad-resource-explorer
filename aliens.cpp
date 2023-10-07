@@ -46,12 +46,6 @@ Aliens::Aliens(DatLibrary& lib, Palette& pal) :
   DatTable<AlienTableEntry> (lib),
   m_pal(&pal)
 {
-
-}
-
-Aliens::~Aliens()
-{
-
 }
 
 /**
@@ -130,7 +124,7 @@ QString Aliens::getName(int id)
  */
 AlienRace Aliens::getRace(int id)
 {
-  AlienRace race = AlienRace_Invalid;
+  AlienRace race = AlienRace::Invalid;
 
   if (m_alienList.isEmpty())
   {
@@ -153,7 +147,7 @@ bool Aliens::populateList()
 {
   bool status = false;
 
-  if (openFile(DatFileType_CONVERSE, "ALIEN.TAB"))
+  if (openFile(DatFileType::CONVERSE, "ALIEN.TAB"))
   {
     status = true;
     int index = 0;
@@ -198,13 +192,13 @@ bool Aliens::getAnimationFrames(int alienId, QMap<int, QImage>& frames, QString&
     const QString anmFilename = QString("%1.ANM").arg(s_animationMap[alienId]);
     QByteArray anmFileData;
 
-    if (m_lib->getFileByName(DatFileType_ANIM, anmFilename, anmFileData))
+    if (m_lib->getFileByName(DatFileType::ANIM, anmFilename, anmFileData))
     {
       // the ASCII string for the palette filename begins at offset 00 in the ANM file
       palFilename = QString::fromLocal8Bit(anmFileData.data());
       QVector<QRgb> pal;
 
-      if (m_pal->paletteByName(DatFileType_ANIM, palFilename, pal))
+      if (m_pal->paletteByName(DatFileType::ANIM, palFilename, pal))
       {
         // get a list of frame numbers, and the list of composite sections (.del files) used to build each frame
         const QMap<int, QVector<int>> frameList = getListOfFrames(anmFileData);
@@ -251,7 +245,7 @@ bool Aliens::buildFrame(QVector<int> delIdList, QString delFilenamePrefix, const
   {
     const QString delFilename = delFilenamePrefix + QString("%1.del").arg(delNumber, 4, 10, QChar('0'));
 
-    if (status && m_lib->getFileByName(DatFileType_ANIM, delFilename, delFileData))
+    if (status && m_lib->getFileByName(DatFileType::ANIM, delFilename, delFileData))
     {
       if (!ImageConverter::delToImage(delFileData, pal, frame))
       {
@@ -307,3 +301,4 @@ QMap<int, QVector<int> > Aliens::getListOfFrames(const QByteArray& anmData) cons
 
   return frames;
 }
+

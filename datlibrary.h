@@ -1,6 +1,4 @@
-#ifndef DATLIBRARY_H
-#define DATLIBRARY_H
-
+#pragma once
 #include <stdint.h>
 #include <QByteArray>
 #include <QString>
@@ -21,18 +19,17 @@
 
 #define INDEX_FILENAME_LEN    14
 
-enum DatFileType
+enum class DatFileType
 {
-  DatFileType_ANIM,
-  DatFileType_CONVERSE,
-  DatFileType_INVENT,
-  DatFileType_SAMPLES,
-  DatFileType_TEST,
-  DatFileType_NUM_DAT_FILES,
-  DatFileType_INVALID
+  ANIM,
+  CONVERSE,
+  INVENT,
+  SAMPLES,
+  TEST,
+  NumFiles,
+  Invalid
 };
 
-// TODO: support struct packing in other compilers
 typedef struct __attribute__((packed)) DatFileIndex
 {
   uint8_t flags_a;
@@ -43,11 +40,12 @@ typedef struct __attribute__((packed)) DatFileIndex
   uint32_t offset;
 } DatFileIndex;
 
+static_assert(sizeof(DatFileIndex) == 28, "DatFileIndex packing does not match game data");
+
 class DatLibrary
 {
 public:
   DatLibrary();
-  virtual ~DatLibrary();
   bool openData(QString pathToGameDir);
   void closeData();
 
@@ -58,12 +56,10 @@ public:
   QStringList getFilenamesByExtension(DatFileType dat, QString extension);
 
 private:
-  QByteArray m_datContents[DatFileType_NUM_DAT_FILES];
+  QByteArray m_datContents[static_cast<int>(DatFileType::NumFiles)];
   QByteArray m_gameText; // keep a copy of GAMETEXT.TXT since it is referenced frequently
 
   bool lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes) const;
   bool getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile) const;
 };
-
-#endif // DATLIBRARY_H
 

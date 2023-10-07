@@ -3,12 +3,6 @@
 Facts::Facts(DatLibrary& lib) :
   DatTable<FactTableEntry> (lib)
 {
-
-}
-
-Facts::~Facts()
-{
-
 }
 
 /**
@@ -77,7 +71,7 @@ bool Facts::populateList()
 {
   bool status = false;
 
-  if (openFile(DatFileType_CONVERSE, "FACT.TAB"))
+  if (openFile(DatFileType::CONVERSE, "FACT.TAB"))
   {
     status = true;
     int index = 0;
@@ -93,7 +87,7 @@ bool Facts::populateList()
         if (!f.text.isEmpty())
         {
           f.id = index;
-          for (int raceId = 0; raceId < AlienRace_NumRaces; raceId++)
+          for (int raceId = 0; raceId < static_cast<int>(AlienRace::NumRaces); raceId++)
           {
             f.receptivity[static_cast<AlienRace>(raceId)] = currentEntry->receptivity[raceId] * 10;
           }
@@ -108,3 +102,4 @@ bool Facts::populateList()
 
   return status;
 }
+

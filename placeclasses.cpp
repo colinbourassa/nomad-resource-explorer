@@ -39,7 +39,7 @@ void PlaceClasses::populatePlaceClassList()
   QByteArray classdata;
   clear();
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "PCLASS.TAB", classdata))
+  if (m_lib->getFileByName(DatFileType::CONVERSE, "PCLASS.TAB", classdata))
   {
     const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(classdata.data());
     unsigned int offset = 0;
@@ -61,32 +61,32 @@ void PlaceClasses::populatePlaceClassList()
         {
           if (currentEntry->foods[rIdx])
           {
-            pclass.resources[PlanetResourceType_Food].insert(currentEntry->foods[rIdx],
+            pclass.resources[PlanetResourceType::Food].insert(currentEntry->foods[rIdx],
                                                              currentEntry->foodsAgriculture[rIdx]);
           }
           if (currentEntry->ores[rIdx])
           {
-            pclass.resources[PlanetResourceType_Mineral].insert(currentEntry->ores[rIdx],
+            pclass.resources[PlanetResourceType::Mineral].insert(currentEntry->ores[rIdx],
                                                                 currentEntry->oresConcentration[rIdx]);
           }
           if (currentEntry->ancientArtifacts[rIdx])
           {
-            pclass.resources[PlanetResourceType_ArchaeologicalArtifact].insert(currentEntry->ancientArtifacts[rIdx],
+            pclass.resources[PlanetResourceType::ArchaeologicalArtifact].insert(currentEntry->ancientArtifacts[rIdx],
                                                                                currentEntry->ancientArtifactsConcentration[rIdx]);
           }
           if (currentEntry->gasses[rIdx])
           {
-            pclass.resources[PlanetResourceType_Gas].insert(currentEntry->gasses[rIdx],
+            pclass.resources[PlanetResourceType::Gas].insert(currentEntry->gasses[rIdx],
                                                             currentEntry->gassesConcentration[rIdx]);
           }
           if (currentEntry->animals[rIdx])
           {
-            pclass.resources[PlanetResourceType_Animal].insert(currentEntry->animals[rIdx],
+            pclass.resources[PlanetResourceType::Animal].insert(currentEntry->animals[rIdx],
                                                                currentEntry->animalsConcentration[rIdx]);
           }
           if (currentEntry->intelligenceItems[rIdx])
           {
-            pclass.resources[PlanetResourceType_EspionageItem].insert(currentEntry->intelligenceItems[rIdx],
+            pclass.resources[PlanetResourceType::EspionageItem].insert(currentEntry->intelligenceItems[rIdx],
                                                                       currentEntry->intelligenceItemsConcentration[rIdx]);
           }
         }
@@ -112,7 +112,7 @@ void PlaceClasses::populatePlaceClassList()
 
   classdata.clear();
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "STCLASS.TAB", classdata))
+  if (m_lib->getFileByName(DatFileType::CONVERSE, "STCLASS.TAB", classdata))
   {
     const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(classdata.data());
     unsigned int offset = 0;
@@ -182,3 +182,4 @@ QString PlaceClasses::getStarClassName(int id)
 
   return name;
 }
+

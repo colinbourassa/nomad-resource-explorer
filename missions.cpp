@@ -28,7 +28,7 @@ bool Missions::populateList()
 {
   bool status = false;
 
-  if (openFile(DatFileType_CONVERSE, "MISSION.TAB"))
+  if (openFile(DatFileType::CONVERSE, "MISSION.TAB"))
   {
     status = true;
     int index = 0;
@@ -43,19 +43,19 @@ bool Missions::populateList()
         Mission m;
         if (currentEntry->actionRequired == 0)
         {
-          m.action = MissionActionType_None;
+          m.action = MissionActionType::None;
         }
         else if (currentEntry->actionRequired == 2)
         {
-          m.action = MissionActionType_DestroyShip;
+          m.action = MissionActionType::DestroyShip;
         }
         else if (currentEntry->actionRequired == 3)
         {
-          m.action = MissionActionType_DeliverItem;
+          m.action = MissionActionType::DeliverItem;
         }
         else
         {
-          m.action = MissionActionType_Unknown;
+          m.action = MissionActionType::Unknown;
         }
         m.missionActionRawVal = currentEntry->actionRequired;
         m.startText    = getMissionText(qFromLittleEndian<quint16>(currentEntry->startTextIndex), m.startTextCommands);
@@ -83,8 +83,8 @@ QString Missions::getMissionText(uint16_t idxFileIndex, QVector<QPair<GTxtCmd,in
   QByteArray misTextStrData;
   QString txt;
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "MISTEXT.IDX", misTextIdxData) &&
-      m_lib->getFileByName(DatFileType_CONVERSE, "MISTEXT.TXT", misTextStrData))
+  if (m_lib->getFileByName(DatFileType::CONVERSE, "MISTEXT.IDX", misTextIdxData) &&
+      m_lib->getFileByName(DatFileType::CONVERSE, "MISTEXT.TXT", misTextStrData))
   {
     const int idxOffset = (idxFileIndex + 1) * 4;
     int32_t txtOffset = 0;

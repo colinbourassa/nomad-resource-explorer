@@ -222,7 +222,7 @@ QMap<DatFileType,QStringList> Audio::getAllSoundList()
 {
   QMap<DatFileType,QStringList> nnvContainerList;
 
-  for (int datIdx = 0; datIdx < DatFileType_NUM_DAT_FILES; datIdx++)
+  for (int datIdx = 0; datIdx < static_cast<int>(DatFileType::NumFiles); datIdx++)
   {
     const DatFileType datType = static_cast<DatFileType>(datIdx);
     QStringList nnvsInDat = m_lib->getFilenamesByExtension(datType, ".NNV");

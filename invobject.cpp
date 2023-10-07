@@ -8,12 +8,6 @@ InvObject::InvObject(DatLibrary& lib, Palette& pal, GameText& gtext) :
   m_pal(&pal),
   m_gtext(&gtext)
 {
-
-}
-
-InvObject::~InvObject()
-{
-
 }
 
 /**
@@ -33,7 +27,7 @@ bool InvObject::populateList()
 {
   bool status = false;
 
-  if (openFile(DatFileType_CONVERSE, "OBJECT.TAB"))
+  if (openFile(DatFileType::CONVERSE, "OBJECT.TAB"))
   {
     status = true;
     int index = 0;
@@ -54,7 +48,7 @@ bool InvObject::populateList()
           obj.type = static_cast<InventoryObjType>(currentEntry->type & 0x7F);
           obj.subtype = currentEntry->subtype;
           obj.knownByPlayer = (currentEntry->flags & 0x04);
-          for (int raceid = 0; raceid < AlienRace_NumRaces; ++raceid)
+          for (int raceid = 0; raceid < static_cast<int>(AlienRace::NumRaces); ++raceid)
           {
             obj.valueByRace[raceid] = currentEntry->valueByRace[raceid];
           }
@@ -93,11 +87,10 @@ QString InvObject::getObjectText(int id)
   QByteArray objTextStrData;
   QString txt;
 
-  if (m_objList.contains(id) && (m_objList[id].type == InventoryObjType_NormalWithText))
+  if (m_objList.contains(id) && (m_objList[id].type == InventoryObjType::NormalWithText))
   {
-
-    if (m_lib->getFileByName(DatFileType_CONVERSE, "OBJTEXT.IDX", objTextIdxData) &&
-        m_lib->getFileByName(DatFileType_CONVERSE, "OBJTEXT.TXT", objTextStrData))
+    if (m_lib->getFileByName(DatFileType::CONVERSE, "OBJTEXT.IDX", objTextIdxData) &&
+        m_lib->getFileByName(DatFileType::CONVERSE, "OBJTEXT.TXT", objTextStrData))
     {
       const int idxOffset = m_objList[id].subtype * 4;
       int32_t txtOffset = 0;
@@ -125,10 +118,10 @@ QString InvObject::getObjectText(int id)
 bool InvObject::getImage(int id, QImage& img)
 {
   bool status = false;
-  QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
+  const QString invStpFilename = QString("inv%1.stp").arg(id, 4, 10, QChar('0'));
   QByteArray stpData;
 
-  if (m_lib->getFileByName(DatFileType_INVENT, invStpFilename, stpData))
+  if (m_lib->getFileByName(DatFileType::INVENT, invStpFilename, stpData))
   {
     QVector<QRgb> pal;
     if (m_pal->gamePalette(pal))
@@ -147,7 +140,7 @@ bool InvObject::getImage(int id, QImage& img)
  */
 InventoryObjType InvObject::getObjectType(int id)
 {
-  InventoryObjType type = InventoryObjType_Invalid;
+  InventoryObjType type = InventoryObjType::Invalid;
 
   if (m_objList.isEmpty())
   {
@@ -198,3 +191,4 @@ bool InvObject::isUnique(const int id)
 
   return false;
 }
+

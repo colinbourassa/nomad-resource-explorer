@@ -69,12 +69,6 @@ Places::Places(DatLibrary& lib, Palette& pal, PlaceClasses& pclasses) :
   m_pal(&pal),
   m_placeClasses(&pclasses)
 {
-
-}
-
-Places::~Places()
-{
-
 }
 
 /**
@@ -108,7 +102,7 @@ bool Places::populateList()
 {
   bool status = false;
 
-  if (openFile(DatFileType_CONVERSE, "PLACE.TAB"))
+  if (openFile(DatFileType::CONVERSE, "PLACE.TAB"))
   {
     status = true;
     int index = 0;
@@ -196,11 +190,12 @@ QImage Places::getPlaceSurfaceImage(int id, bool& status, QString& palFilename)
   QByteArray plnFile;
   QVector<QRgb> pal;
 
-  status = (m_pal->paletteByName(DatFileType_TEST, palFilename, pal) &&
-            m_lib->getFileByName(DatFileType_TEST, plnFilename, plnFile));
+  status = (m_pal->paletteByName(DatFileType::TEST, palFilename, pal) &&
+            m_lib->getFileByName(DatFileType::TEST, plnFilename, plnFile));
 
   QImage surfaceImage;
   status = status && ImageConverter::plnToPixmap(plnFile, pal, surfaceImage);
 
   return surfaceImage;
 }
+

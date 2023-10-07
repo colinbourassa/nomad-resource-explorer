@@ -41,7 +41,7 @@ void ShipInventory::populateInventoryData()
 {
   QByteArray inventdata;
 
-  if (m_lib->getFileByName(DatFileType_CONVERSE, "INVENT.TAB", inventdata))
+  if (m_lib->getFileByName(DatFileType::CONVERSE, "INVENT.TAB", inventdata))
   {
     const uint8_t* rawdata = reinterpret_cast<const uint8_t*>(inventdata.data());
     int shipRecordOffset = 0;

@@ -1,6 +1,4 @@
-#ifndef STAMPIMAGES_H
-#define STAMPIMAGES_H
-
+#pragma once
 #include <stdint.h>
 #include <QMap>
 #include <QString>
@@ -37,4 +35,3 @@ private:
   QList<QByteArray> getStpDataFromRoll(const QByteArray& roll);
 };
 
-#endif // STAMPIMAGES_H

@@ -1,6 +1,4 @@
-#ifndef PALETTE_H
-#define PALETTE_H
-
+#pragma once
 #include <QString>
 #include <QVector>
 #include <QRgb>
@@ -32,4 +30,3 @@ private:
                    int* startIndex = nullptr) const;
 };
 
-#endif

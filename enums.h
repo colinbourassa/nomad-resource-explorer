@@ -1,54 +1,50 @@
-#ifndef ENUMS_H
-#define ENUMS_H
-
+#pragma once
 #include <QMap>
 #include <QString>
 
-enum AlienRace
+enum class AlienRace
 {
-  AlienRace_Altec,
-  AlienRace_Arden,
-  AlienRace_Bellicosian,
-  AlienRace_Chanticleer,
-  AlienRace_Human,
-  AlienRace_Kenelm,
-  AlienRace_Korok,
-  AlienRace_Musin,
-  AlienRace_Pahrump,
-  AlienRace_Phelonese,
-  AlienRace_Shaasa,
-  AlienRace_Ursor,
-  AlienRace_NumRaces,
-  AlienRace_Invalid
+  Altec,
+  Arden,
+  Bellicosian,
+  Chanticleer,
+  Human,
+  Kenelm,
+  Korok,
+  Musin,
+  Pahrump,
+  Phelonese,
+  Shaasa,
+  Ursor,
+  NumRaces, // 12
+  Invalid
 };
 
 static const QMap<AlienRace,QString> s_raceNames =
 {
-  {AlienRace_Altec, "Altec Hocker"},
-  {AlienRace_Arden, "Arden"},
-  {AlienRace_Bellicosian, "Bellicosian"},
-  {AlienRace_Chanticleer, "Chanticleer"},
-  {AlienRace_Human, "Human"},
-  {AlienRace_Kenelm, "Kenelm"},
-  {AlienRace_Korok, "Korok"},
-  {AlienRace_Musin, "Musin"},
-  {AlienRace_Pahrump, "Pahrump"},
-  {AlienRace_Phelonese, "Phelonese"},
-  {AlienRace_Phelonese, "Phelonese"},
-  {AlienRace_Shaasa, "Shaasa"},
-  {AlienRace_Ursor, "Ursor"}
+  {AlienRace::Altec, "Altec Hocker"},
+  {AlienRace::Arden, "Arden"},
+  {AlienRace::Bellicosian, "Bellicosian"},
+  {AlienRace::Chanticleer, "Chanticleer"},
+  {AlienRace::Human, "Human"},
+  {AlienRace::Kenelm, "Kenelm"},
+  {AlienRace::Korok, "Korok"},
+  {AlienRace::Musin, "Musin"},
+  {AlienRace::Pahrump, "Pahrump"},
+  {AlienRace::Phelonese, "Phelonese"},
+  {AlienRace::Phelonese, "Phelonese"},
+  {AlienRace::Shaasa, "Shaasa"},
+  {AlienRace::Ursor, "Ursor"}
 };
 
-enum PlanetResourceType
+enum class PlanetResourceType
 {
-  PlanetResourceType_Animal,
-  PlanetResourceType_ArchaeologicalArtifact,
-  PlanetResourceType_EspionageItem,
-  PlanetResourceType_Food,
-  PlanetResourceType_Gas,
-  PlanetResourceType_Mineral,
-  PlanetResourceType_NumTypes
+  Animal,
+  ArchaeologicalArtifact,
+  EspionageItem,
+  Food,
+  Gas,
+  Mineral,
+  NumTypes
 };
-
-#endif // ENUMS_H
 

@@ -48,7 +48,7 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_currentNNVSoundCount(0),
   m_currentNNVSoundId(-1),
   m_currentNNVFilename(""),
-  m_currentSoundDat(DatFileType_INVALID),
+  m_currentSoundDat(DatFileType::Invalid),
   m_audioOutput(nullptr),
   m_currentConvTopic(ConvTopicCategory_GreetingInitial)
 {
@@ -110,24 +110,24 @@ void MainWindow::on_actionAbout_triggered()
  */
 void MainWindow::putResourceLabelsInArray()
 {
-  m_resourceLabels[PlanetResourceType_Animal] = { { 0, ui->m_pAnimals0 },
-                                                  { 1, ui->m_pAnimals1 },
-                                                  { 2, ui->m_pAnimals2 } };
-  m_resourceLabels[PlanetResourceType_ArchaeologicalArtifact] = { { 0, ui->m_pArchArtifacts0 },
-                                                                  { 1, ui->m_pArchArtifacts1 },
-                                                                  { 2, ui->m_pArchArtifacts2 } };
-  m_resourceLabels[PlanetResourceType_EspionageItem] = { { 0, ui->m_pSpyArtifacts0 },
-                                                         { 1, ui->m_pSpyArtifacts1 },
-                                                         { 2, ui->m_pSpyArtifacts2 } };
-  m_resourceLabels[PlanetResourceType_Food] = { { 0, ui->m_pFoods0 },
-                                                { 1, ui->m_pFoods1 },
-                                                { 2, ui->m_pFoods2 } };
-  m_resourceLabels[PlanetResourceType_Gas] = { { 0, ui->m_pGasses0 },
-                                               { 1, ui->m_pGasses1 },
-                                               { 2, ui->m_pGasses2 } };
-  m_resourceLabels[PlanetResourceType_Mineral] = { { 0, ui->m_pMinerals0 },
-                                                   { 1, ui->m_pMinerals1 },
-                                                   { 2, ui->m_pMinerals2 } };
+  m_resourceLabels[PlanetResourceType::Animal] = { { 0, ui->m_pAnimals0 },
+                                                   { 1, ui->m_pAnimals1 },
+                                                   { 2, ui->m_pAnimals2 } };
+  m_resourceLabels[PlanetResourceType::ArchaeologicalArtifact] = { { 0, ui->m_pArchArtifacts0 },
+                                                                   { 1, ui->m_pArchArtifacts1 },
+                                                                   { 2, ui->m_pArchArtifacts2 } };
+  m_resourceLabels[PlanetResourceType::EspionageItem] = { { 0, ui->m_pSpyArtifacts0 },
+                                                          { 1, ui->m_pSpyArtifacts1 },
+                                                          { 2, ui->m_pSpyArtifacts2 } };
+  m_resourceLabels[PlanetResourceType::Food] = { { 0, ui->m_pFoods0 },
+                                                 { 1, ui->m_pFoods1 },
+                                                 { 2, ui->m_pFoods2 } };
+  m_resourceLabels[PlanetResourceType::Gas] = { { 0, ui->m_pGasses0 },
+                                                { 1, ui->m_pGasses1 },
+                                                { 2, ui->m_pGasses2 } };
+  m_resourceLabels[PlanetResourceType::Mineral] = { { 0, ui->m_pMinerals0 },
+                                                    { 1, ui->m_pMinerals1 },
+                                                    { 2, ui->m_pMinerals2 } };
 }
 
 /**
@@ -135,7 +135,7 @@ void MainWindow::putResourceLabelsInArray()
  */
 void MainWindow::clearAllResourceLabels()
 {
-  for (int rtypeIdx = 0; rtypeIdx < PlanetResourceType_NumTypes; rtypeIdx++)
+  for (int rtypeIdx = 0; rtypeIdx < static_cast<int>(PlanetResourceType::NumTypes); rtypeIdx++)
   {
     const PlanetResourceType prType = static_cast<PlanetResourceType>(rtypeIdx);
     foreach (QLabel* l, m_resourceLabels[prType])
@@ -342,7 +342,7 @@ void MainWindow::populateObjectWidgets()
     ui->m_objTable->insertRow(rowcount);
     ui->m_objTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(obj.id)));
     ui->m_objTable->setItem(rowcount, 1, new QTableWidgetItem(obj.name));
-    for (int r = 0; r < AlienRace_NumRaces; r++)
+    for (int r = 0; r < static_cast<int>(AlienRace::NumRaces); r++)
     {
       ui->m_objTable->setItem(rowcount, 2 + r, new TableNumberItem(QString("%1").arg(obj.valueByRace[r])));
     }
@@ -408,7 +408,7 @@ void MainWindow::populateFactWidgets()
     const int rowcount = ui->m_factTable->rowCount();
     ui->m_factTable->insertRow(rowcount);
     ui->m_factTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(f.id)));
-    for (int raceId = 0; raceId < AlienRace_NumRaces; raceId++)
+    for (int raceId = 0; raceId < static_cast<int>(AlienRace::NumRaces); raceId++)
     {
       AlienRace race = static_cast<AlienRace>(raceId);
       ui->m_factTable->setItem(rowcount, 1 + raceId, new TableNumberItem(QString("%1").arg(f.receptivity[race])));
@@ -555,7 +555,7 @@ void MainWindow::populate3dModelWidgets()
   ui->m_3dModelTree->clear();
 
   QMap<DatFileType,QStringList> binList;
-  binList[DatFileType_TEST] = m_lib.getFilenamesByExtension(DatFileType_TEST, ".bin");
+  binList[DatFileType::TEST] = m_lib.getFilenamesByExtension(DatFileType::TEST, ".bin");
 
   foreach (DatFileType dat, binList.keys())
   {
@@ -678,7 +678,16 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
       ui->m_objectImageView->setScene(&m_objScene);
     }
 
-    ui->m_objectTypeLabel->setText("Type: " + getInventoryObjTypeText(m_invObject.getObjectType(id)));
+    const InventoryObjType type = m_invObject.getObjectType(id);
+    if (s_objTypeNames.count(type))
+    {
+      ui->m_objectTypeLabel->setText("Type: " + s_objTypeNames[type]);
+    }
+    else
+    {
+      ui->m_objectTypeLabel->setText("Type: (unknown)");
+    }
+
     if (m_invObject.isUnique(id))
     {
       ui->m_objectUniqueLabel->setText("Unique: Yes");
@@ -885,7 +894,7 @@ void MainWindow::on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTr
     m_currentNNVSoundCount = 0;
     m_currentNNVSoundId = -1;
     m_currentNNVFilename = "";
-    m_currentSoundDat = DatFileType_INVALID;
+    m_currentSoundDat = DatFileType::Invalid;
   }
 
   setSoundButtonStates();
@@ -1340,7 +1349,7 @@ void MainWindow::populateConversationTopicTable(int lastSelectedTopicId)
   else if (m_currentConvTopic == ConvTopicCategory_AskAboutRace)
   {
     QMap<int,QString> raceNames;
-    for (int raceId = 0; raceId < AlienRace_NumRaces; raceId++)
+    for (int raceId = 0; raceId < static_cast<int>(AlienRace::NumRaces); raceId++)
     {
       const AlienRace race = static_cast<AlienRace>(raceId);
       raceNames.insert(raceId, s_raceNames[race]);
@@ -1529,16 +1538,16 @@ void MainWindow::showInfoForMission(int id)
     populateGameTextCommandList(ui->m_missionStartCommandList, missions[id].startTextCommands);
     populateGameTextCommandList(ui->m_missionEndCommandList,   missions[id].completeTextCommands);
 
-    if (missions[id].action == MissionActionType_None)
+    if (missions[id].action == MissionActionType::None)
     {
       ui->m_missionReqText->setHtml("(No action required.)");
     }
-    else if (missions[id].action == MissionActionType_DeliverItem)
+    else if (missions[id].action == MissionActionType::DeliverItem)
     {
       const QString itemName = m_invObject.getName(missions[id].objectiveId);
       ui->m_missionReqText->setHtml(QString("Deliver item: %1").arg(itemName));
     }
-    else if (missions[id].action == MissionActionType_DestroyShip)
+    else if (missions[id].action == MissionActionType::DestroyShip)
     {
       const QString shipName = m_ships.getName(missions[id].objectiveId);
       ui->m_missionReqText->setHtml(QString("Destroy ship: %1").arg(shipName));

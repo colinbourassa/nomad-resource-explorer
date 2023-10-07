@@ -5,12 +5,6 @@
 Ships::Ships(DatLibrary& lib) :
   DatTable<ShipTableEntry> (lib)
 {
-
-}
-
-Ships::~Ships()
-{
-
 }
 
 /**
@@ -51,7 +45,7 @@ bool Ships::populateList()
 {
   bool status = false;
 
-  if (openFile(DatFileType_CONVERSE, "SHIP.TAB"))
+  if (openFile(DatFileType::CONVERSE, "SHIP.TAB"))
   {
     status = true;
     int index = 0;
@@ -81,3 +75,4 @@ bool Ships::populateList()
 
   return status;
 }
+

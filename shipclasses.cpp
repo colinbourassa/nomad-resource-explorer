@@ -4,12 +4,6 @@
 ShipClasses::ShipClasses(DatLibrary& lib) :
   DatTable<ShipClassTableEntry> (lib)
 {
-
-}
-
-ShipClasses::~ShipClasses()
-{
-
 }
 
 /**
@@ -33,7 +27,7 @@ bool ShipClasses::populateList()
 {
   bool status = false;
 
-  if (openFile(DatFileType_CONVERSE, "SCLASS.TAB"))
+  if (openFile(DatFileType::CONVERSE, "SCLASS.TAB"))
   {
     status = true;
     int index = 0;
@@ -79,3 +73,4 @@ QString ShipClasses::getName(int id)
 
   return name;
 }
+

@@ -32,7 +32,7 @@ QString ConversationText::getConversationText(int alienId, ConvTopicCategory top
   if (tlknIndex < 0)
   {
     tableType = ConvTableType_Race;
-    alienOrRaceId = m_aliens->getRace(alienId);
+    alienOrRaceId = static_cast<int>(m_aliens->getRace(alienId));
     getTLKTData(tableType, alienOrRaceId, tlktData);
     tlknIndex = getTLKNIndex(topic, thingId, tlktData);
   }
@@ -78,8 +78,8 @@ bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& 
 
   if (!idxFilename.isEmpty() && !strFilename.isEmpty())
   {
-    status = (m_lib->getFileByName(DatFileType_CONVERSE, idxFilename, indexData) &&
-              m_lib->getFileByName(DatFileType_CONVERSE, strFilename, strData));
+    status = (m_lib->getFileByName(DatFileType::CONVERSE, idxFilename, indexData) &&
+              m_lib->getFileByName(DatFileType::CONVERSE, strFilename, strData));
   }
 
   return status;
@@ -116,11 +116,11 @@ bool ConversationText::getTLKNData(ConvTableType tableType, int id, QByteArray& 
 
   if (tableType == ConvTableType_Individual)
   {
-    status = m_lib->getFileByName(DatFileType_CONVERSE, getTLKNCFilename(id), data);
+    status = m_lib->getFileByName(DatFileType::CONVERSE, getTLKNCFilename(id), data);
   }
   else if (tableType == ConvTableType_Race)
   {
-    status = m_lib->getFileByName(DatFileType_CONVERSE, getTLKNRFilename(id), data);
+    status = m_lib->getFileByName(DatFileType::CONVERSE, getTLKNRFilename(id), data);
   }
 
   return status;
@@ -136,11 +136,11 @@ bool ConversationText::getTLKTData(ConvTableType tableType, int id, QByteArray& 
 
   if (tableType == ConvTableType_Individual)
   {
-    status = m_lib->getFileByName(DatFileType_CONVERSE, getTLKTCFilename(id), data);
+    status = m_lib->getFileByName(DatFileType::CONVERSE, getTLKTCFilename(id), data);
   }
   else if (tableType == ConvTableType_Race)
   {
-    status = m_lib->getFileByName(DatFileType_CONVERSE, getTLKTRFilename(id), data);
+    status = m_lib->getFileByName(DatFileType::CONVERSE, getTLKTRFilename(id), data);
   }
 
   return status;
@@ -306,7 +306,7 @@ bool ConversationText::doesInterestingDialogExist(int alienId, ConvTopicCategory
   else
   {
     tableType = ConvTableType_Race;
-    alienOrRaceId = m_aliens->getRace(alienId);
+    alienOrRaceId = static_cast<int>(m_aliens->getRace(alienId));
     getTLKTData(tableType, alienOrRaceId, tlktData);
     tlknIndex = getTLKNIndex(category, thingId, tlktData);
 

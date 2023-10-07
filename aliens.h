@@ -1,6 +1,4 @@
-#ifndef ALIENS_H
-#define ALIENS_H
-
+#pragma once
 #include <QByteArray>
 #include <QVector>
 #include <QString>
@@ -27,11 +25,12 @@ typedef struct __attribute__((packed)) AlienTableEntry
   uint8_t unknown[5];
 } AlienTableEntry;
 
+static_assert(sizeof(AlienTableEntry) == 8, "AlienTableEntry packing does not match game data");
+
 class Aliens : DatTable<AlienTableEntry>
 {
 public:
   Aliens(DatLibrary& lib, Palette& pal);
-  virtual ~Aliens();
   void clear();
   QMap<int,Alien> getList();
   QString getName(int id);
@@ -51,4 +50,3 @@ private:
   bool buildFrame(QVector<int> delIdList, QString delFilenamePrefix, const QVector<QRgb> pal, QImage& frame) const;
 };
 
-#endif // ALIENS_H

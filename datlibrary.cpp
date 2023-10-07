@@ -8,21 +8,15 @@
 
 const QMap<DatFileType,QString> DatLibrary::s_datFileNames
 {
-  {DatFileType_ANIM,     DAT_FILENAME_ANIM},
-  {DatFileType_CONVERSE, DAT_FILENAME_CONVERSE},
-  {DatFileType_INVENT,   DAT_FILENAME_INVENT},
-  {DatFileType_SAMPLES,  DAT_FILENAME_SAMPLES},
-  {DatFileType_TEST,     DAT_FILENAME_TEST}
+  {DatFileType::ANIM,     DAT_FILENAME_ANIM},
+  {DatFileType::CONVERSE, DAT_FILENAME_CONVERSE},
+  {DatFileType::INVENT,   DAT_FILENAME_INVENT},
+  {DatFileType::SAMPLES,  DAT_FILENAME_SAMPLES},
+  {DatFileType::TEST,     DAT_FILENAME_TEST}
 };
 
 DatLibrary::DatLibrary()
 {
-
-}
-
-DatLibrary::~DatLibrary()
-{
-
 }
 
 /**
@@ -39,7 +33,7 @@ bool DatLibrary::openData(QString pathToGameDir)
 
     if (datFile.open(QIODevice::ReadOnly))
     {
-      m_datContents[dat] = datFile.readAll();
+      m_datContents[static_cast<int>(dat)] = datFile.readAll();
     }
     else
     {
@@ -57,7 +51,7 @@ void DatLibrary::closeData()
 {
   foreach (DatFileType datType, s_datFileNames.keys())
   {
-    m_datContents[datType].clear();
+    m_datContents[static_cast<int>(datType)].clear();
   }
 
   m_gameText.clear();
@@ -72,10 +66,11 @@ bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray&
 {
   bool status = false;
   const unsigned long indexEntryOffset = 2 + (index * sizeof(DatFileIndex));
+  const int datIndex = static_cast<int>(dat);
 
-  if (m_datContents[dat].size() >= static_cast<int>((indexEntryOffset + sizeof(DatFileIndex))))
+  if (m_datContents[datIndex].size() >= static_cast<int>((indexEntryOffset + sizeof(DatFileIndex))))
   {
-    const char* rawDat = m_datContents[dat].constData();
+    const char* rawDat = m_datContents[datIndex].constData();
     int skipUncompressedBytes = 0;
 
     DatFileIndex indexEntry;
@@ -114,8 +109,9 @@ bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray&
  */
 bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& filedata) const
 {
-  const char* rawdat = m_datContents[dat].constData();
-  const long datsize = m_datContents[dat].size();
+  const int datIndex = static_cast<int>(dat);
+  const char* rawdat = m_datContents[datIndex].constData();
+  const long datsize = m_datContents[datIndex].size();
   bool found = false;
   bool status = false;
   long currentIndexOffset = 2;
@@ -152,8 +148,9 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& fi
  */
 QStringList DatLibrary::getFilenamesByExtension(DatFileType dat, QString extension)
 {
-  const char* rawdat = m_datContents[dat].constData();
-  const long datsize = m_datContents[dat].size();
+  const int datIndex = static_cast<int>(dat);
+  const char* rawdat = m_datContents[datIndex].constData();
+  const long datsize = m_datContents[datIndex].size();
   long currentIndexOffset = 2;
   const DatFileIndex* index = nullptr;
   const uint16_t totalFileCount = qFromLittleEndian<quint16>(rawdat);
@@ -291,7 +288,7 @@ QString DatLibrary::getGameText(int offset)
   if (m_gameText.isEmpty())
   {
     QString filename("GAMETEXT.TXT");
-    getFileByName(DatFileType_CONVERSE, filename, m_gameText);
+    getFileByName(DatFileType::CONVERSE, filename, m_gameText);
   }
 
   if (offset < m_gameText.size())
@@ -302,3 +299,4 @@ QString DatLibrary::getGameText(int offset)
 
   return txt;
 }
+

@@ -1,6 +1,4 @@
-#ifndef DATTABLE_H
-#define DATTABLE_H
-
+#pragma once
 #include <QByteArray>
 #include <QMap>
 #include <QString>
@@ -26,10 +24,6 @@ protected:
   DatTable(DatLibrary& lib)
   {
     m_lib = &lib;
-  }
-
-  ~DatTable()
-  {
   }
 
   StructType* getEntry(int index)
@@ -66,4 +60,3 @@ private:
   static const int s_entrySize = sizeof(StructType);
 };
 
-#endif // DATTABLE_H

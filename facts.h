@@ -1,6 +1,4 @@
-#ifndef FACTS_H
-#define FACTS_H
-
+#pragma once
 #include <QString>
 #include <QMap>
 #include "enums.h"
@@ -17,16 +15,17 @@ struct Fact
 typedef struct __attribute__((packed)) FactTableEntry
 {
   uint16_t textOffset;
-  uint8_t receptivity[AlienRace_NumRaces];
+  uint8_t receptivity[static_cast<int>(AlienRace::NumRaces)];
   uint8_t bitfield;
   uint8_t unused;
 } FactTableEntry;
+
+static_assert(sizeof(FactTableEntry) == 16, "FactTableEntry packing does not match game data");
 
 class Facts : public DatTable<FactTableEntry>
 {
 public:
   Facts(DatLibrary& lib);
-  virtual ~Facts();
   QMap<int,Fact> getList();
   Fact getFact(int id) const;
   QMap<AlienRace,int> getReceptivity(int id);
@@ -39,4 +38,3 @@ private:
   QMap<int,Fact> m_factList;
 };
 
-#endif // FACTS_H

@@ -1,6 +1,4 @@
-#ifndef SHIPCLASSES_H
-#define SHIPCLASSES_H
-
+#pragma once
 #include <QString>
 #include <QMap>
 #include "dattable.h"
@@ -23,6 +21,8 @@ typedef struct __attribute__((packed)) ShipClassTableEntry
   uint16_t startingStrengthB; // and the other is hull strength; needs more research
 } ShipClassTableEntry;
 
+static_assert(sizeof(ShipClassTableEntry) == 12, "ShipClassTableEntry packing does not match game data");
+
 /**
  * Reads and parses the table containing ship class data.
  */
@@ -30,7 +30,6 @@ class ShipClasses : public DatTable<ShipClassTableEntry>
 {
 public:
   ShipClasses(DatLibrary& lib);
-  virtual ~ShipClasses();
   QMap<int,ShipClass> getList();
   QString getName(int id);
 
@@ -41,4 +40,3 @@ private:
   QMap<int,ShipClass> m_shipClasses;
 };
 
-#endif // SHIPCLASSES_H
