@@ -19,6 +19,7 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 endif ()
 
 include_directories ("${CMAKE_SOURCE_DIR}"
+                     "${CMAKE_SOURCE_DIR}/src"
                      "${Qt5Widgets_INCLUDE_DIRS}")
 
 qt5_wrap_ui (UI_SOURCE mainwindow.ui)
@@ -30,52 +31,52 @@ add_definitions ("-DNRE_VER_MAJOR=${NRE_VER_MAJOR}"
                  "-DNRE_VER_PATCH=${NRE_VER_PATCH}")
 
 add_executable (nomad-resource-explorer
-    main.cpp
-    aboutbox.cpp
-    aboutbox.h
-    dattable.h
-    mainwindow.cpp
-    mainwindow.h
-    datlibrary.cpp
-    datlibrary.h
-    invobject.cpp
-    invobject.h
-    palette.cpp
-    palette.h
-    places.cpp
-    places.h
-    imageconverter.cpp
-    imageconverter.h
-    aliens.cpp
-    aliens.h
-    placeclasses.cpp
-    placeclasses.h
-    audio.cpp
-    audio.h
-    ships.cpp
-    ships.h
-    shipinventory.cpp
-    shipinventory.h
-    shipclasses.cpp
-    shipclasses.h
-    facts.cpp
-    facts.h
-    tablenumberitem.cpp
-    tablenumberitem.h
-    gametext.cpp
-    gametext.h
-    fullscreenimages.cpp
-    fullscreenimages.h
-    conversationtext.cpp
-    conversationtext.h
-    stampimages.cpp
-    stampimages.h
-    missions.cpp
-    missions.h
-    glshipviewerwidget.cpp
-    glshipviewerwidget.h
-    shipmodeldata.cpp
-    shipmodeldata.h
+    src/main.cpp
+    src/aboutbox.cpp
+    src/aboutbox.h
+    src/dattable.h
+    src/mainwindow.cpp
+    src/mainwindow.h
+    src/datlibrary.cpp
+    src/datlibrary.h
+    src/invobject.cpp
+    src/invobject.h
+    src/palette.cpp
+    src/palette.h
+    src/places.cpp
+    src/places.h
+    src/imageconverter.cpp
+    src/imageconverter.h
+    src/aliens.cpp
+    src/aliens.h
+    src/placeclasses.cpp
+    src/placeclasses.h
+    src/audio.cpp
+    src/audio.h
+    src/ships.cpp
+    src/ships.h
+    src/shipinventory.cpp
+    src/shipinventory.h
+    src/shipclasses.cpp
+    src/shipclasses.h
+    src/facts.cpp
+    src/facts.h
+    src/tablenumberitem.cpp
+    src/tablenumberitem.h
+    src/gametext.cpp
+    src/gametext.h
+    src/fullscreenimages.cpp
+    src/fullscreenimages.h
+    src/conversationtext.cpp
+    src/conversationtext.h
+    src/stampimages.cpp
+    src/stampimages.h
+    src/missions.cpp
+    src/missions.h
+    src/glshipviewerwidget.cpp
+    src/glshipviewerwidget.h
+    src/shipmodeldata.cpp
+    src/shipmodeldata.h
     nre.rc
     ${NRE_RESOURCE}
     ${UI_SOURCE})
