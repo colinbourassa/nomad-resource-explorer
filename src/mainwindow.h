@@ -39,6 +39,10 @@ namespace Ui {
 class MainWindow;
 }
 
+//! Tabbed entity kinds that navigateToEntity can jump to. Races are deliberately excluded --
+//! there is no race tab, so race parameters are never linked.
+enum class EntityType { Alien, Place, Object, Ship, Fact };
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -97,6 +101,16 @@ private slots:
   void on_m_3dResetButton_clicked();
   void on_m_paletteTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
   void on_m_factSources_itemDoubleClicked(QListWidgetItem* item);
+  void on_m_factSources_itemClicked(QListWidgetItem* item);
+  void on_m_shipTable_cellClicked(int row, int column);
+  void on_m_shipInventoryTable_cellClicked(int row, int column);
+  void on_m_convCommandList_cellClicked(int row, int column);
+  void on_m_missionStartCommandList_cellClicked(int row, int column);
+  void on_m_missionEndCommandList_cellClicked(int row, int column);
+  void on_m_missionReqText_anchorClicked(const QUrl& arg1);
+  void on_m_convTopicTable_customContextMenuRequested(const QPoint& pos);
+  void on_m_objUsages_itemClicked(QListWidgetItem* item);
+  void onEntityLinkActivated(const QString& link);
 
 private:
   Ui::MainWindow *ui;
@@ -150,6 +164,11 @@ private:
   QMultiHash<QPair<int,int>, ConversationRef> m_convIndex;
   bool m_convIndexBuilt;
 
+  //! Reverse index of conversation topics (not just embedded commands), keyed by (topic,
+  //! thingId), so e.g. "an alien has a line about this object" is findable even when the line
+  //! embeds no command. Populated alongside m_convIndex.
+  QMultiHash<QPair<int,int>, ConversationRef> m_convTopicIndex;
+
   //! Refs (isRace/alienOrRaceId/topic/thingId) already processed while building m_convIndex --
   //! many alienIds fall back to the same race-level dialogue line, so this avoids reprocessing
   //! (and rescanning m_convIndex for) an identical ref once per alien that falls back to it.
@@ -191,8 +210,18 @@ private:
   void buildConversationIndexIfNeeded();
   void indexConversationEntry(int alienId, ConvTopicCategory topic, int thingId);
   QList<ConversationRef> conversationRefsFor(GTxtCmd cmd, int param);
+  QList<ConversationRef> conversationTopicRefsFor(ConvTopicCategory topic, int thingId);
   QString describeConversationTopic(const ConversationRef& ref);
   void navigateToConversation(const ConversationRef& ref);
+
+  void navigateToEntity(EntityType type, int id);
+  QString entityHref(EntityType type, int id) const;
+  bool parseEntityHref(const QString& href, EntityType& outType, int& outId) const;
+  bool getEntityLinkForGameTextCommand(GTxtCmd cmd, int param, EntityType& outType) const;
+  void styleAsLinkItem(QListWidgetItem* item);
+  void styleAsLinkItem(QTableWidgetItem* item);
+  void handleLinkCellClicked(QTableWidget* table, int row, int column);
+  void populateObjectUsages(int id);
 };
 
 #endif // MAINWINDOW_H

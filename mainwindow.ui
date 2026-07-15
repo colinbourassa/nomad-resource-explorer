@@ -516,7 +516,7 @@
        <attribute name="title">
         <string>Objects</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,5,0,0,0,2">
+       <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,5,0,0,0,2,0,2">
         <item row="0" column="0">
          <widget class="QLabel" name="m_objDescriptionLabel">
           <property name="text">
@@ -658,6 +658,16 @@
           </property>
          </widget>
         </item>
+        <item row="6" column="0" colspan="2">
+         <widget class="QLabel" name="m_objUsagesLabel">
+          <property name="text">
+           <string>Used in (click to open):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0" colspan="2">
+         <widget class="QListWidget" name="m_objUsages"/>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="m_tabFacts">
@@ -783,7 +793,7 @@
         <item row="3" column="0">
          <widget class="QLabel" name="m_factSourcesLabel">
           <property name="text">
-           <string>Learned from:</string>
+           <string>Learned from (click to open):</string>
           </property>
          </widget>
         </item>
@@ -1445,6 +1455,9 @@
             </property>
             <property name="textInteractionFlags">
              <set>Qt::TextBrowserInteraction</set>
+            </property>
+            <property name="openLinks">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
