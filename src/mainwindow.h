@@ -14,6 +14,9 @@
 #include <QLabel>
 #include <QTableWidget>
 #include <QTimer>
+#include <QMultiHash>
+#include <QSet>
+#include <QPair>
 #include "aboutbox.h"
 #include "datlibrary.h"
 #include "gametext.h"
@@ -93,6 +96,7 @@ private slots:
   void reset3DView();
   void on_m_3dResetButton_clicked();
   void on_m_paletteTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+  void on_m_factSources_itemDoubleClicked(QListWidgetItem* item);
 
 private:
   Ui::MainWindow *ui;
@@ -141,6 +145,16 @@ private:
   QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
   QTimer m_timer;
 
+  //! Reverse index of embedded GTxtCmd commands, keyed by (command, parameter), to the
+  //! conversation lines that contain them. Built lazily on first use.
+  QMultiHash<QPair<int,int>, ConversationRef> m_convIndex;
+  bool m_convIndexBuilt;
+
+  //! Refs (isRace/alienOrRaceId/topic/thingId) already processed while building m_convIndex --
+  //! many alienIds fall back to the same race-level dialogue line, so this avoids reprocessing
+  //! (and rescanning m_convIndex for) an identical ref once per alien that falls back to it.
+  QSet<QPair<QPair<int,int>, QPair<int,int> > > m_convIndexSeenRefs;
+
   void clearData();
   void openNewData(const QString gameDir);
   void connectGLViewerSliders();
@@ -174,6 +188,11 @@ private:
   void showInfoForMission(int id);
   void showAnchorTooltip(const QUrl& url);
   void populateGameTextCommandList(QTableWidget* table, QVector<QPair<GTxtCmd,int> >& commands);
+  void buildConversationIndexIfNeeded();
+  void indexConversationEntry(int alienId, ConvTopicCategory topic, int thingId);
+  QList<ConversationRef> conversationRefsFor(GTxtCmd cmd, int param);
+  QString describeConversationTopic(const ConversationRef& ref);
+  void navigateToConversation(const ConversationRef& ref);
 };
 
 #endif // MAINWINDOW_H

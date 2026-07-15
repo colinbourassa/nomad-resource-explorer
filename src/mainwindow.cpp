@@ -19,6 +19,8 @@
 #include <QBrush>
 #include <QMessageBox>
 #include <QDir>
+#include <QApplication>
+#include <QTimer>
 #include "enums.h"
 #include "tablenumberitem.h"
 
@@ -50,7 +52,8 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_currentNNVFilename(""),
   m_currentSoundDat(DatFileType::Invalid),
   m_audioOutput(nullptr),
-  m_currentConvTopic(ConvTopicCategory_GreetingInitial)
+  m_currentConvTopic(ConvTopicCategory_GreetingInitial),
+  m_convIndexBuilt(false)
 {
   setWindowIcon(QIcon(ICON_PATH));
   ui->setupUi(this);
@@ -171,6 +174,11 @@ void MainWindow::clearData()
   m_inventory.clear();
   m_facts.clear();
   m_missions.clear();
+  m_convText.clear();
+
+  m_convIndex.clear();
+  m_convIndexSeenRefs.clear();
+  m_convIndexBuilt = false;
 
   m_alienFrames.clear();
   m_stampImages.clear();
@@ -188,9 +196,15 @@ void MainWindow::clearData()
 void MainWindow::openNewData(const QString gameDir)
 {
   clearData();
-  ui->statusBar->showMessage(QString("Using directory: %1").arg(gameDir));
 
-  m_lib.openData(gameDir);
+  if (m_lib.openData(gameDir))
+  {
+    ui->statusBar->showMessage(QString("Using directory: %1").arg(gameDir));
+  }
+  else
+  {
+    ui->statusBar->showMessage(QString("Error: could not open all required .DAT files in %1").arg(gameDir));
+  }
   populatePlaceWidgets();
   populateObjectWidgets();
   populateAlienWidgets();
@@ -203,6 +217,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateMissionWidgets();
   populate3dModelWidgets();
   populatePaletteWidgets();
+
 }
 
 /**
@@ -287,8 +302,14 @@ void MainWindow::onAudioStateChanged(QAudio::State state)
  */
 void MainWindow::on_actionOpen_game_data_dir_triggered()
 {
-  m_gamedir = QFileDialog::getExistingDirectory(this, "Select directory containing Nomad .DAT files", "/home", QFileDialog::ShowDirsOnly);
-  openNewData(m_gamedir);
+  // DontUseNativeDialog: the native KDE directory picker under Qt5 can
+  // silently ignore the "Open" button for directory selection.
+  m_gamedir = QFileDialog::getExistingDirectory(this, "Select directory containing Nomad .DAT files", "/home",
+                                                QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
+  if (!m_gamedir.isEmpty())
+  {
+    openNewData(m_gamedir);
+  }
 }
 
 /**
@@ -402,6 +423,8 @@ void MainWindow::populateFactWidgets()
 {
   QMap<int,Fact> facts = m_facts.getList();
   ui->m_factTable->setRowCount(0);
+  ui->m_factText->clear();
+  ui->m_factSources->clear();
 
   foreach (Fact f, facts.values())
   {
@@ -710,6 +733,7 @@ void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentCo
   Q_UNUSED(previousColumn)
 
   ui->m_factText->clear();
+  ui->m_factSources->clear();
 
   const QTableWidgetItem* const selectedItem = ui->m_factTable->item(currentRow, 0);
   if (selectedItem)
@@ -717,6 +741,38 @@ void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentCo
     const int id = selectedItem->text().toInt();
     const Fact f = m_facts.getFact(id);
     ui->m_factText->setPlainText(f.text);
+
+    const QList<ConversationRef> sources = conversationRefsFor(GTxtCmd_GrantKnowledgeFact, id);
+    if (sources.isEmpty())
+    {
+      QListWidgetItem* const item = new QListWidgetItem("(no conversation grants this fact)");
+      item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+      ui->m_factSources->addItem(item);
+    }
+    else
+    {
+      foreach (const ConversationRef& ref, sources)
+      {
+        const QString sourceName = ref.isRace ? s_raceNames.value(static_cast<AlienRace>(ref.alienOrRaceId), "(unknown race)")
+                                               : m_aliens.getName(ref.alienOrRaceId);
+        QListWidgetItem* const item = new QListWidgetItem(QString("%1 - %2").arg(sourceName, describeConversationTopic(ref)));
+        item->setData(Qt::UserRole, QVariant::fromValue(ref));
+        ui->m_factSources->addItem(item);
+      }
+    }
+  }
+}
+
+/**
+ * Responds to a double-click on a "Learned from" entry on the fact tab by jumping to the
+ * conversation tab and selecting the source alien/topic/thing.
+ */
+void MainWindow::on_m_factSources_itemDoubleClicked(QListWidgetItem* item)
+{
+  const QVariant data = item->data(Qt::UserRole);
+  if (data.canConvert<ConversationRef>())
+  {
+    navigateToConversation(data.value<ConversationRef>());
   }
 }
 
@@ -1463,6 +1519,214 @@ QString MainWindow::getNameForGameTextCommandParameter(GTxtCmd cmd, int param)
   }
 
   return name;
+}
+
+/**
+ * Builds the reverse index (once, lazily) from every embedded GTxtCmd command found in any
+ * conversation line to the alien/topic/thing combination that produces it. Covers greetings,
+ * ask-about-person/location/object/race, display/give/sees-object, and give-fact -- the same
+ * topic categories enumerated by the conversation text tab.
+ */
+void MainWindow::buildConversationIndexIfNeeded()
+{
+  if (m_convIndexBuilt)
+  {
+    return;
+  }
+  m_convIndexBuilt = true;
+
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+
+  const QVector<int> alienIds = m_aliens.getList().keys().toVector();
+  const QVector<int> placeIds = m_places.getPlaceList().keys().toVector();
+  const QVector<int> objectIds = m_invObject.getList().keys().toVector();
+  const QVector<int> factIds = m_facts.getList().keys().toVector();
+
+  QVector<int> raceIds;
+  for (int r = 0; r < static_cast<int>(AlienRace::NumRaces); r++)
+  {
+    raceIds.append(r);
+  }
+
+  foreach (int alienId, alienIds)
+  {
+    indexConversationEntry(alienId, ConvTopicCategory_GreetingInitial, 0);
+    indexConversationEntry(alienId, ConvTopicCategory_GreetingSubsequent, 0);
+
+    foreach (int id, alienIds)  { indexConversationEntry(alienId, ConvTopicCategory_AskAboutPerson, id); }
+    foreach (int id, placeIds)  { indexConversationEntry(alienId, ConvTopicCategory_AskAboutLocation, id); }
+    foreach (int id, objectIds)
+    {
+      indexConversationEntry(alienId, ConvTopicCategory_AskAboutObject, id);
+      indexConversationEntry(alienId, ConvTopicCategory_DisplayObject, id);
+      indexConversationEntry(alienId, ConvTopicCategory_GiveObject, id);
+      indexConversationEntry(alienId, ConvTopicCategory_SeesObject, id);
+    }
+    foreach (int id, raceIds)   { indexConversationEntry(alienId, ConvTopicCategory_AskAboutRace, id); }
+    foreach (int id, factIds)   { indexConversationEntry(alienId, ConvTopicCategory_GiveFact, id); }
+  }
+
+  QApplication::restoreOverrideCursor();
+}
+
+/**
+ * Looks up a single alien/topic/thing combination and, if a conversation line exists for it,
+ * records every embedded command it contains in the reverse index. Identical (command,
+ * parameter) -> (source) entries are not duplicated, which is what keeps the index small despite
+ * many individual aliens falling back to the same race-level dialogue.
+ */
+void MainWindow::indexConversationEntry(int alienId, ConvTopicCategory topic, int thingId)
+{
+  QVector<QPair<GTxtCmd,int> > commands;
+  ConvTableType resolvedTableType = ConvTableType_Invalid;
+  int resolvedId = 0;
+
+  m_convText.getConversationText(alienId, topic, thingId, commands, &resolvedTableType, &resolvedId, true);
+
+  if (resolvedTableType == ConvTableType_Invalid)
+  {
+    return;
+  }
+
+  const ConversationRef ref{resolvedTableType == ConvTableType_Race, resolvedId, topic, thingId};
+
+  // Many different alienIds fall back to the exact same race-level dialogue line. Since a ref's
+  // resulting commands are deterministic, skipping a ref that's already been processed is
+  // equivalent to (and far cheaper than) deduping every individual (command, ref) insertion.
+  const QPair<QPair<int,int>, QPair<int,int> > refKey(
+    QPair<int,int>(ref.isRace ? 1 : 0, ref.alienOrRaceId),
+    QPair<int,int>(static_cast<int>(ref.topic), ref.thingId));
+  if (m_convIndexSeenRefs.contains(refKey))
+  {
+    return;
+  }
+  m_convIndexSeenRefs.insert(refKey);
+
+  // A single line can (rarely) embed the same command twice; dedup within this one small list
+  // rather than against the whole (potentially large) growing index.
+  QSet<QPair<int,int> > seenKeysForThisRef;
+  foreach (const auto& cmdParam, commands)
+  {
+    const QPair<int,int> key(static_cast<int>(cmdParam.first), cmdParam.second);
+    if (!seenKeysForThisRef.contains(key))
+    {
+      seenKeysForThisRef.insert(key);
+      m_convIndex.insert(key, ref);
+    }
+  }
+}
+
+/**
+ * Returns every recorded source of the given embedded command/parameter pair (e.g. every
+ * conversation line that grants a particular fact), building the reverse index on first use.
+ */
+QList<ConversationRef> MainWindow::conversationRefsFor(GTxtCmd cmd, int param)
+{
+  buildConversationIndexIfNeeded();
+  return m_convIndex.values(QPair<int,int>(static_cast<int>(cmd), param));
+}
+
+/**
+ * Produces a human-readable description of a conversation topic reference, e.g.
+ * "Ask about location: Nomad Station", for display in a "granted by" list.
+ */
+QString MainWindow::describeConversationTopic(const ConversationRef& ref)
+{
+  static const QMap<ConvTopicCategory,QString> categoryNames =
+  {
+    { ConvTopicCategory_GreetingInitial,    "Greeting (initial)" },
+    { ConvTopicCategory_GreetingSubsequent, "Greeting (subsequent)" },
+    { ConvTopicCategory_AskAboutPerson,     "Ask about person" },
+    { ConvTopicCategory_AskAboutLocation,   "Ask about location" },
+    { ConvTopicCategory_AskAboutObject,     "Ask about object" },
+    { ConvTopicCategory_AskAboutRace,       "Ask about race" },
+    { ConvTopicCategory_DisplayObject,      "Display object" },
+    { ConvTopicCategory_GiveObject,         "Give object" },
+    { ConvTopicCategory_GiveFact,           "Give fact" },
+    { ConvTopicCategory_SeesObject,         "Sees item" },
+  };
+
+  QString thingName;
+  switch (ref.topic)
+  {
+    case ConvTopicCategory_AskAboutPerson:
+      thingName = m_aliens.getName(ref.thingId);
+      break;
+    case ConvTopicCategory_AskAboutLocation:
+      thingName = m_places.getName(ref.thingId);
+      break;
+    case ConvTopicCategory_AskAboutObject:
+    case ConvTopicCategory_DisplayObject:
+    case ConvTopicCategory_GiveObject:
+    case ConvTopicCategory_SeesObject:
+      thingName = m_invObject.getName(ref.thingId);
+      break;
+    case ConvTopicCategory_AskAboutRace:
+      thingName = s_raceNames.value(static_cast<AlienRace>(ref.thingId), "(unknown)");
+      break;
+    case ConvTopicCategory_GiveFact:
+      thingName = m_facts.getFact(ref.thingId).text;
+      break;
+    default:
+      break;
+  }
+
+  const QString category = categoryNames.value(ref.topic, "(unknown topic)");
+  return thingName.isEmpty() ? category : QString("%1: %2").arg(category, thingName);
+}
+
+/**
+ * Switches to the conversation text tab and selects the alien, topic category, and topic
+ * described by the given reference, so the exact source line is shown. For a race-level
+ * reference, an arbitrary alien of that race is selected, since the alien table only lists
+ * individuals.
+ */
+void MainWindow::navigateToConversation(const ConversationRef& ref)
+{
+  ui->m_tabs->setCurrentWidget(ui->m_convTab);
+
+  int alienId = ref.alienOrRaceId;
+  if (ref.isRace)
+  {
+    const AlienRace race = static_cast<AlienRace>(ref.alienOrRaceId);
+    foreach (const Alien& a, m_aliens.getList().values())
+    {
+      if (a.race == race)
+      {
+        alienId = a.id;
+        break;
+      }
+    }
+  }
+
+  m_currentConvTopic = ref.topic;
+  switch (ref.topic)
+  {
+    case ConvTopicCategory_GreetingInitial:    ui->m_convTopicButtonGreeting0->setChecked(true); break;
+    case ConvTopicCategory_GreetingSubsequent: ui->m_convTopicButtonGreeting1->setChecked(true); break;
+    case ConvTopicCategory_AskAboutPerson:     ui->m_convTopicButtonPerson->setChecked(true);    break;
+    case ConvTopicCategory_AskAboutLocation:   ui->m_convTopicButtonPlace->setChecked(true);     break;
+    case ConvTopicCategory_AskAboutObject:     ui->m_convTopicButtonObject->setChecked(true);    break;
+    case ConvTopicCategory_AskAboutRace:       ui->m_convTopicButtonRace->setChecked(true);      break;
+    case ConvTopicCategory_DisplayObject:      ui->m_convTopicButtonDispObj->setChecked(true);   break;
+    case ConvTopicCategory_GiveObject:         ui->m_convTopicButtonGiveObj->setChecked(true);   break;
+    case ConvTopicCategory_GiveFact:           ui->m_convTopicButtonGiveFact->setChecked(true);  break;
+    case ConvTopicCategory_SeesObject:         ui->m_convTopicButtonSeesItem->setChecked(true);  break;
+  }
+
+  for (int row = 0; row < ui->m_convAlienTable->rowCount(); row++)
+  {
+    const QTableWidgetItem* const item = ui->m_convAlienTable->item(row, 0);
+    if (item && (item->text().toInt() == alienId))
+    {
+      ui->m_convAlienTable->selectRow(row);
+      break;
+    }
+  }
+
+  // repopulates the topic table for the now-current category and auto-selects the row
+  // matching ref.thingId, mirroring what selecting the alien row would do on its own
+  populateConversationTopicTable(ref.thingId);
 }
 
 /**

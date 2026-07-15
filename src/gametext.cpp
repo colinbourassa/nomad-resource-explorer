@@ -82,7 +82,7 @@ QString GameText::getMetaString(int metaTabIndex)
  * Walks through the provided ASCII character string one byte at a time, consuming the special command
  * bytes and their parameters, and producing the text that gets generated in their place (if any).
  */
-QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& commands, bool showEmbeddedCommands, int maxlen)
+QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& commands, bool showEmbeddedCommands, int maxlen, bool commandsOnly)
 {
   QString clean;
   int pos = 0;
@@ -93,7 +93,10 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
     // all normally printable characters are passed through to the output directly
     if (data[pos] >= 0x20)
     {
-      clean += QString(data[pos]).toHtmlEscaped();
+      if (!commandsOnly)
+      {
+        clean += QString(data[pos]).toHtmlEscaped();
+      }
       pos++;
     }
     else
@@ -103,29 +106,34 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
 
       if (cmd == GTxtCmd_InsertPlayerName)
       {
-        clean.append(QString("<Player's name>").toHtmlEscaped());
+        if (!commandsOnly) clean.append(QString("<Player's name>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_InsertPlayerShip)
       {
-        clean.append(QString("<Player's ship>").toHtmlEscaped());
+        if (!commandsOnly) clean.append(QString("<Player's ship>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_GAMESTR)
       {
-        clean.append(QString("<GAMESTR>").toHtmlEscaped());
+        if (!commandsOnly) clean.append(QString("<GAMESTR>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_METAMOVE)
       {
-        clean.append(QString("<METAMOVE>").toHtmlEscaped());
+        if (!commandsOnly) clean.append(QString("<METAMOVE>").toHtmlEscaped());
       }
       else if (cmd == GTxtCmd_MetaText)
       {
-        uint16_t metaTabIdx = (static_cast<uint8_t>(data[pos]) + (0x100 * static_cast<uint8_t>(data[pos+1]))) - 1;
-        const QString metaStr = getMetaString(metaTabIdx);
-        clean.append(metaStr);
+        // metatext resolution (synonym/translation/gateway lookups) is only needed to build
+        // the display string, so it's skipped entirely when commandsOnly is set
+        if (!commandsOnly)
+        {
+          uint16_t metaTabIdx = (static_cast<uint8_t>(data[pos]) + (0x100 * static_cast<uint8_t>(data[pos+1]))) - 1;
+          const QString metaStr = getMetaString(metaTabIdx);
+          clean.append(metaStr);
+        }
       }
       else if (cmd == GTxtCmd_InsertCurrentLocation)
       {
-        clean.append(QString("<current location>").toHtmlEscaped());
+        if (!commandsOnly) clean.append(QString("<current location>").toHtmlEscaped());
       }
       else if ((cmd == GTxtCmd_AddItem) ||
                ((cmd >= GTxtCmd_ChangeAlienTemperament) && (cmd <= GTxtCmd_ModifyMissionTable)))
@@ -172,13 +180,13 @@ QString GameText::readString(const char* data, QVector<QPair<GTxtCmd,int> >& com
 
           commands.append(QPair<GTxtCmd,int>(cmd, param));
 
-          if (showEmbeddedCommands)
+          if (showEmbeddedCommands && !commandsOnly)
           {
             clean += QString(EMBEDDED_CMD_REFERENCE_STR).arg(commands.count());
           }
         }
       }
-      else
+      else if (!commandsOnly)
       {
         // all other command values (bytes < 0x20) are unused, and cause the game's text engine to
         // insert the string "<HUH?>"

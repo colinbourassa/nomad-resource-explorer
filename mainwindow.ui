@@ -664,7 +664,7 @@
        <attribute name="title">
         <string>Facts</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,3,1">
+       <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,3,1,0,1">
         <item row="0" column="0">
          <widget class="QLabel" name="m_factLabel">
           <property name="text">
@@ -779,6 +779,16 @@
            <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="m_factSourcesLabel">
+          <property name="text">
+           <string>Learned from:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QListWidget" name="m_factSources"/>
         </item>
        </layout>
       </widget>
@@ -1874,6 +1884,7 @@
   <tabstop>m_objectImageView</tabstop>
   <tabstop>m_factTable</tabstop>
   <tabstop>m_factText</tabstop>
+  <tabstop>m_factSources</tabstop>
   <tabstop>m_soundTree</tabstop>
   <tabstop>m_soundPrevButton</tabstop>
   <tabstop>m_soundPlayButton</tabstop>

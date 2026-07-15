@@ -12,11 +12,19 @@ ConversationText::ConversationText(DatLibrary& lib, Aliens& aliens, GameText& gt
 
 }
 
+void ConversationText::clear()
+{
+  m_tlktCache.clear();
+  m_tlknCache.clear();
+  m_tlkxCache.clear();
+}
+
 /**
  * Gets a list of dialog lines, each one being a response from the specified alien about the
  * thing with the provided ID in the specified conversation topic category.
  */
-QString ConversationText::getConversationText(int alienId, ConvTopicCategory topic, int thingId, QVector<QPair<GTxtCmd, int> >& commands)
+QString ConversationText::getConversationText(int alienId, ConvTopicCategory topic, int thingId, QVector<QPair<GTxtCmd, int> >& commands,
+                                              ConvTableType* resolvedTableType, int* resolvedId, bool commandsOnly)
 {
   QString dialogLine;
   QByteArray tlktData;
@@ -48,7 +56,14 @@ QString ConversationText::getConversationText(int alienId, ConvTopicCategory top
     QByteArray tlkxIndexData;
     QByteArray tlkxStrData;
     getTLKXData(tableType, alienOrRaceId, tlkxIndexData, tlkxStrData);
-    dialogLine = getTLKXString(tlkxIndex, tlkxIndexData, tlkxStrData, commands);
+    dialogLine = getTLKXString(tlkxIndex, tlkxIndexData, tlkxStrData, commands, commandsOnly);
+
+    if (resolvedTableType) *resolvedTableType = tableType;
+    if (resolvedId) *resolvedId = alienOrRaceId;
+  }
+  else if (resolvedTableType)
+  {
+    *resolvedTableType = ConvTableType_Invalid;
   }
 
   return dialogLine;
@@ -61,6 +76,15 @@ QString ConversationText::getConversationText(int alienId, ConvTopicCategory top
  */
 bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& indexData, QByteArray& strData)
 {
+  const QPair<int,int> cacheKey(static_cast<int>(tableType), id);
+  const auto cached = m_tlkxCache.find(cacheKey);
+  if (cached != m_tlkxCache.end())
+  {
+    indexData = cached.value().first;
+    strData = cached.value().second;
+    return true;
+  }
+
   bool status = false;
   QString idxFilename;
   QString strFilename;
@@ -82,6 +106,11 @@ bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& 
               m_lib->getFileByName(DatFileType::CONVERSE, strFilename, strData));
   }
 
+  if (status)
+  {
+    m_tlkxCache.insert(cacheKey, qMakePair(indexData, strData));
+  }
+
   return status;
 }
 
@@ -92,7 +121,8 @@ bool ConversationText::getTLKXData(ConvTableType tableType, int id, QByteArray& 
 QString ConversationText::getTLKXString(int tlkxIndex,
                                         const QByteArray& tlkxIndexData,
                                         const QByteArray& tlkxStrData,
-                                        QVector<QPair<GTxtCmd,int> >& commands)
+                                        QVector<QPair<GTxtCmd,int> >& commands,
+                                        bool commandsOnly)
 {
   const uint8_t* idxData = reinterpret_cast<const uint8_t*>(tlkxIndexData.data());
 
@@ -101,7 +131,7 @@ QString ConversationText::getTLKXString(int tlkxIndex,
   memcpy(&tlkxStrOffset, &idxData[tlkxIndexOffset], TLKX_RECORDSIZE);
   tlkxStrOffset = qFromLittleEndian<quint32>(tlkxStrOffset);
 
-  const QString line = m_gtext->readString(tlkxStrData.data() + tlkxStrOffset, commands, true);
+  const QString line = m_gtext->readString(tlkxStrData.data() + tlkxStrOffset, commands, true, 0x1000, commandsOnly);
 
   return line;
 }
@@ -112,6 +142,14 @@ QString ConversationText::getTLKXString(int tlkxIndex,
  */
 bool ConversationText::getTLKNData(ConvTableType tableType, int id, QByteArray& data)
 {
+  const QPair<int,int> cacheKey(static_cast<int>(tableType), id);
+  const auto cached = m_tlknCache.find(cacheKey);
+  if (cached != m_tlknCache.end())
+  {
+    data = cached.value();
+    return true;
+  }
+
   bool status = false;
 
   if (tableType == ConvTableType_Individual)
@@ -123,6 +161,11 @@ bool ConversationText::getTLKNData(ConvTableType tableType, int id, QByteArray& 
     status = m_lib->getFileByName(DatFileType::CONVERSE, getTLKNRFilename(id), data);
   }
 
+  if (status)
+  {
+    m_tlknCache.insert(cacheKey, data);
+  }
+
   return status;
 }
 
@@ -132,6 +175,14 @@ bool ConversationText::getTLKNData(ConvTableType tableType, int id, QByteArray& 
  */
 bool ConversationText::getTLKTData(ConvTableType tableType, int id, QByteArray& data)
 {
+  const QPair<int,int> cacheKey(static_cast<int>(tableType), id);
+  const auto cached = m_tlktCache.find(cacheKey);
+  if (cached != m_tlktCache.end())
+  {
+    data = cached.value();
+    return true;
+  }
+
   bool status = false;
 
   if (tableType == ConvTableType_Individual)
@@ -141,6 +192,11 @@ bool ConversationText::getTLKTData(ConvTableType tableType, int id, QByteArray& 
   else if (tableType == ConvTableType_Race)
   {
     status = m_lib->getFileByName(DatFileType::CONVERSE, getTLKTRFilename(id), data);
+  }
+
+  if (status)
+  {
+    m_tlktCache.insert(cacheKey, data);
   }
 
   return status;
