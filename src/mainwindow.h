@@ -138,8 +138,8 @@ private slots:
   void on_m_raceTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_raceMembers_itemClicked(QListWidgetItem* item);
   void on_m_racePlaces_itemClicked(QListWidgetItem* item);
-  void on_m_raceFacts_itemClicked(QListWidgetItem* item);
-  void on_m_raceObjValues_itemClicked(QListWidgetItem* item);
+  void on_m_raceFacts_cellClicked(int row, int column);
+  void on_m_raceObjValues_cellClicked(int row, int column);
   void on_m_raceDialogue_itemClicked(QListWidgetItem* item);
   void onNavBack();
   void onNavForward();

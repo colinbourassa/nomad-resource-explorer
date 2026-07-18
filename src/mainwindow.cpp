@@ -518,8 +518,8 @@ void MainWindow::populateRaceWidgets()
   ui->m_raceTable->setRowCount(0);
   ui->m_raceMembers->clear();
   ui->m_racePlaces->clear();
-  ui->m_raceFacts->clear();
-  ui->m_raceObjValues->clear();
+  ui->m_raceFacts->setRowCount(0);
+  ui->m_raceObjValues->setRowCount(0);
   ui->m_raceDialogue->clear();
 
   for (int id = 0; id < static_cast<int>(AlienRace::NumRaces); id++)
@@ -1033,8 +1033,8 @@ void MainWindow::on_m_raceTable_currentCellChanged(int currentRow, int currentCo
 
   ui->m_raceMembers->clear();
   ui->m_racePlaces->clear();
-  ui->m_raceFacts->clear();
-  ui->m_raceObjValues->clear();
+  ui->m_raceFacts->setRowCount(0);
+  ui->m_raceObjValues->setRowCount(0);
   ui->m_raceDialogue->clear();
 
   const QTableWidgetItem* const selectedItem = ui->m_raceTable->item(currentRow, 0);
@@ -1069,19 +1069,31 @@ void MainWindow::on_m_raceTable_currentCellChanged(int currentRow, int currentCo
 
   foreach (const Fact& f, m_facts.getList().values())
   {
-    QListWidgetItem* const item = new QListWidgetItem(QString("%1 - %2").arg(f.receptivity[race]).arg(f.text));
-    item->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Fact), f.id));
-    styleAsLinkItem(item);
-    ui->m_raceFacts->addItem(item);
+    const int rowcount = ui->m_raceFacts->rowCount();
+    ui->m_raceFacts->insertRow(rowcount);
+    ui->m_raceFacts->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(f.id)));
+    ui->m_raceFacts->setItem(rowcount, 1, new TableNumberItem(QString("%1").arg(f.receptivity[race])));
+    QTableWidgetItem* const textItem = new QTableWidgetItem(f.text);
+    textItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Fact), f.id));
+    styleAsLinkItem(textItem);
+    ui->m_raceFacts->setItem(rowcount, 2, textItem);
   }
+  ui->m_raceFacts->resizeColumnsToContents();
+  ui->m_raceFacts->resizeRowsToContents();
 
   foreach (const InventoryObj& obj, m_invObject.getList().values())
   {
-    QListWidgetItem* const item = new QListWidgetItem(QString("%1 - %2").arg(obj.valueByRace[r]).arg(obj.name));
-    item->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Object), obj.id));
-    styleAsLinkItem(item);
-    ui->m_raceObjValues->addItem(item);
+    const int rowcount = ui->m_raceObjValues->rowCount();
+    ui->m_raceObjValues->insertRow(rowcount);
+    ui->m_raceObjValues->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(obj.id)));
+    ui->m_raceObjValues->setItem(rowcount, 1, new TableNumberItem(QString("%1").arg(obj.valueByRace[r])));
+    QTableWidgetItem* const nameItem = new QTableWidgetItem(obj.name);
+    nameItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Object), obj.id));
+    styleAsLinkItem(nameItem);
+    ui->m_raceObjValues->setItem(rowcount, 2, nameItem);
   }
+  ui->m_raceObjValues->resizeColumnsToContents();
+  ui->m_raceObjValues->resizeRowsToContents();
 
   buildConversationIndexIfNeeded();
 
@@ -1156,14 +1168,14 @@ void MainWindow::on_m_racePlaces_itemClicked(QListWidgetItem* item)
   handleRaceDetailItemClicked(item);
 }
 
-void MainWindow::on_m_raceFacts_itemClicked(QListWidgetItem* item)
+void MainWindow::on_m_raceFacts_cellClicked(int row, int column)
 {
-  handleRaceDetailItemClicked(item);
+  handleLinkCellClicked(ui->m_raceFacts, row, column);
 }
 
-void MainWindow::on_m_raceObjValues_itemClicked(QListWidgetItem* item)
+void MainWindow::on_m_raceObjValues_cellClicked(int row, int column)
 {
-  handleRaceDetailItemClicked(item);
+  handleLinkCellClicked(ui->m_raceObjValues, row, column);
 }
 
 void MainWindow::on_m_raceDialogue_itemClicked(QListWidgetItem* item)
