@@ -28,6 +28,20 @@ const QMap<QString,QString> StampImages::s_stpToPal =
   { "guyhead2.rol", "backg.pal" }
 };
 
+/**
+ * Nav sector-view stamps that reference palette indices 192-255 for their
+ * bright glow / shading, which GAME.PAL does not define (see
+ * Palette::navPalette() for the source of those colors and the evidence
+ * behind it).
+ */
+const QStringList StampImages::s_navPaletteStamps =
+{
+  "NAVMAP.STP", "NAVBKGND.STP",
+  "STAR0001.STP", "STAR0002.STP", "STAR0003.STP", "STAR0004.STP",
+  "STAR0005.STP", "STAR0006.STP", "STAR0007.STP", "STAR0008.STP",
+  "STAR0009.STP", "STAR0010.STP", "STAR0011.STP", "STAR0012.STP"
+};
+
 const QList<DatFileType> StampImages::s_datsToSearch =
 {
   // in the standard game, the only STP/ROL images that are
@@ -84,6 +98,10 @@ bool StampImages::getStamp(DatFileType dat, QString filename, QList<QImage>& ima
       if (s_stpToPal.contains(filename))
       {
         status = m_pal->paletteByName(dat, s_stpToPal[filename], palData);
+      }
+      else if (s_navPaletteStamps.contains(filename))
+      {
+        status = m_pal->navPalette(palData);
       }
       else
       {

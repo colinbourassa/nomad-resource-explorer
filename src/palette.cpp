@@ -37,6 +37,7 @@ const QVector<QRgb> Palette::s_defaultVgaPalette =
 };
 
 const QString Palette::s_gamePalFilename = "GAME.PAL";
+const QString Palette::s_shipPalFilename = "SHIP.PAL";
 
 /**
  * Loads and interprets Nomad's color palette files, filling in any missing entries
@@ -55,6 +56,7 @@ Palette::Palette(DatLibrary& lib) :
 void Palette::clear()
 {
   m_gamePal.clear();
+  m_navPal.clear();
 }
 
 /**
@@ -167,6 +169,44 @@ bool Palette::gamePalette(QVector<QRgb>& palette)
     status = loadPalData(DatFileType::TEST, s_gamePalFilename, m_gamePal);
   }
   palette = m_gamePal;
+  return status;
+}
+
+/**
+ * Loads GAME.PAL (indices 0-63) as in gamePalette(), then overlays SHIP.PAL
+ * (indices 192-255) on top, and returns the result in the provided vector.
+ *
+ * GAME.PAL only ever defines indices 0-63; everything above that renders using
+ * the hardcoded best-guess default VGA colors unless overridden here. The game
+ * reprograms indices 192-255 per screen rather than using one fixed palette for
+ * that range: SHIP.PAL is the only *.PAL resource in the game data that defines
+ * colors for indices 192-255 (all other full palettes, e.g. WORLDnn?.PAL, cover
+ * 128-191 for planet surfaces), and the decompiled game code has a real,
+ * non-dead call site for it (ship3d_palette_load(), invoked from the overlay
+ * that also saves/restores the live VGA palette around ship/cockpit screens).
+ * The nav sector-view star sprites (STAR0001-0012.STP) and the nav map/background
+ * (NAVMAP.STP, NAVBKGND.STP) use indices in the 192-255 range for their bright
+ * glow and shading, which otherwise render as a dark, muddy ring using the
+ * default guess.
+ */
+bool Palette::navPalette(QVector<QRgb>& palette)
+{
+  bool status = true;
+  if (m_navPal.size() == 0)
+  {
+    status = gamePalette(m_navPal);
+
+    QVector<QRgb> shipPal;
+    int shipStartIndex = 0;
+    if (status && loadPalData(DatFileType::TEST, s_shipPalFilename, shipPal, &shipStartIndex))
+    {
+      for (int i = 0; i < shipPal.size() && (shipStartIndex + i) < m_navPal.size(); i++)
+      {
+        m_navPal[shipStartIndex + i] = shipPal[i];
+      }
+    }
+  }
+  palette = m_navPal;
   return status;
 }
 

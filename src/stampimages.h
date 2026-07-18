@@ -29,6 +29,7 @@ private:
   Palette* m_pal;
   static const QList<DatFileType> s_datsToSearch;
   static const QMap<QString,QString> s_stpToPal;
+  static const QStringList s_navPaletteStamps;
 
   int getNumOfStampsInRoll(const QByteArray& roll);
   QList<int> getStpStartOffsetListFromRoll(const QByteArray& roll);
