@@ -17,6 +17,8 @@
 #include <QMultiHash>
 #include <QSet>
 #include <QPair>
+#include <QVector>
+#include <QAction>
 #include "aboutbox.h"
 #include "datlibrary.h"
 #include "gametext.h"
@@ -41,6 +43,28 @@ class MainWindow;
 
 //! Tabbed entity kinds that navigateToEntity can jump to.
 enum class EntityType { Alien, Place, Object, Ship, Fact, Race };
+
+//! One entry in the back/forward navigation history: either an entity-tab
+//! location or a conversation-tab location (link-jump destinations and the
+//! locations jumps were made from). See navigateToEntity/navigateToConversation.
+struct NavLocation
+{
+  enum class Kind { Entity, Conversation };
+  Kind kind;
+  EntityType entityType; // valid when kind == Entity
+  int entityId;          // valid when kind == Entity
+  ConversationRef conv;  // valid when kind == Conversation
+
+  bool operator==(const NavLocation& other) const
+  {
+    if (kind != other.kind)
+    {
+      return false;
+    }
+    return (kind == Kind::Entity) ? ((entityType == other.entityType) && (entityId == other.entityId))
+                                   : (conv == other.conv);
+  }
+};
 
 class MainWindow : public QMainWindow
 {
@@ -117,6 +141,8 @@ private slots:
   void on_m_raceFacts_itemClicked(QListWidgetItem* item);
   void on_m_raceObjValues_itemClicked(QListWidgetItem* item);
   void on_m_raceDialogue_itemClicked(QListWidgetItem* item);
+  void onNavBack();
+  void onNavForward();
 
 private:
   Ui::MainWindow *ui;
@@ -164,6 +190,13 @@ private:
 
   QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
   QTimer m_timer;
+
+  static const int NAV_HISTORY_MAX = 50;
+  QVector<NavLocation> m_navHistory;
+  int m_navIndex = -1;             // index of the current location in m_navHistory
+  bool m_navigatingHistory = false; // suppresses recording during back/forward traversal
+  QAction* m_navBackAction = nullptr;
+  QAction* m_navForwardAction = nullptr;
 
   //! Reverse index of embedded GTxtCmd commands, keyed by (command, parameter), to the
   //! conversation lines that contain them. Built lazily on first use.
@@ -222,6 +255,10 @@ private:
   void navigateToConversation(const ConversationRef& ref);
 
   void navigateToEntity(EntityType type, int id);
+  bool currentNavLocation(NavLocation& out) const;
+  void recordNavigation(const NavLocation& dest);
+  void goToNavLocation(const NavLocation& loc);
+  void updateNavActions();
   QString entityHref(EntityType type, int id) const;
   bool parseEntityHref(const QString& href, EntityType& outType, int& outId) const;
   bool getEntityLinkForGameTextCommand(GTxtCmd cmd, int param, EntityType& outType) const;

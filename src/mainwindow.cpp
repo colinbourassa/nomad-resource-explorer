@@ -92,6 +92,17 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   connect(ui->m_convTopicTable, &QTableWidget::customContextMenuRequested,
           this, &MainWindow::on_m_convTopicTable_customContextMenuRequested);
 
+  // Designer only holds one shortcut per action; add the platform "back/forward mouse button"
+  // sequences alongside the Alt+Left/Right set in the .ui file.
+  ui->actionNavBack->setShortcuts(QList<QKeySequence>{ ui->actionNavBack->shortcut(), QKeySequence::Back });
+  ui->actionNavForward->setShortcuts(QList<QKeySequence>{ ui->actionNavForward->shortcut(), QKeySequence::Forward });
+  ui->actionNavBack->setEnabled(false);
+  ui->actionNavForward->setEnabled(false);
+  connect(ui->actionNavBack, &QAction::triggered, this, &MainWindow::onNavBack);
+  connect(ui->actionNavForward, &QAction::triggered, this, &MainWindow::onNavForward);
+  m_navBackAction = ui->actionNavBack;
+  m_navForwardAction = ui->actionNavForward;
+
   if (!gameDir.isEmpty())
   {
     openNewData(gameDir);
@@ -210,6 +221,10 @@ void MainWindow::clearData()
   m_stampScene.clear();
   m_alienScene.clear();
   m_planetSurfaceScene.clear();
+
+  m_navHistory.clear();
+  m_navIndex = -1;
+  updateNavActions();
 }
 
 /**
@@ -2148,6 +2163,11 @@ QString MainWindow::describeConversationTopic(const ConversationRef& ref)
  */
 void MainWindow::navigateToConversation(const ConversationRef& ref)
 {
+  NavLocation dest;
+  dest.kind = NavLocation::Kind::Conversation;
+  dest.conv = ref;
+  recordNavigation(dest);
+
   ui->m_tabs->setCurrentWidget(ui->m_convTab);
 
   int alienId = ref.alienOrRaceId;
@@ -2200,6 +2220,12 @@ void MainWindow::navigateToConversation(const ConversationRef& ref)
  */
 void MainWindow::navigateToEntity(EntityType type, int id)
 {
+  NavLocation dest;
+  dest.kind = NavLocation::Kind::Entity;
+  dest.entityType = type;
+  dest.entityId = id;
+  recordNavigation(dest);
+
   QWidget* tab = nullptr;
   QTableWidget* table = nullptr;
   switch (type)
@@ -2225,6 +2251,135 @@ void MainWindow::navigateToEntity(EntityType type, int id)
       table->selectRow(row);
       break;
     }
+  }
+}
+
+/**
+ * Captures the currently displayed entity or conversation location, if any, so it can be
+ * recorded as the "from" location of a link-jump. Returns false for any other tab, or if
+ * the current tab has nothing selected -- no history entry is recorded in that case.
+ */
+bool MainWindow::currentNavLocation(NavLocation& out) const
+{
+  QWidget* const currentTab = ui->m_tabs->currentWidget();
+
+  EntityType type = EntityType::Alien;
+  QTableWidget* table = nullptr;
+  if (currentTab == ui->m_tabAliens)       { type = EntityType::Alien;  table = ui->m_alienTable; }
+  else if (currentTab == ui->m_tabPlaces)  { type = EntityType::Place;  table = ui->m_placeTable; }
+  else if (currentTab == ui->m_tabObjects) { type = EntityType::Object; table = ui->m_objTable;   }
+  else if (currentTab == ui->m_tabShips)   { type = EntityType::Ship;   table = ui->m_shipTable;  }
+  else if (currentTab == ui->m_tabFacts)   { type = EntityType::Fact;   table = ui->m_factTable;  }
+
+  if (table)
+  {
+    const QTableWidgetItem* const item = table->item(table->currentRow(), 0);
+    if (!item)
+    {
+      return false;
+    }
+    out.kind = NavLocation::Kind::Entity;
+    out.entityType = type;
+    out.entityId = item->text().toInt();
+    return true;
+  }
+
+  if (currentTab == ui->m_convTab)
+  {
+    const QTableWidgetItem* const alienItem = ui->m_convAlienTable->item(ui->m_convAlienTable->currentRow(), 0);
+    const QTableWidgetItem* const topicItem = ui->m_convTopicTable->item(ui->m_convTopicTable->currentRow(), 0);
+    if (!alienItem || !topicItem)
+    {
+      return false;
+    }
+    out.kind = NavLocation::Kind::Conversation;
+    out.conv = ConversationRef{ false, alienItem->text().toInt(), m_currentConvTopic, topicItem->text().toInt() };
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Records a link-jump to dest in the back/forward history: the current location (if any) is
+ * recorded as the "from" entry, the forward tail is truncated, and the cap is enforced. Does
+ * nothing while a back/forward traversal is in progress, so following goToNavLocation doesn't
+ * re-record the jump it's replaying.
+ */
+void MainWindow::recordNavigation(const NavLocation& dest)
+{
+  if (m_navigatingHistory)
+  {
+    return;
+  }
+
+  m_navHistory.resize(m_navIndex + 1);
+
+  NavLocation from;
+  if (currentNavLocation(from) && (m_navHistory.isEmpty() || !(from == m_navHistory.last())))
+  {
+    m_navHistory.append(from);
+  }
+  if (m_navHistory.isEmpty() || !(dest == m_navHistory.last()))
+  {
+    m_navHistory.append(dest);
+  }
+
+  while (m_navHistory.size() > NAV_HISTORY_MAX)
+  {
+    m_navHistory.removeFirst();
+  }
+
+  m_navIndex = m_navHistory.size() - 1;
+  updateNavActions();
+}
+
+/**
+ * Jumps to a recorded location without re-recording it as a new history entry.
+ */
+void MainWindow::goToNavLocation(const NavLocation& loc)
+{
+  m_navigatingHistory = true;
+  if (loc.kind == NavLocation::Kind::Entity)
+  {
+    navigateToEntity(loc.entityType, loc.entityId);
+  }
+  else
+  {
+    navigateToConversation(loc.conv);
+  }
+  m_navigatingHistory = false;
+}
+
+void MainWindow::onNavBack()
+{
+  if (m_navIndex > 0)
+  {
+    m_navIndex--;
+    goToNavLocation(m_navHistory.at(m_navIndex));
+  }
+  updateNavActions();
+}
+
+void MainWindow::onNavForward()
+{
+  if (m_navIndex < m_navHistory.size() - 1)
+  {
+    m_navIndex++;
+    goToNavLocation(m_navHistory.at(m_navIndex));
+  }
+  updateNavActions();
+}
+
+void MainWindow::updateNavActions()
+{
+  if (m_navBackAction)
+  {
+    m_navBackAction->setEnabled(m_navIndex > 0);
+  }
+  if (m_navForwardAction)
+  {
+    m_navForwardAction->setEnabled(m_navIndex < m_navHistory.size() - 1);
   }
 }
 

@@ -54,6 +54,12 @@ struct ConversationRef
   int alienOrRaceId;
   ConvTopicCategory topic;
   int thingId;
+
+  bool operator==(const ConversationRef& other) const
+  {
+    return (isRace == other.isRace) && (alienOrRaceId == other.alienOrRaceId) &&
+           (topic == other.topic) && (thingId == other.thingId);
+  }
 };
 
 class ConversationText
