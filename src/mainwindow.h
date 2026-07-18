@@ -143,6 +143,7 @@ private:
 
   void clearData();
   void openNewData(const QString gameDir);
+  void offerObjectTableFix(const QString& gameDir);
   void connectGLViewerSliders();
   void setupAudio();
   void setupTimer();

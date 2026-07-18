@@ -21,6 +21,7 @@
 #include <QDir>
 #include "enums.h"
 #include "tablenumberitem.h"
+#include "objecttablefix.h"
 
 #define ICON_PATH ":/icon/icon/nre-48x48.png"
 #define SURFACE_TEXTURE_PAL_LABEL_PREFIX "Surface texture palette: "
@@ -191,6 +192,7 @@ void MainWindow::openNewData(const QString gameDir)
   ui->statusBar->showMessage(QString("Using directory: %1").arg(gameDir));
 
   m_lib.openData(gameDir);
+  offerObjectTableFix(gameDir);
   populatePlaceWidgets();
   populateObjectWidgets();
   populateAlienWidgets();
@@ -203,6 +205,45 @@ void MainWindow::openNewData(const QString gameDir)
   populateMissionWidgets();
   populate3dModelWidgets();
   populatePaletteWidgets();
+}
+
+/**
+ * Checks the opened game data for the known Korok/Kenelm value-swap bug in
+ * OBJECT.TAB (see ObjectTableFix), and offers to repair CONVERSE.DAT in place
+ * (with a backup) if it is found. Reloads the game data after a repair.
+ */
+void MainWindow::offerObjectTableFix(const QString& gameDir)
+{
+  if (!ObjectTableFix::isKnownBuggy(m_lib))
+  {
+    return;
+  }
+
+  const QMessageBox::StandardButton choice = QMessageBox::question(this,
+    "Known data bug detected",
+    "This game data contains the original OBJECT.TAB, in which the per-race "
+    "object value fields for the Korok and the Kenelm are swapped (a known bug "
+    "in the retail data).\n\n"
+    "Fix CONVERSE.DAT in place? The original file will first be backed up as "
+    "CONVERSE.DAT.orig.",
+    QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+  if (choice != QMessageBox::Yes)
+  {
+    return;
+  }
+
+  QString errorMsg;
+  if (ObjectTableFix::apply(gameDir, errorMsg))
+  {
+    ui->statusBar->showMessage("Repaired OBJECT.TAB in CONVERSE.DAT (backup saved as CONVERSE.DAT.orig)");
+    m_lib.closeData();
+    m_lib.openData(gameDir);
+  }
+  else
+  {
+    QMessageBox::warning(this, "Fix failed", errorMsg);
+  }
 }
 
 /**
