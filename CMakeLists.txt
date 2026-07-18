@@ -41,6 +41,8 @@ add_executable (nomad-resource-explorer
     src/datlibrary.h
     src/invobject.cpp
     src/invobject.h
+    src/objecttablefix.cpp
+    src/objecttablefix.h
     src/palette.cpp
     src/palette.h
     src/places.cpp
