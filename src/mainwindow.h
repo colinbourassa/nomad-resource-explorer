@@ -39,9 +39,8 @@ namespace Ui {
 class MainWindow;
 }
 
-//! Tabbed entity kinds that navigateToEntity can jump to. Races are deliberately excluded --
-//! there is no race tab, so race parameters are never linked.
-enum class EntityType { Alien, Place, Object, Ship, Fact };
+//! Tabbed entity kinds that navigateToEntity can jump to.
+enum class EntityType { Alien, Place, Object, Ship, Fact, Race };
 
 class MainWindow : public QMainWindow
 {
@@ -63,6 +62,7 @@ private slots:
   void on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_alienFrameSlider_valueChanged(int value);
+  void on_m_alienTable_cellClicked(int row, int column);
   void on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
   void on_m_soundPrevButton_clicked();
   void on_m_soundPlayButton_clicked();
@@ -111,6 +111,12 @@ private slots:
   void on_m_convTopicTable_customContextMenuRequested(const QPoint& pos);
   void on_m_objUsages_itemClicked(QListWidgetItem* item);
   void onEntityLinkActivated(const QString& link);
+  void on_m_raceTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+  void on_m_raceMembers_itemClicked(QListWidgetItem* item);
+  void on_m_racePlaces_itemClicked(QListWidgetItem* item);
+  void on_m_raceFacts_itemClicked(QListWidgetItem* item);
+  void on_m_raceObjValues_itemClicked(QListWidgetItem* item);
+  void on_m_raceDialogue_itemClicked(QListWidgetItem* item);
 
 private:
   Ui::MainWindow *ui;
@@ -187,6 +193,7 @@ private:
   void populateFullscreenLbmWidgets();
   void populateStampWidgets();
   void populateFactWidgets();
+  void populateRaceWidgets();
   void populateConversationWidgets();
   void populateMissionWidgets();
   void populate3dModelWidgets();
@@ -222,6 +229,8 @@ private:
   void styleAsLinkItem(QTableWidgetItem* item);
   void handleLinkCellClicked(QTableWidget* table, int row, int column);
   void populateObjectUsages(int id);
+  void handleRaceDetailItemClicked(QListWidgetItem* item);
+  QList<ConversationRef> raceOwnedConversationRefs(int raceId);
 };
 
 #endif // MAINWINDOW_H
