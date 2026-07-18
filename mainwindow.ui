@@ -682,7 +682,7 @@
           </widget>
           <widget class="QWidget" name="m_raceDialogueTab">
            <attribute name="title">
-            <string>Dialogue &amp; mentions</string>
+            <string>Dialogue &amp;&amp; mentions</string>
            </attribute>
            <layout class="QGridLayout" name="m_raceDialogueLayout">
             <item row="0" column="0">
