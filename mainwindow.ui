@@ -512,11 +512,193 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="m_tabRaces">
+       <attribute name="title">
+        <string>Races</string>
+       </attribute>
+       <layout class="QGridLayout" name="m_raceTabLayout" columnstretch="3,5">
+        <item row="0" column="0">
+         <widget class="QTableWidget" name="m_raceTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="columnCount">
+           <number>2</number>
+          </property>
+          <attribute name="horizontalHeaderHighlightSections">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QTabWidget" name="m_raceDetailTabs">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="m_raceMembersTab">
+           <attribute name="title">
+            <string>Members</string>
+           </attribute>
+           <layout class="QGridLayout" name="m_raceMembersLayout">
+            <item row="0" column="0">
+             <widget class="QListWidget" name="m_raceMembers"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="m_racePlacesTab">
+           <attribute name="title">
+            <string>Places</string>
+           </attribute>
+           <layout class="QGridLayout" name="m_racePlacesLayout">
+            <item row="0" column="0">
+             <widget class="QListWidget" name="m_racePlaces"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="m_raceFactsTab">
+           <attribute name="title">
+            <string>Fact receptivity</string>
+           </attribute>
+           <layout class="QGridLayout" name="m_raceFactsLayout">
+            <item row="0" column="0">
+             <widget class="QTableWidget" name="m_raceFacts">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <property name="columnCount">
+               <number>3</number>
+              </property>
+              <attribute name="horizontalHeaderHighlightSections">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Receptivity</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Fact</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="m_raceObjValuesTab">
+           <attribute name="title">
+            <string>Object values</string>
+           </attribute>
+           <layout class="QGridLayout" name="m_raceObjValuesLayout">
+            <item row="0" column="0">
+             <widget class="QTableWidget" name="m_raceObjValues">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <property name="columnCount">
+               <number>3</number>
+              </property>
+              <attribute name="horizontalHeaderHighlightSections">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Value</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Object</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="m_raceDialogueTab">
+           <attribute name="title">
+            <string>Dialogue &amp;&amp; mentions</string>
+           </attribute>
+           <layout class="QGridLayout" name="m_raceDialogueLayout">
+            <item row="0" column="0">
+             <widget class="QListWidget" name="m_raceDialogue"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="m_tabObjects">
        <attribute name="title">
         <string>Objects</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,5,0,0,0,2">
+       <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,5,0,0,0,2,0,2">
         <item row="0" column="0">
          <widget class="QLabel" name="m_objDescriptionLabel">
           <property name="text">
@@ -658,13 +840,23 @@
           </property>
          </widget>
         </item>
+        <item row="6" column="0" colspan="2">
+         <widget class="QLabel" name="m_objUsagesLabel">
+          <property name="text">
+           <string>Used in (click to open):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0" colspan="2">
+         <widget class="QListWidget" name="m_objUsages"/>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="m_tabFacts">
        <attribute name="title">
         <string>Facts</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,3,1">
+       <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,3,1,0,1">
         <item row="0" column="0">
          <widget class="QLabel" name="m_factLabel">
           <property name="text">
@@ -779,6 +971,16 @@
            <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="m_factSourcesLabel">
+          <property name="text">
+           <string>Learned from (click to open):</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QListWidget" name="m_factSources"/>
         </item>
        </layout>
       </widget>
@@ -1436,6 +1638,9 @@
             <property name="textInteractionFlags">
              <set>Qt::TextBrowserInteraction</set>
             </property>
+            <property name="openLinks">
+             <bool>false</bool>
+            </property>
            </widget>
           </item>
           <item row="0" column="3">
@@ -1851,6 +2056,22 @@
     <string>About...</string>
    </property>
   </action>
+  <action name="actionNavBack">
+   <property name="text">
+    <string>Back</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Left</string>
+   </property>
+  </action>
+  <action name="actionNavForward">
+   <property name="text">
+    <string>Forward</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Right</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -1869,11 +2090,13 @@
   <tabstop>m_alienTable</tabstop>
   <tabstop>m_alienView</tabstop>
   <tabstop>m_alienFrameSlider</tabstop>
+  <tabstop>m_raceTable</tabstop>
   <tabstop>m_objTable</tabstop>
   <tabstop>m_objectText</tabstop>
   <tabstop>m_objectImageView</tabstop>
   <tabstop>m_factTable</tabstop>
   <tabstop>m_factText</tabstop>
+  <tabstop>m_factSources</tabstop>
   <tabstop>m_soundTree</tabstop>
   <tabstop>m_soundPrevButton</tabstop>
   <tabstop>m_soundPlayButton</tabstop>

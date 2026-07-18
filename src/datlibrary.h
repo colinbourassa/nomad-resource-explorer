@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QMap>
+#include <QHash>
 #include <QImage>
 #include <QVector>
 #include <QRgb>
@@ -58,6 +59,10 @@ public:
 private:
   QByteArray m_datContents[static_cast<int>(DatFileType::NumFiles)];
   QByteArray m_gameText; // keep a copy of GAMETEXT.TXT since it is referenced frequently
+
+  // cache of decompressed file contents by name, since the same member (e.g. a TLK*
+  // conversation file) is frequently requested many times in a row by callers
+  mutable QHash<QString, QByteArray> m_fileCache[static_cast<int>(DatFileType::NumFiles)];
 
   bool lzDecompress(QByteArray compressedfile, QByteArray& decompressedFile, int skipUncompressedBytes) const;
   bool getFileAtIndex(DatFileType dat, unsigned int index, QByteArray& decompressedFile) const;

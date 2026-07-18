@@ -118,9 +118,11 @@ public:
   GameText(DatLibrary& lib);
   void clear();
 
-  //! Produces a regular string from string data with embedded commands
+  //! Produces a regular string from string data with embedded commands. If commandsOnly is
+  //! true, skips building the display string and resolving metatext substitutions -- used by
+  //! callers (e.g. the conversation reverse index) that only need the (command, parameter) list.
   QString readString(const char* data, QVector<QPair<GTxtCmd,int> >& commands,
-                     bool showEmbeddedCommands = false, int maxlen = 0x1000);
+                     bool showEmbeddedCommands = false, int maxlen = 0x1000, bool commandsOnly = false);
 
 private:
   DatLibrary* m_lib;

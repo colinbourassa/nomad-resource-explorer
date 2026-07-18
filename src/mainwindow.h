@@ -14,6 +14,11 @@
 #include <QLabel>
 #include <QTableWidget>
 #include <QTimer>
+#include <QMultiHash>
+#include <QSet>
+#include <QPair>
+#include <QVector>
+#include <QAction>
 #include "aboutbox.h"
 #include "datlibrary.h"
 #include "gametext.h"
@@ -36,6 +41,31 @@ namespace Ui {
 class MainWindow;
 }
 
+//! Tabbed entity kinds that navigateToEntity can jump to.
+enum class EntityType { Alien, Place, Object, Ship, Fact, Race };
+
+//! One entry in the back/forward navigation history: either an entity-tab
+//! location or a conversation-tab location (link-jump destinations and the
+//! locations jumps were made from). See navigateToEntity/navigateToConversation.
+struct NavLocation
+{
+  enum class Kind { Entity, Conversation };
+  Kind kind;
+  EntityType entityType; // valid when kind == Entity
+  int entityId;          // valid when kind == Entity
+  ConversationRef conv;  // valid when kind == Conversation
+
+  bool operator==(const NavLocation& other) const
+  {
+    if (kind != other.kind)
+    {
+      return false;
+    }
+    return (kind == Kind::Entity) ? ((entityType == other.entityType) && (entityId == other.entityId))
+                                   : (conv == other.conv);
+  }
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -56,6 +86,7 @@ private slots:
   void on_m_placeTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_alienTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void on_m_alienFrameSlider_valueChanged(int value);
+  void on_m_alienTable_cellClicked(int row, int column);
   void on_m_soundTree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
   void on_m_soundPrevButton_clicked();
   void on_m_soundPlayButton_clicked();
@@ -93,6 +124,25 @@ private slots:
   void reset3DView();
   void on_m_3dResetButton_clicked();
   void on_m_paletteTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+  void on_m_factSources_itemDoubleClicked(QListWidgetItem* item);
+  void on_m_factSources_itemClicked(QListWidgetItem* item);
+  void on_m_shipTable_cellClicked(int row, int column);
+  void on_m_shipInventoryTable_cellClicked(int row, int column);
+  void on_m_convCommandList_cellClicked(int row, int column);
+  void on_m_missionStartCommandList_cellClicked(int row, int column);
+  void on_m_missionEndCommandList_cellClicked(int row, int column);
+  void on_m_missionReqText_anchorClicked(const QUrl& arg1);
+  void on_m_convTopicTable_customContextMenuRequested(const QPoint& pos);
+  void on_m_objUsages_itemClicked(QListWidgetItem* item);
+  void onEntityLinkActivated(const QString& link);
+  void on_m_raceTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+  void on_m_raceMembers_itemClicked(QListWidgetItem* item);
+  void on_m_racePlaces_itemClicked(QListWidgetItem* item);
+  void on_m_raceFacts_cellClicked(int row, int column);
+  void on_m_raceObjValues_cellClicked(int row, int column);
+  void on_m_raceDialogue_itemClicked(QListWidgetItem* item);
+  void onNavBack();
+  void onNavForward();
 
 private:
   Ui::MainWindow *ui;
@@ -141,6 +191,28 @@ private:
   QMap<PlanetResourceType,QMap<int,QLabel*> > m_resourceLabels;
   QTimer m_timer;
 
+  static const int NAV_HISTORY_MAX = 50;
+  QVector<NavLocation> m_navHistory;
+  int m_navIndex = -1;             // index of the current location in m_navHistory
+  bool m_navigatingHistory = false; // suppresses recording during back/forward traversal
+  QAction* m_navBackAction = nullptr;
+  QAction* m_navForwardAction = nullptr;
+
+  //! Reverse index of embedded GTxtCmd commands, keyed by (command, parameter), to the
+  //! conversation lines that contain them. Built lazily on first use.
+  QMultiHash<QPair<int,int>, ConversationRef> m_convIndex;
+  bool m_convIndexBuilt;
+
+  //! Reverse index of conversation topics (not just embedded commands), keyed by (topic,
+  //! thingId), so e.g. "an alien has a line about this object" is findable even when the line
+  //! embeds no command. Populated alongside m_convIndex.
+  QMultiHash<QPair<int,int>, ConversationRef> m_convTopicIndex;
+
+  //! Refs (isRace/alienOrRaceId/topic/thingId) already processed while building m_convIndex --
+  //! many alienIds fall back to the same race-level dialogue line, so this avoids reprocessing
+  //! (and rescanning m_convIndex for) an identical ref once per alien that falls back to it.
+  QSet<QPair<QPair<int,int>, QPair<int,int> > > m_convIndexSeenRefs;
+
   void clearData();
   void openNewData(const QString gameDir);
   void connectGLViewerSliders();
@@ -154,6 +226,7 @@ private:
   void populateFullscreenLbmWidgets();
   void populateStampWidgets();
   void populateFactWidgets();
+  void populateRaceWidgets();
   void populateConversationWidgets();
   void populateMissionWidgets();
   void populate3dModelWidgets();
@@ -174,6 +247,27 @@ private:
   void showInfoForMission(int id);
   void showAnchorTooltip(const QUrl& url);
   void populateGameTextCommandList(QTableWidget* table, QVector<QPair<GTxtCmd,int> >& commands);
+  void buildConversationIndexIfNeeded();
+  void indexConversationEntry(int alienId, ConvTopicCategory topic, int thingId);
+  QList<ConversationRef> conversationRefsFor(GTxtCmd cmd, int param);
+  QList<ConversationRef> conversationTopicRefsFor(ConvTopicCategory topic, int thingId);
+  QString describeConversationTopic(const ConversationRef& ref);
+  void navigateToConversation(const ConversationRef& ref);
+
+  void navigateToEntity(EntityType type, int id);
+  bool currentNavLocation(NavLocation& out) const;
+  void recordNavigation(const NavLocation& dest);
+  void goToNavLocation(const NavLocation& loc);
+  void updateNavActions();
+  QString entityHref(EntityType type, int id) const;
+  bool parseEntityHref(const QString& href, EntityType& outType, int& outId) const;
+  bool getEntityLinkForGameTextCommand(GTxtCmd cmd, int param, EntityType& outType) const;
+  void styleAsLinkItem(QListWidgetItem* item);
+  void styleAsLinkItem(QTableWidgetItem* item);
+  void handleLinkCellClicked(QTableWidget* table, int row, int column);
+  void populateObjectUsages(int id);
+  void handleRaceDetailItemClicked(QListWidgetItem* item);
+  QList<ConversationRef> raceOwnedConversationRefs(int raceId);
 };
 
 #endif // MAINWINDOW_H

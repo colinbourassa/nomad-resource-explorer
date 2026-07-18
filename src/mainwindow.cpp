@@ -19,6 +19,12 @@
 #include <QBrush>
 #include <QMessageBox>
 #include <QDir>
+#include <QApplication>
+#include <QTimer>
+#include <QMenu>
+#include <QAction>
+#include <QToolButton>
+#include <QHBoxLayout>
 #include "enums.h"
 #include "tablenumberitem.h"
 
@@ -50,7 +56,8 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   m_currentNNVFilename(""),
   m_currentSoundDat(DatFileType::Invalid),
   m_audioOutput(nullptr),
-  m_currentConvTopic(ConvTopicCategory_GreetingInitial)
+  m_currentConvTopic(ConvTopicCategory_GreetingInitial),
+  m_convIndexBuilt(false)
 {
   setWindowIcon(QIcon(ICON_PATH));
   ui->setupUi(this);
@@ -66,6 +73,58 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   setupTimer();
   clearAllResourceLabels();
   connectGLViewerSliders();
+
+  // wire up the entity links embedded as <a href> anchors in the place representative/resource
+  // labels -- these are plain QLabels, not named per-widget slots, so connect them in code
+  ui->m_placeRepData->setTextInteractionFlags(Qt::TextBrowserInteraction);
+  connect(ui->m_placeRepData, &QLabel::linkActivated, this, &MainWindow::onEntityLinkActivated);
+  ui->m_placeRaceData->setTextInteractionFlags(Qt::TextBrowserInteraction);
+  connect(ui->m_placeRaceData, &QLabel::linkActivated, this, &MainWindow::onEntityLinkActivated);
+  for (int rtypeIdx = 0; rtypeIdx < static_cast<int>(PlanetResourceType::NumTypes); rtypeIdx++)
+  {
+    const PlanetResourceType prType = static_cast<PlanetResourceType>(rtypeIdx);
+    foreach (QLabel* l, m_resourceLabels[prType])
+    {
+      l->setTextInteractionFlags(Qt::TextBrowserInteraction);
+      connect(l, &QLabel::linkActivated, this, &MainWindow::onEntityLinkActivated);
+    }
+  }
+
+  ui->m_convTopicTable->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->m_convTopicTable, &QTableWidget::customContextMenuRequested,
+          this, &MainWindow::on_m_convTopicTable_customContextMenuRequested);
+
+  // Designer only holds one shortcut per action; add the platform "back/forward mouse button"
+  // sequences alongside the Alt+Left/Right set in the .ui file.
+  ui->actionNavBack->setShortcuts(QList<QKeySequence>{ ui->actionNavBack->shortcut(), QKeySequence::Back });
+  ui->actionNavForward->setShortcuts(QList<QKeySequence>{ ui->actionNavForward->shortcut(), QKeySequence::Forward });
+  ui->actionNavBack->setEnabled(false);
+  ui->actionNavForward->setEnabled(false);
+  connect(ui->actionNavBack, &QAction::triggered, this, &MainWindow::onNavBack);
+  connect(ui->actionNavForward, &QAction::triggered, this, &MainWindow::onNavForward);
+  m_navBackAction = ui->actionNavBack;
+  m_navForwardAction = ui->actionNavForward;
+
+  // The actions no longer live in any menu, so re-attach them to the window to keep the
+  // shortcuts firing, and expose them as corner buttons on the tab bar instead.
+  addAction(ui->actionNavBack);
+  addAction(ui->actionNavForward);
+
+  QWidget* const navCorner = new QWidget(this);
+  QHBoxLayout* const navLayout = new QHBoxLayout(navCorner);
+  navLayout->setContentsMargins(0, 0, 4, 0);
+  navLayout->setSpacing(0);
+  QToolButton* const backBtn = new QToolButton(navCorner);
+  backBtn->setDefaultAction(ui->actionNavBack);
+  backBtn->setAutoRaise(true);
+  backBtn->setArrowType(Qt::LeftArrow);
+  QToolButton* const fwdBtn = new QToolButton(navCorner);
+  fwdBtn->setDefaultAction(ui->actionNavForward);
+  fwdBtn->setAutoRaise(true);
+  fwdBtn->setArrowType(Qt::RightArrow);
+  navLayout->addWidget(backBtn);
+  navLayout->addWidget(fwdBtn);
+  ui->m_tabs->setCornerWidget(navCorner, Qt::TopLeftCorner);
 
   if (!gameDir.isEmpty())
   {
@@ -171,6 +230,11 @@ void MainWindow::clearData()
   m_inventory.clear();
   m_facts.clear();
   m_missions.clear();
+  m_convText.clear();
+
+  m_convIndex.clear();
+  m_convIndexSeenRefs.clear();
+  m_convIndexBuilt = false;
 
   m_alienFrames.clear();
   m_stampImages.clear();
@@ -180,6 +244,10 @@ void MainWindow::clearData()
   m_stampScene.clear();
   m_alienScene.clear();
   m_planetSurfaceScene.clear();
+
+  m_navHistory.clear();
+  m_navIndex = -1;
+  updateNavActions();
 }
 
 /**
@@ -188,12 +256,19 @@ void MainWindow::clearData()
 void MainWindow::openNewData(const QString gameDir)
 {
   clearData();
-  ui->statusBar->showMessage(QString("Using directory: %1").arg(gameDir));
 
-  m_lib.openData(gameDir);
+  if (m_lib.openData(gameDir))
+  {
+    ui->statusBar->showMessage(QString("Using directory: %1").arg(gameDir));
+  }
+  else
+  {
+    ui->statusBar->showMessage(QString("Error: could not open all required .DAT files in %1").arg(gameDir));
+  }
   populatePlaceWidgets();
   populateObjectWidgets();
   populateAlienWidgets();
+  populateRaceWidgets();
   populateShipWidgets();
   populateAudioWidgets();
   populateFactWidgets();
@@ -203,6 +278,7 @@ void MainWindow::openNewData(const QString gameDir)
   populateMissionWidgets();
   populate3dModelWidgets();
   populatePaletteWidgets();
+
 }
 
 /**
@@ -287,8 +363,14 @@ void MainWindow::onAudioStateChanged(QAudio::State state)
  */
 void MainWindow::on_actionOpen_game_data_dir_triggered()
 {
-  m_gamedir = QFileDialog::getExistingDirectory(this, "Select directory containing Nomad .DAT files", "/home", QFileDialog::ShowDirsOnly);
-  openNewData(m_gamedir);
+  // DontUseNativeDialog: the native KDE directory picker under Qt5 can
+  // silently ignore the "Open" button for directory selection.
+  m_gamedir = QFileDialog::getExistingDirectory(this, "Select directory containing Nomad .DAT files", "/home",
+                                                QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
+  if (!m_gamedir.isEmpty())
+  {
+    openNewData(m_gamedir);
+  }
 }
 
 /**
@@ -367,10 +449,24 @@ void MainWindow::populateAlienWidgets()
     ui->m_alienTable->setItem(rowcount, 1, new QTableWidgetItem(a.name));
 
     const QString racename = s_raceNames.contains(a.race) ? s_raceNames[a.race] : "(invalid/unknown)";
-    ui->m_alienTable->setItem(rowcount, 2, new QTableWidgetItem(racename));
+    QTableWidgetItem* const raceItem = new QTableWidgetItem(racename);
+    if (s_raceNames.contains(a.race))
+    {
+      raceItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Race), static_cast<int>(a.race)));
+      styleAsLinkItem(raceItem);
+    }
+    ui->m_alienTable->setItem(rowcount, 2, raceItem);
   }
   ui->m_alienTable->resizeColumnsToContents();
   ui->m_alienTable->resizeRowsToContents();
+}
+
+/**
+ * Responds to a click on the alien table's race (col 2) cell by navigating to the linked race.
+ */
+void MainWindow::on_m_alienTable_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_alienTable, row, column);
 }
 
 /*
@@ -388,8 +484,24 @@ void MainWindow::populateShipWidgets()
     ui->m_shipTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(s.id)));
     ui->m_shipTable->setItem(rowcount, 1, new QTableWidgetItem(s.name));
     ui->m_shipTable->setItem(rowcount, 2, new QTableWidgetItem(m_shipClasses.getName(s.shipclass)));
-    ui->m_shipTable->setItem(rowcount, 3, new QTableWidgetItem(m_aliens.getName(s.pilot)));
-    ui->m_shipTable->setItem(rowcount, 4, new QTableWidgetItem(m_places.getName(s.location)));
+
+    const QString pilotName = m_aliens.getName(s.pilot);
+    QTableWidgetItem* const pilotItem = new QTableWidgetItem(pilotName);
+    if (!pilotName.isEmpty())
+    {
+      pilotItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Alien), s.pilot));
+      styleAsLinkItem(pilotItem);
+    }
+    ui->m_shipTable->setItem(rowcount, 3, pilotItem);
+
+    const QString locationName = m_places.getName(s.location);
+    QTableWidgetItem* const locationItem = new QTableWidgetItem(locationName);
+    if (!locationName.isEmpty())
+    {
+      locationItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Place), s.location));
+      styleAsLinkItem(locationItem);
+    }
+    ui->m_shipTable->setItem(rowcount, 4, locationItem);
   }
   ui->m_shipTable->resizeColumnsToContents();
   ui->m_shipTable->resizeRowsToContents();
@@ -402,6 +514,8 @@ void MainWindow::populateFactWidgets()
 {
   QMap<int,Fact> facts = m_facts.getList();
   ui->m_factTable->setRowCount(0);
+  ui->m_factText->clear();
+  ui->m_factSources->clear();
 
   foreach (Fact f, facts.values())
   {
@@ -416,6 +530,30 @@ void MainWindow::populateFactWidgets()
   }
   ui->m_factTable->resizeColumnsToContents();
   ui->m_factTable->resizeRowsToContents();
+}
+
+/*
+ * Populates the table of races -- a fixed 12-entry list (the AlienRace enum), not an on-disk
+ * table, so this iterates ordinals rather than an m_races data class.
+ */
+void MainWindow::populateRaceWidgets()
+{
+  ui->m_raceTable->setRowCount(0);
+  ui->m_raceMembers->clear();
+  ui->m_racePlaces->clear();
+  ui->m_raceFacts->setRowCount(0);
+  ui->m_raceObjValues->setRowCount(0);
+  ui->m_raceDialogue->clear();
+
+  for (int id = 0; id < static_cast<int>(AlienRace::NumRaces); id++)
+  {
+    const int rowcount = ui->m_raceTable->rowCount();
+    ui->m_raceTable->insertRow(rowcount);
+    ui->m_raceTable->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(id)));
+    ui->m_raceTable->setItem(rowcount, 1, new QTableWidgetItem(s_raceNames.value(static_cast<AlienRace>(id), "(unknown)")));
+  }
+  ui->m_raceTable->resizeColumnsToContents();
+  ui->m_raceTable->resizeRowsToContents();
 }
 
 /*
@@ -639,8 +777,17 @@ void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentCo
       const int count = inventory[obj];
       const int rowcount = ui->m_shipInventoryTable->rowCount();
       ui->m_shipInventoryTable->insertRow(rowcount);
-      ui->m_shipInventoryTable->setItem(rowcount, 0, new QTableWidgetItem(QString("%1").arg(obj)));
-      ui->m_shipInventoryTable->setItem(rowcount, 1, new QTableWidgetItem(m_invObject.getName(obj)));
+
+      QTableWidgetItem* const idItem = new QTableWidgetItem(QString("%1").arg(obj));
+      idItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Object), obj));
+      styleAsLinkItem(idItem);
+      ui->m_shipInventoryTable->setItem(rowcount, 0, idItem);
+
+      QTableWidgetItem* const nameItem = new QTableWidgetItem(m_invObject.getName(obj));
+      nameItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Object), obj));
+      styleAsLinkItem(nameItem);
+      ui->m_shipInventoryTable->setItem(rowcount, 1, nameItem);
+
       ui->m_shipInventoryTable->setItem(rowcount, 2, new QTableWidgetItem(QString("%1").arg(count)));
     }
 
@@ -650,6 +797,23 @@ void MainWindow::on_m_shipTable_currentCellChanged(int currentRow, int currentCo
     ui->m_shipInventoryTable->resizeColumnToContents(1);
     ui->m_shipInventoryTable->resizeRowsToContents();
   }
+}
+
+/**
+ * Responds to a click on the ships table's pilot (col 3) or location (col 4) cell by
+ * navigating to the linked alien/place.
+ */
+void MainWindow::on_m_shipTable_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_shipTable, row, column);
+}
+
+/**
+ * Responds to a click on a ship inventory row by navigating to the object it references.
+ */
+void MainWindow::on_m_shipInventoryTable_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_shipInventoryTable, row, column);
 }
 
 /*
@@ -697,6 +861,121 @@ void MainWindow::on_m_objTable_currentCellChanged(int currentRow, int currentCol
       ui->m_objectUniqueLabel->setText("Unique: No");
     }
     ui->m_objectText->setHtml(m_invObject.getObjectText(id));
+    populateObjectUsages(id);
+  }
+  else
+  {
+    ui->m_objUsages->clear();
+  }
+}
+
+/**
+ * Populates the objects tab's "Used in" list with every place the given object is referenced --
+ * conversation lines (either an embedded command or just a topic about it), ship cargo, planet
+ * resources, and mission objectives. Cheap linear scans over already-loaded tables; computed on
+ * selection rather than cached.
+ */
+void MainWindow::populateObjectUsages(int id)
+{
+  ui->m_objUsages->clear();
+
+  QList<ConversationRef> convRefs = conversationRefsFor(GTxtCmd_AddItem, id);
+  convRefs += conversationRefsFor(GTxtCmd_GrantKnowledgeObject, id);
+  convRefs += conversationTopicRefsFor(ConvTopicCategory_AskAboutObject, id);
+  convRefs += conversationTopicRefsFor(ConvTopicCategory_DisplayObject, id);
+  convRefs += conversationTopicRefsFor(ConvTopicCategory_GiveObject, id);
+  convRefs += conversationTopicRefsFor(ConvTopicCategory_SeesObject, id);
+  foreach (const ConversationRef& ref, convRefs)
+  {
+    const QString sourceName = ref.isRace ? s_raceNames.value(static_cast<AlienRace>(ref.alienOrRaceId), "(unknown race)")
+                                           : m_aliens.getName(ref.alienOrRaceId);
+    QListWidgetItem* const item = new QListWidgetItem(QString("%1 - %2").arg(sourceName, describeConversationTopic(ref)));
+    item->setData(Qt::UserRole, QVariant::fromValue(ref));
+    styleAsLinkItem(item);
+    item->setToolTip("Click to open this conversation");
+    ui->m_objUsages->addItem(item);
+  }
+
+  const QMap<int,Ship> ships = m_ships.getList();
+  for (auto it = ships.constBegin(); it != ships.constEnd(); ++it)
+  {
+    if (m_inventory.getInventory(it.key()).contains(id))
+    {
+      QListWidgetItem* const item = new QListWidgetItem(QString("Cargo of %1").arg(it.value().name));
+      item->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Ship), it.key()));
+      styleAsLinkItem(item);
+      item->setToolTip("Click to open this ship");
+      ui->m_objUsages->addItem(item);
+    }
+  }
+
+  const QMap<int,Place> places = m_places.getPlaceList();
+  for (auto it = places.constBegin(); it != places.constEnd(); ++it)
+  {
+    PlanetClass pclass;
+    if (it.value().isPlanet && m_pclasses.pclassData(it.value().classId, pclass))
+    {
+      bool isResourceHere = false;
+      for (const auto& resourcesOfType : pclass.resources)
+      {
+        if (resourcesOfType.contains(id))
+        {
+          isResourceHere = true;
+          break;
+        }
+      }
+      if (isResourceHere)
+      {
+        QListWidgetItem* const item = new QListWidgetItem(QString("Resource on %1").arg(it.value().name));
+        item->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Place), it.key()));
+        styleAsLinkItem(item);
+        item->setToolTip("Click to open this place");
+        ui->m_objUsages->addItem(item);
+      }
+    }
+  }
+
+  const QMap<int,Mission> missions = m_missions.getList();
+  for (auto it = missions.constBegin(); it != missions.constEnd(); ++it)
+  {
+    if ((it.value().action == MissionActionType::DeliverItem) && (it.value().objectiveId == id))
+    {
+      QListWidgetItem* const item = new QListWidgetItem(QString("Objective of mission %1").arg(it.key()));
+      item->setData(Qt::UserRole, it.key());
+      styleAsLinkItem(item);
+      item->setToolTip("Click to open this mission");
+      ui->m_objUsages->addItem(item);
+    }
+  }
+
+  if (ui->m_objUsages->count() == 0)
+  {
+    QListWidgetItem* const item = new QListWidgetItem("(not referenced anywhere)");
+    item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+    ui->m_objUsages->addItem(item);
+  }
+}
+
+/**
+ * Responds to a click on the objects tab's "Used in" list by navigating to whichever source
+ * the entry represents -- a conversation line, another tabbed entity, or a mission.
+ */
+void MainWindow::on_m_objUsages_itemClicked(QListWidgetItem* item)
+{
+  const QVariant data = item->data(Qt::UserRole);
+  if (data.canConvert<ConversationRef>())
+  {
+    navigateToConversation(data.value<ConversationRef>());
+  }
+  else if (data.type() == QVariant::Point)
+  {
+    const QPoint pt = data.toPoint();
+    navigateToEntity(static_cast<EntityType>(pt.x()), pt.y());
+  }
+  else if (data.type() == QVariant::Int)
+  {
+    ui->m_tabs->setCurrentWidget(ui->m_tabMissions);
+    ui->m_missionIdSpinBox->setValue(data.toInt());
   }
 }
 
@@ -710,6 +989,7 @@ void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentCo
   Q_UNUSED(previousColumn)
 
   ui->m_factText->clear();
+  ui->m_factSources->clear();
 
   const QTableWidgetItem* const selectedItem = ui->m_factTable->item(currentRow, 0);
   if (selectedItem)
@@ -717,7 +997,213 @@ void MainWindow::on_m_factTable_currentCellChanged(int currentRow, int currentCo
     const int id = selectedItem->text().toInt();
     const Fact f = m_facts.getFact(id);
     ui->m_factText->setPlainText(f.text);
+
+    const QList<ConversationRef> sources = conversationRefsFor(GTxtCmd_GrantKnowledgeFact, id);
+    if (sources.isEmpty())
+    {
+      QListWidgetItem* const item = new QListWidgetItem("(no conversation grants this fact)");
+      item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+      ui->m_factSources->addItem(item);
+    }
+    else
+    {
+      foreach (const ConversationRef& ref, sources)
+      {
+        const QString sourceName = ref.isRace ? s_raceNames.value(static_cast<AlienRace>(ref.alienOrRaceId), "(unknown race)")
+                                               : m_aliens.getName(ref.alienOrRaceId);
+        QListWidgetItem* const item = new QListWidgetItem(QString("%1 - %2").arg(sourceName, describeConversationTopic(ref)));
+        item->setData(Qt::UserRole, QVariant::fromValue(ref));
+        styleAsLinkItem(item);
+        item->setToolTip("Click to open this conversation");
+        ui->m_factSources->addItem(item);
+      }
+    }
   }
+}
+
+/**
+ * Responds to a double-click on a "Learned from" entry on the fact tab by jumping to the
+ * conversation tab and selecting the source alien/topic/thing.
+ */
+void MainWindow::on_m_factSources_itemDoubleClicked(QListWidgetItem* item)
+{
+  const QVariant data = item->data(Qt::UserRole);
+  if (data.canConvert<ConversationRef>())
+  {
+    navigateToConversation(data.value<ConversationRef>());
+  }
+}
+
+/**
+ * Same as on_m_factSources_itemDoubleClicked, but for a single click -- the "Learned from" list
+ * is now styled as links, so a single click activates them like any other link in the app.
+ */
+void MainWindow::on_m_factSources_itemClicked(QListWidgetItem* item)
+{
+  on_m_factSources_itemDoubleClicked(item);
+}
+
+/**
+ * Responds to a row being selected in the race table by rebuilding its five detail lists:
+ * member aliens, associated places, fact receptivity, object trade values, and dialogue that
+ * mentions the race.
+ */
+void MainWindow::on_m_raceTable_currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
+{
+  Q_UNUSED(currentColumn)
+  Q_UNUSED(previousRow)
+  Q_UNUSED(previousColumn)
+
+  ui->m_raceMembers->clear();
+  ui->m_racePlaces->clear();
+  ui->m_raceFacts->setRowCount(0);
+  ui->m_raceObjValues->setRowCount(0);
+  ui->m_raceDialogue->clear();
+
+  const QTableWidgetItem* const selectedItem = ui->m_raceTable->item(currentRow, 0);
+  if (!selectedItem)
+  {
+    return;
+  }
+  const int r = selectedItem->text().toInt();
+  const AlienRace race = static_cast<AlienRace>(r);
+
+  foreach (const Alien& a, m_aliens.getList().values())
+  {
+    if (a.race == race)
+    {
+      QListWidgetItem* const item = new QListWidgetItem(a.name);
+      item->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Alien), a.id));
+      styleAsLinkItem(item);
+      ui->m_raceMembers->addItem(item);
+    }
+  }
+
+  foreach (const Place& p, m_places.getPlaceList().values())
+  {
+    if (p.race == race)
+    {
+      QListWidgetItem* const item = new QListWidgetItem(p.name);
+      item->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Place), p.id));
+      styleAsLinkItem(item);
+      ui->m_racePlaces->addItem(item);
+    }
+  }
+
+  foreach (const Fact& f, m_facts.getList().values())
+  {
+    const int rowcount = ui->m_raceFacts->rowCount();
+    ui->m_raceFacts->insertRow(rowcount);
+    ui->m_raceFacts->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(f.id)));
+    ui->m_raceFacts->setItem(rowcount, 1, new TableNumberItem(QString("%1").arg(f.receptivity[race])));
+    QTableWidgetItem* const textItem = new QTableWidgetItem(f.text);
+    textItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Fact), f.id));
+    styleAsLinkItem(textItem);
+    ui->m_raceFacts->setItem(rowcount, 2, textItem);
+  }
+  ui->m_raceFacts->resizeColumnsToContents();
+  ui->m_raceFacts->resizeRowsToContents();
+
+  foreach (const InventoryObj& obj, m_invObject.getList().values())
+  {
+    const int rowcount = ui->m_raceObjValues->rowCount();
+    ui->m_raceObjValues->insertRow(rowcount);
+    ui->m_raceObjValues->setItem(rowcount, 0, new TableNumberItem(QString("%1").arg(obj.id)));
+    ui->m_raceObjValues->setItem(rowcount, 1, new TableNumberItem(QString("%1").arg(obj.valueByRace[r])));
+    QTableWidgetItem* const nameItem = new QTableWidgetItem(obj.name);
+    nameItem->setData(Qt::UserRole, QPoint(static_cast<int>(EntityType::Object), obj.id));
+    styleAsLinkItem(nameItem);
+    ui->m_raceObjValues->setItem(rowcount, 2, nameItem);
+  }
+  ui->m_raceObjValues->resizeColumnsToContents();
+  ui->m_raceObjValues->resizeRowsToContents();
+
+  buildConversationIndexIfNeeded();
+
+  QSet<QPair<QPair<int,int>, QPair<int,int> > > seenRefs;
+  foreach (const ConversationRef& ref, raceOwnedConversationRefs(r))
+  {
+    const QPair<QPair<int,int>, QPair<int,int> > key(QPair<int,int>(1, ref.alienOrRaceId),
+      QPair<int,int>(static_cast<int>(ref.topic), ref.thingId));
+    seenRefs.insert(key);
+
+    QListWidgetItem* const item = new QListWidgetItem(QString("Race dialogue - %1").arg(describeConversationTopic(ref)));
+    item->setData(Qt::UserRole, QVariant::fromValue(ref));
+    styleAsLinkItem(item);
+    item->setToolTip("Click to open this conversation");
+    ui->m_raceDialogue->addItem(item);
+  }
+
+  QList<ConversationRef> mentions = conversationTopicRefsFor(ConvTopicCategory_AskAboutRace, r);
+  mentions += conversationRefsFor(GTxtCmd_GrantKnowledgeRace, r);
+  foreach (const ConversationRef& ref, mentions)
+  {
+    const QPair<QPair<int,int>, QPair<int,int> > key(QPair<int,int>(ref.isRace ? 1 : 0, ref.alienOrRaceId),
+      QPair<int,int>(static_cast<int>(ref.topic), ref.thingId));
+    if (seenRefs.contains(key))
+    {
+      continue;
+    }
+    seenRefs.insert(key);
+
+    const QString sourceName = ref.isRace ? s_raceNames.value(static_cast<AlienRace>(ref.alienOrRaceId), "(unknown race)")
+                                           : m_aliens.getName(ref.alienOrRaceId);
+    QListWidgetItem* const item = new QListWidgetItem(QString("%1 - %2").arg(sourceName, describeConversationTopic(ref)));
+    item->setData(Qt::UserRole, QVariant::fromValue(ref));
+    styleAsLinkItem(item);
+    item->setToolTip("Click to open this conversation");
+    ui->m_raceDialogue->addItem(item);
+  }
+
+  if (ui->m_raceDialogue->count() == 0)
+  {
+    QListWidgetItem* const item = new QListWidgetItem("(no dialogue references this race)");
+    item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+    ui->m_raceDialogue->addItem(item);
+  }
+}
+
+/**
+ * Shared handler for the five race detail lists (members/places/facts/object values/dialogue):
+ * navigates to a linked entity or a referenced conversation line.
+ */
+void MainWindow::handleRaceDetailItemClicked(QListWidgetItem* item)
+{
+  const QVariant data = item->data(Qt::UserRole);
+  if (data.canConvert<ConversationRef>())
+  {
+    navigateToConversation(data.value<ConversationRef>());
+  }
+  else if (data.type() == QVariant::Point)
+  {
+    const QPoint pt = data.toPoint();
+    navigateToEntity(static_cast<EntityType>(pt.x()), pt.y());
+  }
+}
+
+void MainWindow::on_m_raceMembers_itemClicked(QListWidgetItem* item)
+{
+  handleRaceDetailItemClicked(item);
+}
+
+void MainWindow::on_m_racePlaces_itemClicked(QListWidgetItem* item)
+{
+  handleRaceDetailItemClicked(item);
+}
+
+void MainWindow::on_m_raceFacts_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_raceFacts, row, column);
+}
+
+void MainWindow::on_m_raceObjValues_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_raceObjValues, row, column);
+}
+
+void MainWindow::on_m_raceDialogue_itemClicked(QListWidgetItem* item)
+{
+  handleRaceDetailItemClicked(item);
 }
 
 /**
@@ -766,8 +1252,12 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
           ui->m_placeClassData->setText(pclassData.name);
           const QString tempString = QString("%1 (%2)").arg(pclassData.temperature).arg(pclassData.temperatureRange);
           ui->m_placeTemperatureData->setText(tempString);
-          ui->m_placeRaceData->setText(s_raceNames.contains(p.race) ? s_raceNames[p.race] : "(none)");
-          ui->m_placeRepData->setText(m_aliens.getName(p.representativeId));
+          ui->m_placeRaceData->setText(s_raceNames.contains(p.race)
+            ? QString("<a href=\"%1\">%2</a>").arg(entityHref(EntityType::Race, static_cast<int>(p.race)), s_raceNames[p.race])
+            : "(none)");
+          const QString repName = m_aliens.getName(p.representativeId);
+          ui->m_placeRepData->setText(repName.isEmpty() ? repName
+            : QString("<a href=\"%1\">%2</a>").arg(entityHref(EntityType::Alien, p.representativeId), repName));
 
           foreach (PlanetResourceType resource, pclassData.resources.keys())
           {
@@ -779,7 +1269,8 @@ void MainWindow::on_m_placeTable_currentCellChanged(int currentRow, int currentC
             {
               const int resourceItemId = resourcesOfType.keys().at(resourceSlot);
               const QString resourceName = m_invObject.getName(resourceItemId);
-              m_resourceLabels[resource][resourceSlot]->setText(QString::fromUtf8(" \u2022  ") + resourceName);
+              const QString link = QString("<a href=\"%1\">%2</a>").arg(entityHref(EntityType::Object, resourceItemId), resourceName);
+              m_resourceLabels[resource][resourceSlot]->setText(QString::fromUtf8(" \u2022  ") + link);
               resourceSlot++;
             }
           }
@@ -1389,6 +1880,51 @@ void MainWindow::on_m_convTopicTable_currentCellChanged(int currentRow, int curr
 }
 
 /**
+ * Offers a "Go to <entity>" context-menu action on the conversation topic table. A plain single
+ * click already selects the topic (on_m_convTopicTable_currentCellChanged), so cross-navigation
+ * to the entity the topic refers to is offered via right-click instead. Not shown for the
+ * greeting categories, which have no linked entity tab.
+ */
+void MainWindow::on_m_convTopicTable_customContextMenuRequested(const QPoint& pos)
+{
+  const QTableWidgetItem* const item = ui->m_convTopicTable->itemAt(pos);
+  if (!item)
+  {
+    return;
+  }
+
+  EntityType type;
+  QString label;
+  switch (m_currentConvTopic)
+  {
+    case ConvTopicCategory_AskAboutPerson:   type = EntityType::Alien;  label = "alien";  break;
+    case ConvTopicCategory_AskAboutLocation: type = EntityType::Place;  label = "place";  break;
+    case ConvTopicCategory_AskAboutObject:
+    case ConvTopicCategory_DisplayObject:
+    case ConvTopicCategory_GiveObject:
+    case ConvTopicCategory_SeesObject:       type = EntityType::Object; label = "object"; break;
+    case ConvTopicCategory_GiveFact:         type = EntityType::Fact;   label = "fact";   break;
+    case ConvTopicCategory_AskAboutRace:     type = EntityType::Race;   label = "race";   break;
+    default:
+      return;
+  }
+
+  const QTableWidgetItem* const idItem = ui->m_convTopicTable->item(item->row(), 0);
+  if (!idItem)
+  {
+    return;
+  }
+  const int id = idItem->text().toInt();
+
+  QMenu menu(ui->m_convTopicTable);
+  QAction* const goToAction = menu.addAction(QString("Go to %1").arg(label));
+  if (menu.exec(ui->m_convTopicTable->viewport()->mapToGlobal(pos)) == goToAction)
+  {
+    navigateToEntity(type, id);
+  }
+}
+
+/**
  * Loads any conversation text that is applicable to the currently selected alien and conversation topic.
  */
 void MainWindow::getConversationLinesForCurrentTopic()
@@ -1463,6 +1999,542 @@ QString MainWindow::getNameForGameTextCommandParameter(GTxtCmd cmd, int param)
   }
 
   return name;
+}
+
+/**
+ * Builds the reverse index (once, lazily) from every embedded GTxtCmd command found in any
+ * conversation line to the alien/topic/thing combination that produces it. Covers greetings,
+ * ask-about-person/location/object/race, display/give/sees-object, and give-fact -- the same
+ * topic categories enumerated by the conversation text tab.
+ */
+void MainWindow::buildConversationIndexIfNeeded()
+{
+  if (m_convIndexBuilt)
+  {
+    return;
+  }
+  m_convIndexBuilt = true;
+
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+
+  const QVector<int> alienIds = m_aliens.getList().keys().toVector();
+  const QVector<int> placeIds = m_places.getPlaceList().keys().toVector();
+  const QVector<int> objectIds = m_invObject.getList().keys().toVector();
+  const QVector<int> factIds = m_facts.getList().keys().toVector();
+
+  QVector<int> raceIds;
+  for (int r = 0; r < static_cast<int>(AlienRace::NumRaces); r++)
+  {
+    raceIds.append(r);
+  }
+
+  foreach (int alienId, alienIds)
+  {
+    indexConversationEntry(alienId, ConvTopicCategory_GreetingInitial, 0);
+    indexConversationEntry(alienId, ConvTopicCategory_GreetingSubsequent, 0);
+
+    foreach (int id, alienIds)  { indexConversationEntry(alienId, ConvTopicCategory_AskAboutPerson, id); }
+    foreach (int id, placeIds)  { indexConversationEntry(alienId, ConvTopicCategory_AskAboutLocation, id); }
+    foreach (int id, objectIds)
+    {
+      indexConversationEntry(alienId, ConvTopicCategory_AskAboutObject, id);
+      indexConversationEntry(alienId, ConvTopicCategory_DisplayObject, id);
+      indexConversationEntry(alienId, ConvTopicCategory_GiveObject, id);
+      indexConversationEntry(alienId, ConvTopicCategory_SeesObject, id);
+    }
+    foreach (int id, raceIds)   { indexConversationEntry(alienId, ConvTopicCategory_AskAboutRace, id); }
+    foreach (int id, factIds)   { indexConversationEntry(alienId, ConvTopicCategory_GiveFact, id); }
+  }
+
+  QApplication::restoreOverrideCursor();
+}
+
+/**
+ * Looks up a single alien/topic/thing combination and, if a conversation line exists for it,
+ * records every embedded command it contains in the reverse index. Identical (command,
+ * parameter) -> (source) entries are not duplicated, which is what keeps the index small despite
+ * many individual aliens falling back to the same race-level dialogue.
+ */
+void MainWindow::indexConversationEntry(int alienId, ConvTopicCategory topic, int thingId)
+{
+  QVector<QPair<GTxtCmd,int> > commands;
+  ConvTableType resolvedTableType = ConvTableType_Invalid;
+  int resolvedId = 0;
+
+  m_convText.getConversationText(alienId, topic, thingId, commands, &resolvedTableType, &resolvedId, true);
+
+  if (resolvedTableType == ConvTableType_Invalid)
+  {
+    return;
+  }
+
+  const ConversationRef ref{resolvedTableType == ConvTableType_Race, resolvedId, topic, thingId};
+
+  // Many different alienIds fall back to the exact same race-level dialogue line. Since a ref's
+  // resulting commands are deterministic, skipping a ref that's already been processed is
+  // equivalent to (and far cheaper than) deduping every individual (command, ref) insertion.
+  const QPair<QPair<int,int>, QPair<int,int> > refKey(
+    QPair<int,int>(ref.isRace ? 1 : 0, ref.alienOrRaceId),
+    QPair<int,int>(static_cast<int>(ref.topic), ref.thingId));
+  if (m_convIndexSeenRefs.contains(refKey))
+  {
+    return;
+  }
+  m_convIndexSeenRefs.insert(refKey);
+
+  // Also record the topic itself (not just any embedded commands) so a line that merely mentions
+  // a thing -- with no Grant/Add command attached -- is still findable, e.g. from the object tab.
+  m_convTopicIndex.insert(QPair<int,int>(static_cast<int>(topic), thingId), ref);
+
+  // A single line can (rarely) embed the same command twice; dedup within this one small list
+  // rather than against the whole (potentially large) growing index.
+  QSet<QPair<int,int> > seenKeysForThisRef;
+  foreach (const auto& cmdParam, commands)
+  {
+    const QPair<int,int> key(static_cast<int>(cmdParam.first), cmdParam.second);
+    if (!seenKeysForThisRef.contains(key))
+    {
+      seenKeysForThisRef.insert(key);
+      m_convIndex.insert(key, ref);
+    }
+  }
+}
+
+/**
+ * Returns every recorded source of the given embedded command/parameter pair (e.g. every
+ * conversation line that grants a particular fact), building the reverse index on first use.
+ */
+QList<ConversationRef> MainWindow::conversationRefsFor(GTxtCmd cmd, int param)
+{
+  buildConversationIndexIfNeeded();
+  return m_convIndex.values(QPair<int,int>(static_cast<int>(cmd), param));
+}
+
+/**
+ * Returns every recorded conversation line about the given topic/thing, regardless of whether
+ * the line embeds a command -- e.g. every "ask about object N" line, not just ones that also
+ * grant knowledge of it.
+ */
+QList<ConversationRef> MainWindow::conversationTopicRefsFor(ConvTopicCategory topic, int thingId)
+{
+  buildConversationIndexIfNeeded();
+  return m_convTopicIndex.values(QPair<int,int>(static_cast<int>(topic), thingId));
+}
+
+/**
+ * Returns every indexed conversation line owned by (i.e. falls back to) the given race's
+ * race-level TLK files, decoded back from m_convIndexSeenRefs -- the deduped set of every ref
+ * already discovered while building the index -- rather than a new index structure.
+ */
+QList<ConversationRef> MainWindow::raceOwnedConversationRefs(int raceId)
+{
+  buildConversationIndexIfNeeded();
+
+  QList<ConversationRef> result;
+  for (auto it = m_convIndexSeenRefs.constBegin(); it != m_convIndexSeenRefs.constEnd(); ++it)
+  {
+    if ((it->first.first == 1) && (it->first.second == raceId))
+    {
+      result.append(ConversationRef{true, it->first.second, static_cast<ConvTopicCategory>(it->second.first), it->second.second});
+    }
+  }
+  return result;
+}
+
+/**
+ * Produces a human-readable description of a conversation topic reference, e.g.
+ * "Ask about location: Nomad Station", for display in a "granted by" list.
+ */
+QString MainWindow::describeConversationTopic(const ConversationRef& ref)
+{
+  static const QMap<ConvTopicCategory,QString> categoryNames =
+  {
+    { ConvTopicCategory_GreetingInitial,    "Greeting (initial)" },
+    { ConvTopicCategory_GreetingSubsequent, "Greeting (subsequent)" },
+    { ConvTopicCategory_AskAboutPerson,     "Ask about person" },
+    { ConvTopicCategory_AskAboutLocation,   "Ask about location" },
+    { ConvTopicCategory_AskAboutObject,     "Ask about object" },
+    { ConvTopicCategory_AskAboutRace,       "Ask about race" },
+    { ConvTopicCategory_DisplayObject,      "Display object" },
+    { ConvTopicCategory_GiveObject,         "Give object" },
+    { ConvTopicCategory_GiveFact,           "Give fact" },
+    { ConvTopicCategory_SeesObject,         "Sees item" },
+  };
+
+  QString thingName;
+  switch (ref.topic)
+  {
+    case ConvTopicCategory_AskAboutPerson:
+      thingName = m_aliens.getName(ref.thingId);
+      break;
+    case ConvTopicCategory_AskAboutLocation:
+      thingName = m_places.getName(ref.thingId);
+      break;
+    case ConvTopicCategory_AskAboutObject:
+    case ConvTopicCategory_DisplayObject:
+    case ConvTopicCategory_GiveObject:
+    case ConvTopicCategory_SeesObject:
+      thingName = m_invObject.getName(ref.thingId);
+      break;
+    case ConvTopicCategory_AskAboutRace:
+      thingName = s_raceNames.value(static_cast<AlienRace>(ref.thingId), "(unknown)");
+      break;
+    case ConvTopicCategory_GiveFact:
+      thingName = m_facts.getFact(ref.thingId).text;
+      break;
+    default:
+      break;
+  }
+
+  const QString category = categoryNames.value(ref.topic, "(unknown topic)");
+  return thingName.isEmpty() ? category : QString("%1: %2").arg(category, thingName);
+}
+
+/**
+ * Switches to the conversation text tab and selects the alien, topic category, and topic
+ * described by the given reference, so the exact source line is shown. For a race-level
+ * reference, an arbitrary alien of that race is selected, since the alien table only lists
+ * individuals.
+ */
+void MainWindow::navigateToConversation(const ConversationRef& ref)
+{
+  NavLocation dest;
+  dest.kind = NavLocation::Kind::Conversation;
+  dest.conv = ref;
+  recordNavigation(dest);
+
+  ui->m_tabs->setCurrentWidget(ui->m_convTab);
+
+  int alienId = ref.alienOrRaceId;
+  if (ref.isRace)
+  {
+    const AlienRace race = static_cast<AlienRace>(ref.alienOrRaceId);
+    foreach (const Alien& a, m_aliens.getList().values())
+    {
+      if (a.race == race)
+      {
+        alienId = a.id;
+        break;
+      }
+    }
+  }
+
+  m_currentConvTopic = ref.topic;
+  switch (ref.topic)
+  {
+    case ConvTopicCategory_GreetingInitial:    ui->m_convTopicButtonGreeting0->setChecked(true); break;
+    case ConvTopicCategory_GreetingSubsequent: ui->m_convTopicButtonGreeting1->setChecked(true); break;
+    case ConvTopicCategory_AskAboutPerson:     ui->m_convTopicButtonPerson->setChecked(true);    break;
+    case ConvTopicCategory_AskAboutLocation:   ui->m_convTopicButtonPlace->setChecked(true);     break;
+    case ConvTopicCategory_AskAboutObject:     ui->m_convTopicButtonObject->setChecked(true);    break;
+    case ConvTopicCategory_AskAboutRace:       ui->m_convTopicButtonRace->setChecked(true);      break;
+    case ConvTopicCategory_DisplayObject:      ui->m_convTopicButtonDispObj->setChecked(true);   break;
+    case ConvTopicCategory_GiveObject:         ui->m_convTopicButtonGiveObj->setChecked(true);   break;
+    case ConvTopicCategory_GiveFact:           ui->m_convTopicButtonGiveFact->setChecked(true);  break;
+    case ConvTopicCategory_SeesObject:         ui->m_convTopicButtonSeesItem->setChecked(true);  break;
+  }
+
+  for (int row = 0; row < ui->m_convAlienTable->rowCount(); row++)
+  {
+    const QTableWidgetItem* const item = ui->m_convAlienTable->item(row, 0);
+    if (item && (item->text().toInt() == alienId))
+    {
+      ui->m_convAlienTable->selectRow(row);
+      break;
+    }
+  }
+
+  // repopulates the topic table for the now-current category and auto-selects the row
+  // matching ref.thingId, mirroring what selecting the alien row would do on its own
+  populateConversationTopicTable(ref.thingId);
+}
+
+/**
+ * Switches to the tab for the given entity type and selects the row whose ID (column 0)
+ * matches, mirroring navigateToConversation's tab-switch + row-scan-and-select pattern.
+ */
+void MainWindow::navigateToEntity(EntityType type, int id)
+{
+  NavLocation dest;
+  dest.kind = NavLocation::Kind::Entity;
+  dest.entityType = type;
+  dest.entityId = id;
+  recordNavigation(dest);
+
+  QWidget* tab = nullptr;
+  QTableWidget* table = nullptr;
+  switch (type)
+  {
+    case EntityType::Alien:  tab = ui->m_tabAliens; table = ui->m_alienTable; break;
+    case EntityType::Place:  tab = ui->m_tabPlaces; table = ui->m_placeTable; break;
+    case EntityType::Object: tab = ui->m_tabObjects; table = ui->m_objTable;  break;
+    case EntityType::Ship:   tab = ui->m_tabShips;   table = ui->m_shipTable; break;
+    case EntityType::Fact:   tab = ui->m_tabFacts;   table = ui->m_factTable; break;
+    case EntityType::Race:   tab = ui->m_tabRaces;   table = ui->m_raceTable; break;
+  }
+  if (!tab || !table)
+  {
+    return;
+  }
+
+  ui->m_tabs->setCurrentWidget(tab);
+  for (int row = 0; row < table->rowCount(); row++)
+  {
+    const QTableWidgetItem* const item = table->item(row, 0);
+    if (item && (item->text().toInt() == id))
+    {
+      table->selectRow(row);
+      break;
+    }
+  }
+}
+
+/**
+ * Captures the currently displayed entity or conversation location, if any, so it can be
+ * recorded as the "from" location of a link-jump. Returns false for any other tab, or if
+ * the current tab has nothing selected -- no history entry is recorded in that case.
+ */
+bool MainWindow::currentNavLocation(NavLocation& out) const
+{
+  QWidget* const currentTab = ui->m_tabs->currentWidget();
+
+  EntityType type = EntityType::Alien;
+  QTableWidget* table = nullptr;
+  if (currentTab == ui->m_tabAliens)       { type = EntityType::Alien;  table = ui->m_alienTable; }
+  else if (currentTab == ui->m_tabPlaces)  { type = EntityType::Place;  table = ui->m_placeTable; }
+  else if (currentTab == ui->m_tabObjects) { type = EntityType::Object; table = ui->m_objTable;   }
+  else if (currentTab == ui->m_tabShips)   { type = EntityType::Ship;   table = ui->m_shipTable;  }
+  else if (currentTab == ui->m_tabFacts)   { type = EntityType::Fact;   table = ui->m_factTable;  }
+
+  if (table)
+  {
+    const QTableWidgetItem* const item = table->item(table->currentRow(), 0);
+    if (!item)
+    {
+      return false;
+    }
+    out.kind = NavLocation::Kind::Entity;
+    out.entityType = type;
+    out.entityId = item->text().toInt();
+    return true;
+  }
+
+  if (currentTab == ui->m_convTab)
+  {
+    const QTableWidgetItem* const alienItem = ui->m_convAlienTable->item(ui->m_convAlienTable->currentRow(), 0);
+    const QTableWidgetItem* const topicItem = ui->m_convTopicTable->item(ui->m_convTopicTable->currentRow(), 0);
+    if (!alienItem || !topicItem)
+    {
+      return false;
+    }
+    out.kind = NavLocation::Kind::Conversation;
+    out.conv = ConversationRef{ false, alienItem->text().toInt(), m_currentConvTopic, topicItem->text().toInt() };
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Records a link-jump to dest in the back/forward history: the current location (if any) is
+ * recorded as the "from" entry, the forward tail is truncated, and the cap is enforced. Does
+ * nothing while a back/forward traversal is in progress, so following goToNavLocation doesn't
+ * re-record the jump it's replaying.
+ */
+void MainWindow::recordNavigation(const NavLocation& dest)
+{
+  if (m_navigatingHistory)
+  {
+    return;
+  }
+
+  m_navHistory.resize(m_navIndex + 1);
+
+  NavLocation from;
+  if (currentNavLocation(from) && (m_navHistory.isEmpty() || !(from == m_navHistory.last())))
+  {
+    m_navHistory.append(from);
+  }
+  if (m_navHistory.isEmpty() || !(dest == m_navHistory.last()))
+  {
+    m_navHistory.append(dest);
+  }
+
+  while (m_navHistory.size() > NAV_HISTORY_MAX)
+  {
+    m_navHistory.removeFirst();
+  }
+
+  m_navIndex = m_navHistory.size() - 1;
+  updateNavActions();
+}
+
+/**
+ * Jumps to a recorded location without re-recording it as a new history entry.
+ */
+void MainWindow::goToNavLocation(const NavLocation& loc)
+{
+  m_navigatingHistory = true;
+  if (loc.kind == NavLocation::Kind::Entity)
+  {
+    navigateToEntity(loc.entityType, loc.entityId);
+  }
+  else
+  {
+    navigateToConversation(loc.conv);
+  }
+  m_navigatingHistory = false;
+}
+
+void MainWindow::onNavBack()
+{
+  if (m_navIndex > 0)
+  {
+    m_navIndex--;
+    goToNavLocation(m_navHistory.at(m_navIndex));
+  }
+  updateNavActions();
+}
+
+void MainWindow::onNavForward()
+{
+  if (m_navIndex < m_navHistory.size() - 1)
+  {
+    m_navIndex++;
+    goToNavLocation(m_navHistory.at(m_navIndex));
+  }
+  updateNavActions();
+}
+
+void MainWindow::updateNavActions()
+{
+  if (m_navBackAction)
+  {
+    m_navBackAction->setEnabled(m_navIndex > 0);
+  }
+  if (m_navForwardAction)
+  {
+    m_navForwardAction->setEnabled(m_navIndex < m_navHistory.size() - 1);
+  }
+}
+
+/**
+ * Formats an entity reference as the small "type:id" href scheme used both for table-cell
+ * UserRole payloads (as a QPoint) and for <a href> anchors in QLabel/QTextBrowser rich text.
+ */
+QString MainWindow::entityHref(EntityType type, int id) const
+{
+  static const QMap<EntityType,QString> prefixes = {
+    { EntityType::Alien,  "alien"  },
+    { EntityType::Place,  "place"  },
+    { EntityType::Object, "object" },
+    { EntityType::Ship,   "ship"   },
+    { EntityType::Fact,   "fact"   },
+    { EntityType::Race,   "race"   },
+  };
+  return QString("%1:%2").arg(prefixes.value(type), QString::number(id));
+}
+
+/**
+ * Parses an href produced by entityHref back into an entity type and ID.
+ */
+bool MainWindow::parseEntityHref(const QString& href, EntityType& outType, int& outId) const
+{
+  static const QMap<QString,EntityType> types = {
+    { "alien",  EntityType::Alien  },
+    { "place",  EntityType::Place  },
+    { "object", EntityType::Object },
+    { "ship",   EntityType::Ship   },
+    { "fact",   EntityType::Fact   },
+    { "race",   EntityType::Race   },
+  };
+
+  const int sep = href.indexOf(':');
+  if (sep < 0 || !types.contains(href.left(sep)))
+  {
+    return false;
+  }
+
+  bool ok = false;
+  const int id = href.mid(sep + 1).toInt(&ok);
+  if (!ok)
+  {
+    return false;
+  }
+
+  outType = types.value(href.left(sep));
+  outId = id;
+  return true;
+}
+
+/**
+ * Responds to a link activated in a QLabel (place representative / resource links).
+ */
+void MainWindow::onEntityLinkActivated(const QString& link)
+{
+  EntityType type;
+  int id;
+  if (parseEntityHref(link, type, id))
+  {
+    navigateToEntity(type, id);
+  }
+}
+
+/**
+ * Maps a GTxtCmd command to the entity type its parameter refers to, per the same mapping
+ * getNameForGameTextCommandParameter uses to resolve a display name. Returns false for
+ * commands with no linkable entity (race parameters have no dedicated tab).
+ */
+bool MainWindow::getEntityLinkForGameTextCommand(GTxtCmd cmd, int param, EntityType& outType) const
+{
+  Q_UNUSED(param)
+  switch (cmd)
+  {
+    case GTxtCmd_AddItem:
+    case GTxtCmd_GrantKnowledgeObject:
+      outType = EntityType::Object;
+      return true;
+    case GTxtCmd_GrantKnowledgeAlien:
+    case GTxtCmd_AStateTableModifyB:
+      outType = EntityType::Alien;
+      return true;
+    case GTxtCmd_GrantKnowledgePlace:
+    case GTxtCmd_StorePlaceIDInSetupTable:
+      outType = EntityType::Place;
+      return true;
+    case GTxtCmd_StoreShipIDInSetupTab:
+      outType = EntityType::Ship;
+      return true;
+    case GTxtCmd_GrantKnowledgeFact:
+      outType = EntityType::Fact;
+      return true;
+    case GTxtCmd_GrantKnowledgeRace:
+      outType = EntityType::Race;
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Styles a list/table item as a clickable link (link-colored, underlined, with a hint tooltip).
+ */
+void MainWindow::styleAsLinkItem(QListWidgetItem* item)
+{
+  QFont f = item->font();
+  f.setUnderline(true);
+  item->setFont(f);
+  item->setForeground(QApplication::palette().color(QPalette::Link));
+  item->setToolTip("Click to open");
+}
+
+void MainWindow::styleAsLinkItem(QTableWidgetItem* item)
+{
+  QFont f = item->font();
+  f.setUnderline(true);
+  item->setFont(f);
+  item->setForeground(QApplication::palette().color(QPalette::Link));
+  item->setToolTip("Click to open");
 }
 
 /**
@@ -1545,12 +2617,14 @@ void MainWindow::showInfoForMission(int id)
     else if (missions[id].action == MissionActionType::DeliverItem)
     {
       const QString itemName = m_invObject.getName(missions[id].objectiveId);
-      ui->m_missionReqText->setHtml(QString("Deliver item: %1").arg(itemName));
+      const QString link = QString("<a href=\"%1\">%2</a>").arg(entityHref(EntityType::Object, missions[id].objectiveId), itemName);
+      ui->m_missionReqText->setHtml(QString("Deliver item: %1").arg(link));
     }
     else if (missions[id].action == MissionActionType::DestroyShip)
     {
       const QString shipName = m_ships.getName(missions[id].objectiveId);
-      ui->m_missionReqText->setHtml(QString("Destroy ship: %1").arg(shipName));
+      const QString link = QString("<a href=\"%1\">%2</a>").arg(entityHref(EntityType::Ship, missions[id].objectiveId), shipName);
+      ui->m_missionReqText->setHtml(QString("Destroy ship: %1").arg(link));
     }
     else
     {
@@ -1604,13 +2678,57 @@ void MainWindow::populateGameTextCommandList(QTableWidget* table, QVector<QPair<
     const QString paramName = getNameForGameTextCommandParameter(command, param);
     if (!paramName.isEmpty())
     {
-      table->setItem(rowcount, 2, new QTableWidgetItem(paramName));
+      QTableWidgetItem* const paramItem = new QTableWidgetItem(paramName);
+      EntityType linkType;
+      if (getEntityLinkForGameTextCommand(command, param, linkType))
+      {
+        paramItem->setData(Qt::UserRole, QPoint(static_cast<int>(linkType), param));
+        styleAsLinkItem(paramItem);
+      }
+      table->setItem(rowcount, 2, paramItem);
     }
   }
 
   table->resizeColumnToContents(0);
   table->resizeColumnToContents(1);
   table->resizeRowsToContents();
+}
+
+/**
+ * Shared handler for a click on any table cell that may carry an EntityType/id link in its
+ * Qt::UserRole data (as set by styleAsLinkItem callers); navigates there if present, and is a
+ * no-op for cells with no such link (e.g. the "Command"/"Parameter" columns of a command-list
+ * table, or the "Quantity" column of the ship inventory table).
+ */
+void MainWindow::handleLinkCellClicked(QTableWidget* table, int row, int column)
+{
+  const QTableWidgetItem* const item = table->item(row, column);
+  if (!item)
+  {
+    return;
+  }
+
+  const QVariant data = item->data(Qt::UserRole);
+  if (data.canConvert<QPoint>())
+  {
+    const QPoint p = data.toPoint();
+    navigateToEntity(static_cast<EntityType>(p.x()), p.y());
+  }
+}
+
+void MainWindow::on_m_convCommandList_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_convCommandList, row, column);
+}
+
+void MainWindow::on_m_missionStartCommandList_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_missionStartCommandList, row, column);
+}
+
+void MainWindow::on_m_missionEndCommandList_cellClicked(int row, int column)
+{
+  handleLinkCellClicked(ui->m_missionEndCommandList, row, column);
 }
 
 /**
@@ -1627,6 +2745,20 @@ void MainWindow::on_m_missionStartText_anchorClicked(const QUrl& arg1)
 void MainWindow::on_m_missionEndText_anchorClicked(const QUrl& arg1)
 {
   showAnchorTooltip(arg1);
+}
+
+/**
+ * Responds to the objective link (delivery item / destroy-ship target) being clicked in the
+ * mission requirements text by navigating to that entity.
+ */
+void MainWindow::on_m_missionReqText_anchorClicked(const QUrl& arg1)
+{
+  EntityType type;
+  int id;
+  if (parseEntityHref(arg1.toString(), type, id))
+  {
+    navigateToEntity(type, id);
+  }
 }
 
 /**

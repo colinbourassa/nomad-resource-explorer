@@ -1,4 +1,5 @@
 #include "datlibrary.h"
+#include <QDir>
 #include <QFile>
 #include <QIODevice>
 #include <QtEndian>
@@ -26,9 +27,24 @@ DatLibrary::DatLibrary()
 bool DatLibrary::openData(QString pathToGameDir)
 {
   bool status = true;
+  // Match the .DAT filenames case-insensitively, since the files may have
+  // been copied from DOS media with either upper- or lowercase names.
+  const QDir gameDir(pathToGameDir);
+  const QStringList dirEntries = gameDir.entryList(QDir::Files);
+
   foreach (DatFileType dat, s_datFileNames.keys())
   {
-    const QString fullpath = pathToGameDir + "/" + s_datFileNames[dat];
+    QString filename = s_datFileNames[dat];
+    foreach (const QString& entry, dirEntries)
+    {
+      if (entry.compare(filename, Qt::CaseInsensitive) == 0)
+      {
+        filename = entry;
+        break;
+      }
+    }
+
+    const QString fullpath = pathToGameDir + "/" + filename;
     QFile datFile(fullpath);
 
     if (datFile.open(QIODevice::ReadOnly))
@@ -52,6 +68,7 @@ void DatLibrary::closeData()
   foreach (DatFileType datType, s_datFileNames.keys())
   {
     m_datContents[static_cast<int>(datType)].clear();
+    m_fileCache[static_cast<int>(datType)].clear();
   }
 
   m_gameText.clear();
@@ -110,6 +127,14 @@ bool DatLibrary::getFileAtIndex(DatFileType dat, unsigned int index, QByteArray&
 bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& filedata) const
 {
   const int datIndex = static_cast<int>(dat);
+
+  const auto cached = m_fileCache[datIndex].find(filename);
+  if (cached != m_fileCache[datIndex].end())
+  {
+    filedata = cached.value();
+    return true;
+  }
+
   const char* rawdat = m_datContents[datIndex].constData();
   const long datsize = m_datContents[datIndex].size();
   bool found = false;
@@ -137,6 +162,10 @@ bool DatLibrary::getFileByName(DatFileType dat, QString filename, QByteArray& fi
   if (found)
   {
     status = getFileAtIndex(dat, indexNum, filedata);
+    if (status)
+    {
+      m_fileCache[datIndex].insert(filename, filedata);
+    }
   }
 
   return status;
