@@ -23,6 +23,8 @@
 #include <QTimer>
 #include <QMenu>
 #include <QAction>
+#include <QToolButton>
+#include <QHBoxLayout>
 #include "enums.h"
 #include "tablenumberitem.h"
 
@@ -102,6 +104,27 @@ MainWindow::MainWindow(QString gameDir, QWidget *parent) :
   connect(ui->actionNavForward, &QAction::triggered, this, &MainWindow::onNavForward);
   m_navBackAction = ui->actionNavBack;
   m_navForwardAction = ui->actionNavForward;
+
+  // The actions no longer live in any menu, so re-attach them to the window to keep the
+  // shortcuts firing, and expose them as corner buttons on the tab bar instead.
+  addAction(ui->actionNavBack);
+  addAction(ui->actionNavForward);
+
+  QWidget* const navCorner = new QWidget(this);
+  QHBoxLayout* const navLayout = new QHBoxLayout(navCorner);
+  navLayout->setContentsMargins(0, 0, 4, 0);
+  navLayout->setSpacing(0);
+  QToolButton* const backBtn = new QToolButton(navCorner);
+  backBtn->setDefaultAction(ui->actionNavBack);
+  backBtn->setAutoRaise(true);
+  backBtn->setArrowType(Qt::LeftArrow);
+  QToolButton* const fwdBtn = new QToolButton(navCorner);
+  fwdBtn->setDefaultAction(ui->actionNavForward);
+  fwdBtn->setAutoRaise(true);
+  fwdBtn->setArrowType(Qt::RightArrow);
+  navLayout->addWidget(backBtn);
+  navLayout->addWidget(fwdBtn);
+  ui->m_tabs->setCornerWidget(navCorner, Qt::TopLeftCorner);
 
   if (!gameDir.isEmpty())
   {

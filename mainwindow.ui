@@ -2028,13 +2028,6 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuNavigate">
-    <property name="title">
-     <string>Navigate</string>
-    </property>
-    <addaction name="actionNavBack"/>
-    <addaction name="actionNavForward"/>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
@@ -2042,7 +2035,6 @@
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuNavigate"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
